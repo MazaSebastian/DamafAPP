@@ -8,6 +8,7 @@ import ProductManager from '../components/ProductManager'
 import OrdersManager from '../components/OrdersManager'
 import SettingsManager from '../components/SettingsManager'
 import AdminOverview from '../components/AdminOverview'
+import CouponsManager from '../components/CouponsManager'
 
 
 
