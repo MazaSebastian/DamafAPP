@@ -1,63 +1,124 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, ShoppingBag, Plus, Loader2 } from 'lucide-react'
+import { X, ArrowLeft, Loader2, Plus } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import { useNavigate } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { toast } from 'sonner'
 
 const OrderModal = ({ isOpen, onClose }) => {
+    const [step, setStep] = useState(1) // 1: Burger, 2: Sides, 3: Drinks
     const [products, setProducts] = useState([])
+    const [sides, setSides] = useState([])
+    const [drinks, setDrinks] = useState([])
+
+    const [selectedBurger, setSelectedBurger] = useState(null)
+    const [selectedSide, setSelectedSide] = useState(null)
+
     const [loading, setLoading] = useState(true)
+
     const navigate = useNavigate()
+    const { addToCart } = useCart()
 
     useEffect(() => {
         if (isOpen) {
+            resetModal()
             fetchBurgers()
         }
     }, [isOpen])
 
+    const resetModal = () => {
+        setStep(1)
+        setSelectedBurger(null)
+        setSelectedSide(null)
+        setProducts([])
+        setSides([])
+        setDrinks([])
+    }
+
     const fetchBurgers = async () => {
         setLoading(true)
-        // 1. Get 'Hamburguesas' category ID first (to be robust) or just filter by name in products if simplified
-        // Let's assume we filter products by category name via join or 2 steps.
-        // Step 1: Find category 'Hamburguesas'
-        const { data: catData } = await supabase
-            .from('categories')
-            .select('id')
-            .ilike('name', '%hamburguesa%')
-            .single()
-
+        const { data: catData } = await supabase.from('categories').select('id').ilike('name', '%hamburguesa%').single()
         if (catData) {
-            const { data: prodData } = await supabase
-                .from('products')
-                .select('*')
-                .eq('category_id', catData.id)
-                .eq('is_available', true)
-                .order('price', { ascending: true }) // Cheapest first or by sort_order
-
-            if (prodData) setProducts(prodData)
+            const { data } = await supabase.from('products').select('*').eq('category_id', catData.id).eq('is_available', true).order('price', { ascending: true })
+            if (data) setProducts(data)
         }
         setLoading(false)
     }
 
-    const handleSelectProduct = (product) => {
-        // Navigate to menu with product selected or open builder?
-        // User wants "Elegí tu burga". Let's redirect to specific product builder if possible, 
-        // or for now, just close modal and go to menu with that category?
-        // Better: Open MealBuilder directly.
-        // Since MealBuilder is likely on the MenuPage or separate route, let's navigate to menu passing state
-        // OR better yet, if we can, make this modal FULLY functional (add to cart).
-        // For 'PIDE AQUI' usually implies starting an order.
-        // Let's navigate to /menu but maybe highlight the product? 
-        // Or simpler: navigate to /menu is the fallback, but user asked for "show burgers in cards".
-
-        // Strategy: Navigate to /menu but passing state to open specific category/product?
-        // For MVP of this feature: Navigate to '/menu' is standard, but user specifically asked for "Select your burger".
-        // Let's implement a direct "Add to Cart" or "Customize" flow if possible.
-        // Given current architecture, let's navigate to MenuPage with category pre-selected.
-        // Actually, let's make the cards clickable to go to Menu.
-        onClose()
-        navigate('/menu')
+    const fetchSides = async () => {
+        setLoading(true)
+        // Find categories like Papas or Acompañamientos
+        const { data: catData } = await supabase.from('categories').select('id').or('name.ilike.%papa%,name.ilike.%acompañamiento%').limit(1).single()
+        if (catData) {
+            const { data } = await supabase.from('products').select('*').eq('category_id', catData.id).eq('is_available', true).order('price', { ascending: true })
+            if (data) setSides(data)
+        }
+        setLoading(false)
     }
+
+    const fetchDrinks = async () => {
+        setLoading(true)
+        const { data: catData } = await supabase.from('categories').select('id').ilike('name', '%bebida%').limit(1).single()
+        if (catData) {
+            const { data } = await supabase.from('products').select('*').eq('category_id', catData.id).eq('is_available', true).order('price', { ascending: true })
+            if (data) setDrinks(data)
+        }
+        setLoading(false)
+    }
+
+    const handleSelectBurger = (burger) => {
+        setSelectedBurger(burger)
+        setStep(2)
+        fetchSides()
+    }
+
+    const handleSelectSide = (side) => {
+        setSelectedSide(side)
+        setStep(3)
+        fetchDrinks()
+    }
+
+    const handleSelectDrink = (drink) => {
+        // Finalize Order
+        if (!selectedBurger) return
+
+        // 1. Add Burger
+        addToCart({ ...selectedBurger, modifiers: [], notes: 'Desde modal rápido' })
+
+        // 2. Add Side (if selected)
+        if (selectedSide) {
+            addToCart({ ...selectedSide, modifiers: [], notes: 'Acompañamiento modal' })
+        }
+
+        // 3. Add Drink (if selected)
+        if (drink) {
+            addToCart({ ...drink, modifiers: [], notes: 'Bebida modal' })
+        }
+
+        toast.success('¡Combo completo agregado!')
+        onClose()
+        navigate('/checkout')
+    }
+
+    const handleBack = () => {
+        if (step === 3) {
+            setStep(2)
+            // Sides are already fetched, just need to ensure they render
+        } else if (step === 2) {
+            setStep(1)
+        }
+    }
+
+    // Helper to get current list based on step
+    const getCurrentList = () => {
+        if (step === 1) return products
+        if (step === 2) return sides
+        if (step === 3) return drinks
+        return []
+    }
+
+    const currentList = getCurrentList()
 
     return (
         <AnimatePresence>
@@ -82,9 +143,20 @@ const OrderModal = ({ isOpen, onClose }) => {
                     >
                         {/* Header */}
                         <div className="p-6 pb-4 border-b border-white/5 flex justify-between items-center relative">
-                            <div>
-                                <h2 className="text-2xl font-bold text-white italic">¡Elegí tu burga, <span className="text-[var(--color-secondary)]">campeón!</span> 🍔</h2>
-                                <p className="text-[var(--color-text-muted)] text-sm">Las mejores de la ciudad</p>
+                            <div className="flex items-center gap-3">
+                                {step > 1 && (
+                                    <button onClick={handleBack} className="p-1 rounded-full hover:bg-white/10 transition-colors">
+                                        <ArrowLeft className="w-5 h-5 text-white" />
+                                    </button>
+                                )}
+                                <div>
+                                    <h2 className="text-xl md:text-2xl font-bold text-white italic leading-tight">
+                                        {step === 1 && <>¡Elegí tu burga, <span className="text-[var(--color-secondary)]">campeón!</span> 🍔</>}
+                                        {step === 2 && <>¿Con qué la vas a <span className="text-[var(--color-secondary)]">acompañar</span>, rey? 🍟</>}
+                                        {step === 3 && <>¿Y para <span className="text-[var(--color-secondary)]">bajarla</span>? 🥤</>}
+                                    </h2>
+                                    {step === 1 && <p className="text-[var(--color-text-muted)] text-sm">Las mejores de la ciudad</p>}
+                                </div>
                             </div>
                             <button onClick={onClose} className="p-2 bg-white/5 rounded-full hover:bg-white/10 transition-colors">
                                 <X className="w-5 h-5 text-white" />
@@ -97,15 +169,19 @@ const OrderModal = ({ isOpen, onClose }) => {
                                 <div className="flex justify-center py-10">
                                     <Loader2 className="w-8 h-8 text-[var(--color-secondary)] animate-spin" />
                                 </div>
-                            ) : products.length > 0 ? (
+                            ) : (
                                 <div className="grid grid-cols-2 gap-3">
-                                    {products.map(product => (
+                                    {currentList.map(product => (
                                         <div
                                             key={product.id}
-                                            onClick={() => handleSelectProduct(product)}
-                                            className="bg-[var(--color-surface)] rounded-xl overflow-hidden border border-white/5 active:scale-95 transition-transform"
+                                            onClick={() => {
+                                                if (step === 1) handleSelectBurger(product)
+                                                else if (step === 2) handleSelectSide(product)
+                                                else if (step === 3) handleSelectDrink(product)
+                                            }}
+                                            className="bg-[var(--color-surface)] rounded-xl overflow-hidden border border-white/5 active:scale-95 transition-transform cursor-pointer relative group"
                                         >
-                                            <div className="aspect-square bg-white/5 relative group">
+                                            <div className="aspect-square bg-white/5 relative">
                                                 {product.image_url ? (
                                                     product.media_type === 'video' ? (
                                                         <video src={product.image_url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
@@ -113,17 +189,21 @@ const OrderModal = ({ isOpen, onClose }) => {
                                                         <img src={product.image_url} alt={product.name} className="w-full h-full object-cover" />
                                                     )
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-4xl">🍔</div>
+                                                    <div className="w-full h-full flex items-center justify-center text-4xl">
+                                                        {step === 1 ? '🍔' : step === 2 ? '🍟' : '🥤'}
+                                                    </div>
                                                 )}
 
-                                                {/* Hover Description Overlay */}
-                                                <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px] flex items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                                                    <p className="text-white text-xs text-center font-medium leading-relaxed line-clamp-5">
-                                                        {product.description || "¡Una verdadera delicia!"}
-                                                    </p>
-                                                </div>
+                                                {/* Hover Description - ONLY FOR STEP 1 */}
+                                                {step === 1 && (
+                                                    <div className="absolute inset-0 bg-black/80 backdrop-blur-[2px] flex items-center justify-center p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+                                                        <p className="text-white text-xs text-center font-medium leading-relaxed line-clamp-5">
+                                                            {product.description || "¡Una verdadera delicia!"}
+                                                        </p>
+                                                    </div>
+                                                )}
 
-                                                <button className="absolute bottom-2 right-2 bg-[var(--color-secondary)] p-1.5 rounded-full text-white shadow-lg">
+                                                <button className="absolute bottom-2 right-2 bg-[var(--color-secondary)] p-1.5 rounded-full text-white shadow-lg z-20">
                                                     <Plus className="w-4 h-4" />
                                                 </button>
                                             </div>
@@ -133,14 +213,34 @@ const OrderModal = ({ isOpen, onClose }) => {
                                             </div>
                                         </div>
                                     ))}
+
+                                    {/* Option to skip side (Step 2) or drink (Step 3) */}
+                                    {(step === 2 || step === 3) && (
+                                        <div
+                                            onClick={() => step === 2 ? handleSelectSide(null) : handleSelectDrink(null)}
+                                            className="bg-[var(--color-surface)]/50 border-2 border-dashed border-white/10 rounded-xl flex flex-col items-center justify-center p-4 cursor-pointer hover:bg-white/5 transition-colors"
+                                        >
+                                            <span className="text-2xl mb-2">👋</span>
+                                            <p className="text-white font-bold text-sm text-center">
+                                                {step === 2 ? 'Sin acompañamiento' : 'Sin bebida'}
+                                            </p>
+                                            <p className="text-[var(--color-text-muted)] text-xs">
+                                                {step === 2 ? 'Solo la burga' : 'Tengo sed igual'}
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
-                            ) : (
-                                <p className="text-center text-[var(--color-text-muted)] py-10">No encontramos hamburguesas disponibles :(</p>
                             )}
 
-                            <button onClick={onClose} className="w-full py-4 text-center text-[var(--color-text-muted)] text-sm underline mt-4">
-                                Ver menú completo
-                            </button>
+                            {(currentList.length === 0 && !loading) && (
+                                <p className="text-center text-[var(--color-text-muted)] py-10">No encontramos productos :(</p>
+                            )}
+
+                            {step === 1 && (
+                                <button onClick={() => { onClose(); navigate('/menu') }} className="w-full py-4 text-center text-[var(--color-text-muted)] text-sm underline mt-4">
+                                    Ver menú completo
+                                </button>
+                            )}
                         </div>
                     </motion.div>
                 </>
