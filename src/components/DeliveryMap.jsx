@@ -83,7 +83,7 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected }) => {
 
         try {
             const result = await directionsService.route({
-                origin: STORE_LOCATION,
+                origin: finalStoreLocation,
                 destination: destination,
                 travelMode: window.google.maps.TravelMode.DRIVING,
             })
@@ -149,7 +149,7 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected }) => {
             <div className="relative h-64 md:h-80 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
                 <GoogleMap
                     mapContainerStyle={{ width: '100%', height: '100%' }}
-                    center={selectedLocation || STORE_LOCATION}
+                    center={selectedLocation || finalStoreLocation}
                     zoom={12}
                     onLoad={onLoad}
                     onUnmount={onUnmount}
