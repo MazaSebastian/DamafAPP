@@ -9,7 +9,7 @@ const OrdersManager = () => {
     useEffect(() => {
         fetchOrders()
 
-        // Subscription for real-time updates could be added here
+        // Subscription for real-time updates
         const channel = supabase
             .channel('orders_channel')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
@@ -21,11 +21,6 @@ const OrdersManager = () => {
     }, [])
 
     const fetchOrders = async () => {
-        // Fetch orders with their items
-        // Note: Supabase JS client doesn't support deep nested joins easily for all cases in one go perfectly cleanly without foreign keys setup perfectly for every hop, 
-        // but let's try standard approach.
-        // We will fetch orders first, then items for simplicity and reliability or use select with join.
-
         const { data: ordersData, error } = await supabase
             .from('orders')
             .select(`
@@ -48,7 +43,6 @@ const OrdersManager = () => {
             .eq('id', orderId)
 
         if (!error) {
-            // Optimistic update
             setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
         }
     }
@@ -148,78 +142,72 @@ const OrdersManager = () => {
                                     </div>
                                 )}
                             </div>
+                            <div className="text-right">
+                                <span className="font-bold text-lg block">${order.total}</span>
+                                <button
+                                    onClick={() => deleteOrder(order.id)}
+                                    className="text-[var(--color-text-muted)] hover:text-red-400 mt-1"
+                                    title="Eliminar pedido"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
-                        <div className="text-right">
-                            <span className="font-bold text-lg block">${order.total}</span>
-                            <button
-                                onClick={() => deleteOrder(order.id)}
-                                className="text-[var(--color-text-muted)] hover:text-red-400 mt-1"
-                                title="Eliminar pedido"
-                            >
-                                <Trash2 className="w-4 h-4" />
-                            </button>
+
+                        {/* Items */}
+                        <div className="p-4 flex-1 space-y-3">
+                            {order.order_items?.map(item => (
+                                <div key={item.id} className="text-sm">
+                                    <div className="flex justify-between font-medium">
+                                        <span>1x {item.products?.name}</span>
+                                        <span className="text-[var(--color-text-muted)]">${item.price_at_time}</span>
+                                    </div>
+
+                                    {/* Sub-items details */}
+                                    <div className="pl-4 border-l border-white/10 mt-1 text-xs text-[var(--color-text-muted)] space-y-0.5">
+                                        {item.modifiers?.map((m, i) => (
+                                            <div key={i}>+ {m.name}</div>
+                                        ))}
+                                        {item.side_info && <div>+ {item.side_info.name}</div>}
+                                        {item.drink_info && <div>+ {item.drink_info.name}</div>}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Actions */}
+                        <div className="p-3 bg-[var(--color-background)]/30 grid grid-cols-3 gap-2">
+                            {order.status === 'pending' && (
+                                <button onClick={() => updateStatus(order.id, 'cooking')} className="col-span-3 bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
+                                    <ChefHat className="w-4 h-4" /> Empezar a Cocinar
+                                </button>
+                            )}
+                            {order.status === 'cooking' && (
+                                <button onClick={() => updateStatus(order.id, 'packaging')} className="col-span-3 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+                                    <Check className="w-4 h-4" /> Preparar Envío
+                                </button>
+                            )}
+                            {order.status === 'packaging' && (
+                                <button onClick={() => updateStatus(order.id, 'sent')} className="col-span-3 bg-purple-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-purple-500 transition-colors flex items-center justify-center gap-2">
+                                    <Bell className="w-4 h-4" /> Enviar Pedido
+                                </button>
+                            )}
+                            {order.status === 'sent' && (
+                                <button onClick={() => updateStatus(order.id, 'completed')} className="col-span-3 bg-gray-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-gray-500 transition-colors flex items-center justify-center gap-2">
+                                    <Check className="w-4 h-4" /> Finalizar / Entregado
+                                </button>
+                            )}
                         </div>
                     </div>
+                ))}
 
-                        {/* Items */ }
-                    < div className = "p-4 flex-1 space-y-3" >
-                    {
-                        order.order_items?.map(item => (
-                            <div key={item.id} className="text-sm">
-                                <div className="flex justify-between font-medium">
-                                    <span>1x {item.products?.name}</span>
-                                    <span className="text-[var(--color-text-muted)]">${item.price_at_time}</span>
-                                </div>
-
-                                {/* Sub-items details */}
-                                <div className="pl-4 border-l border-white/10 mt-1 text-xs text-[var(--color-text-muted)] space-y-0.5">
-                                    {item.modifiers?.map((m, i) => (
-                                        <div key={i}>+ {m.name}</div>
-                                    ))}
-                                    {item.side_info && <div>+ {item.side_info.name}</div>}
-                                    {item.drink_info && <div>+ {item.drink_info.name}</div>}
-                                </div>
-                            </div>
-                        ))
-                    }
-                        </div>
-
-            {/* Actions */}
-            <div className="p-3 bg-[var(--color-background)]/30 grid grid-cols-3 gap-2">
-                {order.status === 'pending' && (
-                    <button onClick={() => updateStatus(order.id, 'cooking')} className="col-span-3 bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
-                        <ChefHat className="w-4 h-4" /> Empezar a Cocinar
-                    </button>
-                )}
-                {order.status === 'cooking' && (
-                    <button onClick={() => updateStatus(order.id, 'packaging')} className="col-span-3 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
-                        <Check className="w-4 h-4" /> Preparar Envío
-                    </button>
-                )}
-                {order.status === 'packaging' && (
-                    <button onClick={() => updateStatus(order.id, 'sent')} className="col-span-3 bg-purple-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-purple-500 transition-colors flex items-center justify-center gap-2">
-                        <Bell className="w-4 h-4" /> Enviar Pedido
-                    </button>
-                )}
-                {order.status === 'sent' && (
-                    <button onClick={() => updateStatus(order.id, 'completed')} className="col-span-3 bg-gray-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-gray-500 transition-colors flex items-center justify-center gap-2">
-                        <Check className="w-4 h-4" /> Finalizar / Entregado
-                    </button>
+                {orders.length === 0 && (
+                    <div className="col-span-full py-20 text-center text-[var(--color-text-muted)]">
+                        No hay pedidos recientes.
+                    </div>
                 )}
             </div>
         </div>
-    ))
-}
-
-{
-    orders.length === 0 && (
-        <div className="col-span-full py-20 text-center text-[var(--color-text-muted)]">
-            No hay pedidos recientes.
-        </div>
-    )
-}
-            </div >
-        </div >
     )
 }
 
