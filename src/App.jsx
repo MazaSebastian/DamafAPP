@@ -40,7 +40,26 @@ const AnimatedRoutes = () => {
 function App() {
   return (
     <BrowserRouter>
-      <Toaster richColors position="top-center" />
+      <Toaster
+        richColors
+        position="top-center"
+        theme="dark"
+        toastOptions={{
+          style: {
+            background: 'var(--color-surface)',
+            color: 'var(--color-text-main)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+          },
+          actionButtonStyle: {
+            background: 'var(--color-primary)',
+            color: 'white',
+          },
+          cancelButtonStyle: {
+            background: 'rgba(255, 255, 255, 0.1)',
+            color: 'var(--color-text-muted)',
+          },
+        }}
+      />
       <AuthProvider>
         <CartProvider>
           <AnimatedRoutes />
