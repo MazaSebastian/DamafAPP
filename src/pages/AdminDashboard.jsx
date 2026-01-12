@@ -7,6 +7,7 @@ import RewardsManager from '../components/RewardsManager'
 import ProductManager from '../components/ProductManager'
 import OrdersManager from '../components/OrdersManager'
 import SettingsManager from '../components/SettingsManager'
+import AdminOverview from '../components/AdminOverview'
 
 
 
