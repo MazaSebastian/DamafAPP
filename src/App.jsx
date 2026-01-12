@@ -1,6 +1,9 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider } from './context/AuthContext'
+import { AnimatePresence } from 'framer-motion'
+import PageTransition from './components/PageTransition'
+
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/AdminDashboard'
@@ -12,23 +15,33 @@ import MyOrdersPage from './pages/MyOrdersPage'
 import CouponsPage from './pages/CouponsPage'
 import { CartProvider } from './context/CartContext'
 
+const AnimatedRoutes = () => {
+  const location = useLocation()
+
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
+        <Route path="/club-info" element={<PageTransition><ClubInfoPage /></PageTransition>} />
+        <Route path="/rewards" element={<PageTransition><RewardsStorePage /></PageTransition>} />
+        <Route path="/menu" element={<PageTransition><MenuPage /></PageTransition>} />
+        <Route path="/checkout" element={<PageTransition><CheckoutPage /></PageTransition>} />
+        <Route path="/my-orders" element={<PageTransition><MyOrdersPage /></PageTransition>} />
+        <Route path="/coupons" element={<PageTransition><CouponsPage /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  )
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Toaster richColors position="top-center" />
       <AuthProvider>
         <CartProvider>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/club-info" element={<ClubInfoPage />} />
-            <Route path="/rewards" element={<RewardsStorePage />} />
-            <Route path="/menu" element={<MenuPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/my-orders" element={<MyOrdersPage />} />
-            <Route path="/coupons" element={<CouponsPage />} />
-          </Routes>
+          <AnimatedRoutes />
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
