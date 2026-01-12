@@ -1,0 +1,219 @@
+import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { GoogleMap, useLoadScript, Marker, StandaloneSearchBox, DirectionsRenderer } from '@react-google-maps/api'
+import { MapPin, Search, Navigation } from 'lucide-react'
+import { toast } from 'sonner'
+
+// Placeholder coordinates (Obelisk of Buenos Aires) - WILL BE UPDATED BY USER
+const STORE_LOCATION = { lat: -34.603722, lng: -58.381592 }
+const LIBRARIES = ['places']
+
+const DeliveryMap = ({ onDistanceCalculated, onAddressSelected }) => {
+    const { isLoaded, loadError } = useLoadScript({
+        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        libraries: LIBRARIES,
+    })
+
+    const [map, setMap] = useState(null)
+    const [selectedLocation, setSelectedLocation] = useState(null)
+    const [searchBox, setSearchBox] = useState(null)
+    const [directions, setDirections] = useState(null)
+    const [calculating, setCalculating] = useState(false)
+
+    const mapRef = useRef()
+
+    const onLoad = useCallback((map) => {
+        mapRef.current = map
+        setMap(map)
+    }, [])
+
+    const onUnmount = useCallback(() => {
+        setMap(null)
+    }, [])
+
+    const onSearchBoxLoad = (ref) => {
+        setSearchBox(ref)
+    }
+
+    const onPlacesChanged = () => {
+        const places = searchBox.getPlaces()
+        if (places.length === 0) return
+
+        const place = places[0]
+        const location = {
+            lat: place.geometry.location.lat(),
+            lng: place.geometry.location.lng(),
+        }
+
+        setSelectedLocation(location)
+        map.panTo(location)
+        map.setZoom(15)
+
+        // Pass address string back
+        if (onAddressSelected) {
+            onAddressSelected(place.formatted_address)
+        }
+
+        calculateRoute(location)
+    }
+
+    const handleMapClick = async (e) => {
+        const location = {
+            lat: e.latLng.lat(),
+            lng: e.latLng.lng(),
+        }
+        setSelectedLocation(location)
+
+        // Reverse geocoding to get address (optional, nice to have)
+        try {
+            const geocoder = new window.google.maps.Geocoder()
+            const response = await geocoder.geocode({ location })
+            if (response.results[0] && onAddressSelected) {
+                onAddressSelected(response.results[0].formatted_address)
+            }
+        } catch (error) {
+            console.error('Geocoding error:', error)
+        }
+
+        calculateRoute(location)
+    }
+
+    const calculateRoute = async (destination) => {
+        setCalculating(true)
+        const directionsService = new window.google.maps.DirectionsService()
+
+        try {
+            const result = await directionsService.route({
+                origin: STORE_LOCATION,
+                destination: destination,
+                travelMode: window.google.maps.TravelMode.DRIVING,
+            })
+
+            setDirections(result)
+
+            // Get distance in KM (meters / 1000)
+            const distanceInMeters = result.routes[0].legs[0].distance.value
+            const distanceInKm = distanceInMeters / 1000
+
+            if (onDistanceCalculated) {
+                onDistanceCalculated(distanceInKm)
+            }
+        } catch (error) {
+            console.error('Error calculating route:', error)
+            toast.error('No pudimos calcular la ruta hasta ahí. Intenta otra dirección.')
+        } finally {
+            setCalculating(false)
+        }
+    }
+
+    // Get Current Location
+    const handleUseCurrentLocation = () => {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const location = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                    }
+                    setSelectedLocation(location)
+                    map.panTo(location)
+                    map.setZoom(15)
+                    calculateRoute(location)
+                },
+                () => {
+                    toast.error('No pudimos obtener tu ubicación.')
+                }
+            )
+        }
+    }
+
+    if (loadError) return <div className="p-4 text-red-400 bg-red-900/10 rounded-lg">Error al cargar Google Maps</div>
+    if (!isLoaded) return <div className="h-64 bg-white/5 animate-pulse rounded-lg flex items-center justify-center">Cargando Mapa...</div>
+
+    return (
+        <div className="space-y-4">
+            {/* Search Box */}
+            <div className="relative z-10">
+                <StandaloneSearchBox onLoad={onSearchBoxLoad} onPlacesChanged={onPlacesChanged}>
+                    <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Busca tu dirección..."
+                            className="w-full bg-[var(--color-surface)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--color-primary)] shadow-lg"
+                        />
+                    </div>
+                </StandaloneSearchBox>
+            </div>
+
+            {/* Map Container */}
+            <div className="relative h-64 md:h-80 rounded-xl overflow-hidden border border-white/10 shadow-2xl">
+                <GoogleMap
+                    mapContainerStyle={{ width: '100%', height: '100%' }}
+                    center={selectedLocation || STORE_LOCATION}
+                    zoom={12}
+                    onLoad={onLoad}
+                    onUnmount={onUnmount}
+                    onClick={handleMapClick}
+                    options={{
+                        styles: [ // Dark Mode Map Style
+                            { elementType: "geometry", stylers: [{ color: "#242f3e" }] },
+                            { elementType: "labels.text.stroke", stylers: [{ color: "#242f3e" }] },
+                            { elementType: "labels.text.fill", stylers: [{ color: "#746855" }] },
+                            {
+                                featureType: "administrative.locality",
+                                elementType: "labels.text.fill",
+                                stylers: [{ color: "#d59563" }],
+                            },
+                        ],
+                        disableDefaultUI: true, // Clean UI
+                        zoomControl: true,
+                    }}
+                >
+                    {/* Store Marker */}
+                    <Marker
+                        position={STORE_LOCATION}
+                        icon={{
+                            // Simple emoji icon or create a custom one later
+                            url: 'http://maps.google.com/mapfiles/kml/pal2/icon10.png',
+                            scaledSize: new window.google.maps.Size(40, 40)
+                        }}
+                        title="Nuestro Local"
+                    />
+
+                    {/* Customer Marker */}
+                    {selectedLocation && (
+                        <Marker position={selectedLocation} animation={window.google.maps.Animation.DROP} />
+                    )}
+
+                    {/* Route Line */}
+                    {directions && (
+                        <DirectionsRenderer
+                            directions={directions}
+                            options={{
+                                polylineOptions: {
+                                    strokeColor: "#ffbd59", // Secondary color
+                                    strokeWeight: 5,
+                                },
+                                suppressMarkers: true // We use our own markers
+                            }}
+                        />
+                    )}
+                </GoogleMap>
+
+                {/* My Location Button */}
+                <button
+                    onClick={handleUseCurrentLocation}
+                    className="absolute bottom-4 right-4 bg-[var(--color-secondary)] p-3 rounded-full text-white shadow-lg hover:bg-orange-600 transition-colors z-10"
+                >
+                    <Navigation className="w-5 h-5" />
+                </button>
+            </div>
+
+            <p className="text-xs text-[var(--color-text-muted)] text-center">
+                Toca el mapa o busca tu dirección para calcular el envío.
+            </p>
+        </div>
+    )
+}
+
+export default DeliveryMap

@@ -3,8 +3,9 @@ import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useCart } from '../context/CartContext'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Trash2, ShoppingBag, Plus, CreditCard, MapPin, Store, Utensils, Ticket } from 'lucide-react'
+import { ArrowLeft, Trash2, ShoppingBag, Plus, Car, MapPin } from 'lucide-react'
 import { initMercadoPago } from '@mercadopago/sdk-react'
+import DeliveryMap from '../components/DeliveryMap'
 
 const CheckoutPage = () => {
     const { cart, removeFromCart, total, clearCart } = useCart()
@@ -15,6 +16,10 @@ const CheckoutPage = () => {
     const [couponCode, setCouponCode] = useState('')
     const [appliedCoupon, setAppliedCoupon] = useState(null)
     const [discountAmount, setDiscountAmount] = useState(0)
+
+    // New State for Delivery
+    const [shippingCost, setShippingCost] = useState(0)
+    const [distanceKm, setDistanceKm] = useState(0)
 
     const applyCoupon = async () => {
         if (!couponCode) return
@@ -44,16 +49,6 @@ const CheckoutPage = () => {
         } else if (validCoupon.discount_type === 'fixed') {
             discount = validCoupon.value
         } else if (validCoupon.discount_type === 'product') {
-            // Find if product is in cart (assuming 'target_product_id' is the free product)
-            // Note: Simplification - we just deduct the product price if it's in the cart, 
-            // or maybe we should add it? For now, let's assume user must add it first, OR we discount the value of that product.
-            /* 
-               Valid logic: If coupon grants a free product, we look for that product in the cart.
-               If found, we discount its price. If not found, we alert user to add it?
-               Let's try: Discount max 1 instance of that product price.
-            */
-            // We need to fetch product price if not in Join, but we included it in query
-            // wait, we need to check if product is in cart.
             const productInCart = cart.find(item => item.main.id === validCoupon.target_product_id)
             if (productInCart) {
                 discount = productInCart.main.price
@@ -70,11 +65,21 @@ const CheckoutPage = () => {
         toast.success(`¡Cupón ${validCoupon.code} aplicado! Ahorras $${discount.toFixed(2)}`)
     }
 
-    const finalTotal = total - discountAmount
+    // Shipping Logic
+    const handleDistanceCalculated = (distance) => {
+        setDistanceKm(distance)
+        const cost = Math.ceil(distance * 500) // $500 per KM rule
+        setShippingCost(cost)
+        toast.info(`Distancia: ${distance.toFixed(1)}km - Envío: $${cost}`)
+    }
+
+    const handleAddressSelected = (addr) => {
+        setAddress(addr)
+    }
+
+    const finalTotal = total - discountAmount + (orderType === 'delivery' ? shippingCost : 0)
 
     // Initialize Mercado Pago
-    // Replace with your Public Key (or use environment variable)
-    // For development, we can check if the env var exists, otherwise use a placeholder or handle gracefully.
     const MP_PUBLIC_KEY = import.meta.env.VITE_MP_PUBLIC_KEY
     if (MP_PUBLIC_KEY) {
         initMercadoPago(MP_PUBLIC_KEY)
@@ -87,7 +92,12 @@ const CheckoutPage = () => {
         }
 
         if (orderType === 'delivery' && !address.trim()) {
-            toast.error('Por favor ingresa tu dirección de envío')
+            toast.error('Por favor confirma tu ubicación en el mapa')
+            return
+        }
+
+        if (orderType === 'delivery' && shippingCost === 0) {
+            toast.error('Calculando costo de envío, por favor espera...')
             return
         }
 
@@ -102,11 +112,13 @@ const CheckoutPage = () => {
                 .insert([{
                     user_id: user?.id || null,
                     total: finalTotal,
-                    status: 'pending_payment', // New initial status
+                    status: 'pending_payment',
                     order_type: orderType,
                     delivery_address: orderType === 'delivery' ? address : null,
                     coupon_code: appliedCoupon?.code || null,
-                    discount_amount: discountAmount
+                    discount_amount: discountAmount,
+                    // Store shipping details in notes or separate column if schema allows. For now, we assume total includes it.
+                    // Ideally we should add 'shipping_cost' column later.
                 }])
                 .select()
                 .single()
@@ -139,7 +151,6 @@ const CheckoutPage = () => {
 
             if (paymentError) {
                 console.error('Supabase Function Error:', paymentError)
-                // Try to parse the error message if it's a JSON string in the message
                 let diffMsg = paymentError.message || 'Error desconocido del servidor'
                 try {
                     const parsed = JSON.parse(paymentError.message)
@@ -158,7 +169,7 @@ const CheckoutPage = () => {
 
         } catch (error) {
             console.error(error)
-            toast.dismiss() // Dismiss loading toast
+            toast.dismiss()
             toast.error('Ocurrió un error al procesar el pedido: ' + error.message)
         }
     }
@@ -188,10 +199,9 @@ const CheckoutPage = () => {
             </header>
 
             <main className="p-4 max-w-lg mx-auto space-y-4">
+                {/* List Items */}
                 {cart.map((item, index) => (
                     <div key={item.id} className="bg-[var(--color-surface)] rounded-2xl p-4 border border-white/5 animated-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
-
-                        {/* Main Item */}
                         <div className="flex gap-4 mb-3">
                             {item.main.media_type === 'video' ? (
                                 <video src={item.main.image_url} className="w-16 h-16 rounded-lg object-cover bg-black/20" muted loop autoPlay playsInline />
@@ -206,8 +216,6 @@ const CheckoutPage = () => {
                                 <Trash2 className="w-4 h-4" />
                             </button>
                         </div>
-
-                        {/* Details */}
                         <div className="pl-4 border-l-2 border-white/10 space-y-1 text-sm text-[var(--color-text-muted)]">
                             {item.modifiers?.map(mod => (
                                 <div key={mod.id} className="flex justify-between">
@@ -228,7 +236,6 @@ const CheckoutPage = () => {
                                 </div>
                             )}
                         </div>
-
                     </div>
                 ))}
 
@@ -248,7 +255,7 @@ const CheckoutPage = () => {
                     {/* Delivery Toggle */}
                     <div className="bg-[var(--color-background)] p-1 rounded-xl flex">
                         <button
-                            onClick={() => setOrderType('takeaway')}
+                            onClick={() => { setOrderType('takeaway'); setShippingCost(0); }}
                             className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${orderType === 'takeaway' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
                         >
                             Retiro en Local
@@ -261,17 +268,23 @@ const CheckoutPage = () => {
                         </button>
                     </div>
 
-                    {/* Address Input */}
+                    {/* Map Integration */}
                     {orderType === 'delivery' && (
-                        <div className="animated-slide-up">
-                            <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-2">Dirección de Envío</label>
-                            <input
-                                type="text"
-                                value={address}
-                                onChange={(e) => setAddress(e.target.value)}
-                                placeholder="Calle, Número, Piso..."
-                                className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-[var(--color-secondary)]"
+                        <div className="animated-slide-up space-y-2">
+                            <DeliveryMap
+                                onDistanceCalculated={handleDistanceCalculated}
+                                onAddressSelected={handleAddressSelected}
                             />
+                            {distanceKm > 0 && (
+                                <div className="flex justify-between items-center text-sm px-2">
+                                    <span className="text-[var(--color-text-muted)] flex items-center gap-1">
+                                        <MapPin className="w-4 h-4" /> {distanceKm.toFixed(1)} km
+                                    </span>
+                                    <span className="text-[var(--color-secondary)] font-bold flex items-center gap-1">
+                                        <Car className="w-4 h-4" /> Envío: ${shippingCost}
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
 
