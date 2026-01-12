@@ -7,11 +7,13 @@ import { toast } from 'sonner'
 const STORE_LOCATION = { lat: -34.530019, lng: -58.542822 }
 const LIBRARIES = ['places']
 
-const DeliveryMap = ({ onDistanceCalculated, onAddressSelected }) => {
+const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation }) => {
     const { isLoaded, loadError } = useLoadScript({
         googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
         libraries: LIBRARIES,
     })
+
+    const finalStoreLocation = storeLocation || STORE_LOCATION
 
     const [map, setMap] = useState(null)
     const [selectedLocation, setSelectedLocation] = useState(null)
@@ -171,7 +173,7 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected }) => {
                 >
                     {/* Store Marker */}
                     <Marker
-                        position={STORE_LOCATION}
+                        position={finalStoreLocation}
                         icon={{
                             // Simple emoji icon or create a custom one later
                             url: 'https://maps.google.com/mapfiles/kml/pal2/icon10.png',
