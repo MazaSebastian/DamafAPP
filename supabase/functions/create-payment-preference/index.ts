@@ -36,14 +36,19 @@ serve(async (req) => {
             throw new Error('Order not found')
         }
 
-        // 2. Prepare items for Mercado Pago
-        const items = order.order_items.map((item: any) => ({
-            id: item.product_id,
-            title: item.products.name,
-            quantity: item.quantity,
-            currency_id: 'ARS', // Argentina Peso
-            unit_price: Number(item.price)
-        }))
+        // 2. Prepare items for Mercado Pago (Simplified Strategy: Send Total Amount as 1 Item)
+        // This avoids negative price issues with discounts and complex modifier validation.
+        const items = [
+            {
+                id: "order-total",
+                title: `Pedido DamafAPP #${order_id.slice(0, 8)}`,
+                quantity: 1,
+                currency_id: 'ARS',
+                unit_price: Number(order.total)
+            }
+        ];
+
+        // Note: The total in 'orders' table already includes the discount calculation.
 
         // 3. Create Preference in Mercado Pago
         const mpAccessToken = Deno.env.get('MP_ACCESS_TOKEN')
@@ -61,11 +66,7 @@ serve(async (req) => {
             },
             auto_return: "approved",
             external_reference: order_id, // Link MP payment to our Order ID
-            statement_descriptor: "DAMAFAPP",
-            payer: {
-                // Optional: Pre-fill user info if available in 'profiles'
-                // email: ...
-            }
+            statement_descriptor: "DAMAFAPP"
         }
 
         const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {

@@ -137,9 +137,20 @@ const CheckoutPage = () => {
                 body: { order_id: order.id }
             })
 
-            if (paymentError || !paymentData?.init_point) {
-                console.error('Payment Error:', paymentError)
-                throw new Error('Error al conectar con Mercado Pago')
+            if (paymentError) {
+                console.error('Supabase Function Error:', paymentError)
+                // Try to parse the error message if it's a JSON string in the message
+                let diffMsg = paymentError.message || 'Error desconocido del servidor'
+                try {
+                    const parsed = JSON.parse(paymentError.message)
+                    if (parsed.error) diffMsg = parsed.error
+                } catch (e) { }
+
+                throw new Error(diffMsg)
+            }
+
+            if (!paymentData?.init_point) {
+                throw new Error('No se recibió el link de pago (init_point missing)')
             }
 
             // 4. Redirect to Mercado Pago
