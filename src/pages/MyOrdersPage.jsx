@@ -172,15 +172,34 @@ const MyOrdersPage = () => {
                         )
                     })
                 ) : (
-                    <div className="text-center py-20">
-                        <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <ShoppingBag className="w-8 h-8 text-[var(--color-text-muted)] opacity-50" />
+                    <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
+                        <div className="bg-white text-black p-8 rounded-3xl shadow-2xl max-w-sm w-full">
+                            <div className="w-24 h-24 mx-auto mb-6">
+                                <img src="/logo-damaf.png" alt="Logo" className="w-full h-full object-contain drop-shadow-sm" />
+                            </div>
+
+                            <h2 className="text-2xl font-black uppercase leading-none mb-2 tracking-tighter text-[#502314]">
+                                LOS PEDIDOS Y ARTÍCULOS RECIENTES APARECERÁN AQUÍ
+                            </h2>
+
+                            <p className="text-sm font-bold text-[#502314]/70 mb-8">
+                                ¡Empiece un nuevo pedido ahora!
+                            </p>
+
+                            <Link
+                                to="/menu"
+                                className="block w-full bg-[#d62300] text-white font-black text-lg py-3 rounded-full shadow-md mb-3 hover:bg-[#b01d00] transition-colors uppercase tracking-wide"
+                            >
+                                Pide aquí
+                            </Link>
+
+                            <button
+                                onClick={fetchOrders}
+                                className="block w-full bg-transparent border-2 border-[#d62300] text-[#d62300] font-black text-lg py-3 rounded-full hover:bg-[#d62300]/5 transition-colors uppercase tracking-wide"
+                            >
+                                Actualizar
+                            </button>
                         </div>
-                        <h3 className="font-bold text-lg mb-1">No tienes pedidos {activeTab === 'active' ? 'en curso' : 'anteriores'}</h3>
-                        <p className="text-sm text-[var(--color-text-muted)] mb-6">¡Es un buen momento para pedir algo rico!</p>
-                        <Link to="/menu" className="inline-flex items-center gap-2 text-[var(--color-secondary)] font-bold text-sm hover:underline">
-                            Ir al Menú <ArrowRight className="w-4 h-4" />
-                        </Link>
                     </div>
                 )}
             </main>
