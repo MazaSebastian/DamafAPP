@@ -1,4 +1,4 @@
-import { Crown } from 'lucide-react'
+import { Star } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const LoyaltyBanner = ({ stars = 0 }) => {
@@ -14,7 +14,7 @@ const LoyaltyBanner = ({ stars = 0 }) => {
                         Pide hoy por la APP y duplica Estrellas!
                     </p>
                     <div className="flex items-center gap-2">
-                        <Crown className="w-8 h-8 fill-yellow-400 text-yellow-500" />
+                        <Star className="w-8 h-8 fill-yellow-400 text-yellow-500" />
                         <span className="text-4xl font-bold">{stars}</span>
                     </div>
                     <p className="text-xs opacity-80 mt-1">Estrellas disponibles</p>
