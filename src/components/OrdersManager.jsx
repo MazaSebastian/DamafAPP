@@ -106,6 +106,35 @@ const OrdersManager = () => {
         })
     }
 
+    const clearAllOrders = () => {
+        toast('¿BORRAR ABSOLUTAMENTE TODO?', {
+            description: '¡Cuidado! Esto eliminará TODOS los pedidos, incluidos los que están EN CURSO (Pendientes, Cocinando...).',
+            action: {
+                label: 'SÍ, BORRAR TODO',
+                onClick: async () => {
+                    setLoading(true)
+                    // Delete all by matching any total greater than -1 (effectively all)
+                    const { error } = await supabase
+                        .from('orders')
+                        .delete()
+                        .gt('total', -1)
+
+                    if (!error) {
+                        await fetchOrders()
+                        toast.success('Se eliminaron TODOS los pedidos')
+                    } else {
+                        console.error('Error deleting all:', error)
+                        toast.error('Error al vaciar la base de datos')
+                    }
+                    setLoading(false)
+                }
+            },
+            cancel: {
+                label: 'Cancelar'
+            }
+        })
+    }
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending': return 'bg-yellow-500/20 text-yellow-500'
@@ -128,13 +157,22 @@ const OrdersManager = () => {
                     <ChefHat className="text-[var(--color-secondary)]" />
                     Gestión de Pedidos
                 </h2>
-                <button
-                    onClick={clearHistory}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors"
-                >
-                    <Trash2 className="w-4 h-4" />
-                    Limpiar Completados
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={clearAllOrders}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Borrar TODO
+                    </button>
+                    <button
+                        onClick={clearHistory}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                        Limpiar Completados
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
