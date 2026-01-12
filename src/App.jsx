@@ -13,6 +13,7 @@ import MenuPage from './pages/MenuPage'
 import CheckoutPage from './pages/CheckoutPage'
 import MyOrdersPage from './pages/MyOrdersPage'
 import CouponsPage from './pages/CouponsPage'
+import ProfilePage from './pages/ProfilePage'
 import { CartProvider } from './context/CartContext'
 
 const AnimatedRoutes = () => {
@@ -30,6 +31,7 @@ const AnimatedRoutes = () => {
         <Route path="/checkout" element={<PageTransition><CheckoutPage /></PageTransition>} />
         <Route path="/my-orders" element={<PageTransition><MyOrdersPage /></PageTransition>} />
         <Route path="/coupons" element={<PageTransition><CouponsPage /></PageTransition>} />
+        <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   )

@@ -27,7 +27,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     }
 
     const menuItems = [
-        { icon: User, label: 'Información de cuenta', action: () => { } }, // Placeholder for Profile Edit
+        { icon: User, label: 'Información de cuenta', to: '/profile' },
         { icon: CreditCard, label: 'Métodos de pago', action: () => { } }, // Placeholder
         { icon: ShoppingBag, label: 'Órdenes recientes', to: '/my-orders' },
         { icon: Globe, label: 'Preferencia de comunicación', action: () => { } },
