@@ -3,7 +3,7 @@ import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
 import { ArrowLeft, Loader2, Save } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Link, useNavigate } from 'react-router-dom'
+
 import { toast } from 'sonner'
 import { countryCodes } from '../utils/countryCodes'
 
