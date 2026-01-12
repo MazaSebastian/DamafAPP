@@ -45,9 +45,15 @@ const UserHome = () => {
 
             {/* Top Header */}
             <header className="px-4 py-4 flex justify-between items-center">
-                <button className="p-2 text-white">
-                    <Menu className="w-6 h-6" />
-                </button>
+                <div className="flex items-center gap-3">
+                    <button className="text-white">
+                        <Menu className="w-6 h-6" />
+                    </button>
+                    <div className="flex flex-col">
+                        <span className="text-[10px] text-[var(--color-text-muted)] uppercase tracking-wider">Bienvenido</span>
+                        <span className="text-sm font-bold text-white leading-none">{user?.email?.split('@')[0]}</span>
+                    </div>
+                </div>
 
                 <div className="bg-[var(--color-secondary)] p-1.5 rounded-lg shadow-[0_0_15px_rgba(214,67,34,0.5)]">
                     <UtensilsCrossed className="text-white w-5 h-5" />
