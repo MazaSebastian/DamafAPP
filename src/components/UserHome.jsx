@@ -44,32 +44,37 @@ const UserHome = () => {
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
 
             {/* Top Header */}
-            <header className="px-4 py-4 flex justify-between items-center">
-                <div className="flex items-center gap-3">
-                    <button className="text-white">
-                        <Menu className="w-6 h-6" />
-                    </button>
-                    <div className="flex flex-col">
-                        <span className="text-sm font-bold text-white leading-tight">Bienvenido {user?.email?.split('@')[0]}!</span>
-                        <span className="text-[10px] text-[var(--color-text-muted)]">¿Con qué pensas bajonear hoy? 🍔</span>
-                    </div>
-                </div>
+            <header className="px-4 py-4 flex justify-between items-center relative z-10">
+                <button className="p-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                    <Menu className="w-6 h-6" />
+                </button>
 
-                <div className="bg-[var(--color-secondary)] p-1.5 rounded-lg shadow-[0_0_15px_rgba(214,67,34,0.5)]">
-                    <UtensilsCrossed className="text-white w-5 h-5" />
+                <div className="bg-[var(--color-secondary)] p-2 rounded-xl shadow-[0_0_15px_rgba(214,67,34,0.5)] transform hover:scale-105 transition-transform cursor-pointer">
+                    <UtensilsCrossed className="text-white w-6 h-6" />
                 </div>
 
                 {/* Admin Link or Sign Out */}
                 <div className="flex gap-2 items-center">
                     {role === 'admin' && (
-                        <Link to="/admin" className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-purple-700 transition-colors border border-transparent">
+                        <Link to="/admin" className="text-white text-[10px] font-bold px-3 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-purple-700 transition-colors border border-transparent uppercase tracking-wider">
                             Admin
                         </Link>
                     )}
-                    <button onClick={signOut} className="text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
+                    <button onClick={signOut} className="text-white text-[10px] font-bold px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/10 transition-colors uppercase tracking-wider">
                         Salir
                     </button>
-                </div>       </header>
+                </div>
+            </header>
+
+            {/* Welcome Section */}
+            <div className="px-4 pt-2 mb-6 text-center">
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
+                    Bienvenido, <span className="text-[var(--color-secondary)]">{user?.email?.split('@')[0]}</span>!
+                </h1>
+                <p className="text-[var(--color-text-muted)] text-sm flex items-center justify-center gap-2">
+                    ¿Con qué pensas bajonear hoy? <span className="text-xl">🍔</span>
+                </p>
+            </div>
 
             {/* Main Content */}
             <main className="px-4 max-w-lg mx-auto pt-2">
