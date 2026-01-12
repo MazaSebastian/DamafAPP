@@ -3,6 +3,7 @@ import { supabase } from '../supabaseClient'
 import { ArrowLeft, Search, Loader2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
 import MealBuilder from '../components/MealBuilder'
+import { MenuSkeleton } from '../components/skeletons/MenuSkeleton'
 
 const MenuPage = () => {
     const [categories, setCategories] = useState([])
@@ -107,9 +108,7 @@ const MenuPage = () => {
             {/* Product Grid */}
             <main className="px-4 py-4">
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-secondary)]" />
-                    </div>
+                    <MenuSkeleton />
                 ) : (
                     <>
                         <h2 className="text-xl font-bold mb-4 capitalize">

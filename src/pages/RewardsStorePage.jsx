@@ -5,6 +5,7 @@ import { Star, Lock, ChefHat, ArrowLeft, Loader2 } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import BottomNav from '../components/BottomNav'
+import { RewardSkeleton } from '../components/skeletons/RewardSkeleton'
 
 const RewardsStorePage = () => {
     const { user } = useAuth()
@@ -78,9 +79,7 @@ const RewardsStorePage = () => {
                 </div>
 
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-secondary)]" />
-                    </div>
+                    <RewardSkeleton />
                 ) : (
                     <div className="grid grid-cols-2 gap-4">
                         {rewards.map((item) => {

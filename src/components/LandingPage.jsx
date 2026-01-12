@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 import NewsCard from './NewsCard'
 import BottomNav from './BottomNav'
 import FloatingOrderButton from './FloatingOrderButton'
+import { NewsSkeleton } from './skeletons/NewsSkeleton'
 
 const LandingPage = () => {
     const [news, setNews] = useState([])
@@ -87,9 +88,7 @@ const LandingPage = () => {
             {/* Main Feed */}
             <main className="px-4 max-w-lg mx-auto">
                 {loading ? (
-                    <div className="flex justify-center py-20">
-                        <Loader2 className="w-8 h-8 animate-spin text-[var(--color-secondary)]" />
-                    </div>
+                    <NewsSkeleton />
                 ) : (
                     news.map(item => (
                         <NewsCard key={item.id} item={item} />

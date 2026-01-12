@@ -7,6 +7,7 @@ import LoyaltyBanner from './LoyaltyBanner'
 import NewsCard from './NewsCard'
 import BottomNav from './BottomNav'
 import FloatingOrderButton from './FloatingOrderButton'
+import { NewsSkeleton } from './skeletons/NewsSkeleton'
 
 const UserHome = () => {
     const { user, role, signOut } = useAuth()
@@ -82,9 +83,7 @@ const UserHome = () => {
 
                 {/* News Feed */}
                 {loading ? (
-                    <div className="flex justify-center py-10">
-                        <Loader2 className="animate-spin text-[var(--color-secondary)]" />
-                    </div>
+                    <NewsSkeleton />
                 ) : (
                     news.map(item => <NewsCard key={item.id} item={item} />)
                 )}

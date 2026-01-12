@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { ArrowLeft, Ticket, Copy, Loader2, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import { supabase } from '../supabaseClient'
+import { CouponSkeleton } from '../components/skeletons/CouponSkeleton'
 
 const CouponsPage = () => {
     const [coupons, setCoupons] = useState([])
@@ -52,9 +53,7 @@ const CouponsPage = () => {
 
             <main className="p-4 max-w-lg mx-auto space-y-4">
                 {loading ? (
-                    <div className="flex justify-center py-10">
-                        <Loader2 className="animate-spin text-[var(--color-secondary)]" />
-                    </div>
+                    <CouponSkeleton />
                 ) : coupons.length === 0 ? (
                     <div className="text-center py-10 text-[var(--color-text-muted)]">
                         <Ticket className="w-12 h-12 mx-auto mb-4 opacity-50" />

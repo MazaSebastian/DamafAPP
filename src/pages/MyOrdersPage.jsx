@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { Loader2, Clock, ChefHat, Check, ShoppingBag, ArrowRight } from 'lucide-react' // Added ArrowRight import
 import BottomNav from '../components/BottomNav'
 import { Link } from 'react-router-dom'
+import { OrderSkeleton } from '../components/skeletons/OrderSkeleton'
 
 const MyOrdersPage = () => {
     const { user } = useAuth()
@@ -108,7 +109,7 @@ const MyOrdersPage = () => {
 
             <main className="px-4 space-y-4">
                 {loading ? (
-                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-[var(--color-secondary)]" /></div>
+                    <OrderSkeleton />
                 ) : displayOrders.length > 0 ? (
                     displayOrders.map(order => {
                         const status = getStatusInfo(order.status)
