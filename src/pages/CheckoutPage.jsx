@@ -8,13 +8,22 @@ const CheckoutPage = () => {
     const { cart, removeFromCart, total, clearCart } = useCart()
     const navigate = useNavigate()
 
-    const [orderType, setOrderType] = useState('takeaway')
+    const [orderType, setOrderType] = useState(null)
     const [address, setAddress] = useState('')
 
     const handleCheckout = async () => {
+        if (!orderType) {
+            alert('⚠️ POR FAVOR SELECCIONA UNA OPCIÓN:\n\n🛵 DELIVERY (Envío a casa)\n🥡 RETIRO EN LOCAL (Pasar a buscar)')
+            return
+        }
+
         if (orderType === 'delivery' && !address.trim()) {
             alert('Por favor ingresa tu dirección de envío')
             return
+        }
+
+        if (orderType === 'takeaway') {
+            if (!confirm('⚠️ ATENCIÓN: RETIRO EN LOCAL 🥡\n\nHas seleccionado que pasarás a buscar el pedido por nuestra sucursal.\n\n¿Confirmar que NO es para envío?')) return
         }
 
         if (!confirm('¿Confirmar pedido por $' + total.toFixed(2) + '?')) return
@@ -176,8 +185,11 @@ const CheckoutPage = () => {
                         <span className="text-3xl font-bold text-white">${total.toFixed(2)}</span>
                     </div>
 
-                    <button onClick={handleCheckout} className="w-full bg-green-600 text-white py-4 rounded-xl font-bold text-lg hover:bg-green-500 shadow-lg shadow-green-900/20 active:scale-95 transition-all">
-                        {orderType === 'delivery' ? 'Pedir Delivery' : 'Confirmar Retiro'}
+                    <button onClick={handleCheckout} className={`w-full text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all
+                        ${!orderType ? 'bg-gray-600 cursor-not-allowed opacity-50' : 'bg-green-600 hover:bg-green-500 shadow-green-900/20'}`}>
+                        {orderType === 'delivery' ? 'Pedir Delivery' :
+                            orderType === 'takeaway' ? 'Confirmar Retiro' :
+                                'Seleccione método de entrega'}
                     </button>
                 </div>
             </div>
