@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, Check, Clock, X, ChefHat, Bell } from 'lucide-react'
+import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2 } from 'lucide-react'
 
 const OrdersManager = () => {
     const [orders, setOrders] = useState([])
@@ -53,13 +53,49 @@ const OrdersManager = () => {
         }
     }
 
+    const deleteOrder = async (orderId) => {
+        if (!confirm('¿Estás seguro de eliminar este pedido?')) return
+
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .eq('id', orderId)
+
+        if (!error) {
+            setOrders(orders.filter(o => o.id !== orderId))
+        } else {
+            console.error('Error deleting order:', error)
+            alert('Error al eliminar pedido')
+        }
+    }
+
+    const clearHistory = async () => {
+        if (!confirm('¿Estás seguro de eliminar TODOS los pedidos completados y cancelados?')) return
+        setLoading(true)
+
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .in('status', ['completed', 'cancelled', 'rejected'])
+
+        if (!error) {
+            await fetchOrders() // Refresh
+        } else {
+            console.error('Error clearing history:', error)
+            alert('Error al limpiar historial')
+        }
+        setLoading(false)
+    }
+
     const getStatusColor = (status) => {
         switch (status) {
             case 'pending': return 'bg-yellow-500/20 text-yellow-500'
-            case 'cooking': return 'bg-orange-500/20 text-orange-500' // Was 'preparing'
-            case 'packaging': return 'bg-blue-500/20 text-blue-500' // New "Preparando para enviar"
-            case 'sent': return 'bg-purple-500/20 text-purple-500' // New "Pedido Enviado"
+            case 'cooking': return 'bg-orange-500/20 text-orange-500'
+            case 'packaging': return 'bg-blue-500/20 text-blue-500'
+            case 'sent': return 'bg-purple-500/20 text-purple-500'
             case 'completed': return 'bg-gray-500/20 text-gray-400'
+            case 'cancelled':
+            case 'rejected': return 'bg-red-500/20 text-red-500'
             default: return 'bg-gray-500/20 text-gray-400'
         }
     }
@@ -68,10 +104,19 @@ const OrdersManager = () => {
 
     return (
         <div className="space-y-6">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-                <ChefHat className="text-[var(--color-secondary)]" />
-                Gestión de Pedidos
-            </h2>
+            <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                    <ChefHat className="text-[var(--color-secondary)]" />
+                    Gestión de Pedidos
+                </h2>
+                <button
+                    onClick={clearHistory}
+                    className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors"
+                >
+                    <Trash2 className="w-4 h-4" />
+                    Limpiar Completados
+                </button>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {orders.map(order => (
@@ -103,63 +148,78 @@ const OrdersManager = () => {
                                     </div>
                                 )}
                             </div>
-                            <span className="font-bold text-lg">${order.total}</span>
                         </div>
+                        <div className="text-right">
+                            <span className="font-bold text-lg block">${order.total}</span>
+                            <button
+                                onClick={() => deleteOrder(order.id)}
+                                className="text-[var(--color-text-muted)] hover:text-red-400 mt-1"
+                                title="Eliminar pedido"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
 
-                        {/* Items */}
-                        <div className="p-4 flex-1 space-y-3">
-                            {order.order_items?.map(item => (
-                                <div key={item.id} className="text-sm">
-                                    <div className="flex justify-between font-medium">
-                                        <span>1x {item.products?.name}</span>
-                                        <span className="text-[var(--color-text-muted)]">${item.price_at_time}</span>
-                                    </div>
-
-                                    {/* Sub-items details */}
-                                    <div className="pl-4 border-l border-white/10 mt-1 text-xs text-[var(--color-text-muted)] space-y-0.5">
-                                        {item.modifiers?.map((m, i) => (
-                                            <div key={i}>+ {m.name}</div>
-                                        ))}
-                                        {item.side_info && <div>+ {item.side_info.name}</div>}
-                                        {item.drink_info && <div>+ {item.drink_info.name}</div>}
-                                    </div>
+                        {/* Items */ }
+                    < div className = "p-4 flex-1 space-y-3" >
+                    {
+                        order.order_items?.map(item => (
+                            <div key={item.id} className="text-sm">
+                                <div className="flex justify-between font-medium">
+                                    <span>1x {item.products?.name}</span>
+                                    <span className="text-[var(--color-text-muted)]">${item.price_at_time}</span>
                                 </div>
-                            ))}
+
+                                {/* Sub-items details */}
+                                <div className="pl-4 border-l border-white/10 mt-1 text-xs text-[var(--color-text-muted)] space-y-0.5">
+                                    {item.modifiers?.map((m, i) => (
+                                        <div key={i}>+ {m.name}</div>
+                                    ))}
+                                    {item.side_info && <div>+ {item.side_info.name}</div>}
+                                    {item.drink_info && <div>+ {item.drink_info.name}</div>}
+                                </div>
+                            </div>
+                        ))
+                    }
                         </div>
 
-                        {/* Actions */}
-                        <div className="p-3 bg-[var(--color-background)]/30 grid grid-cols-3 gap-2">
-                            {order.status === 'pending' && (
-                                <button onClick={() => updateStatus(order.id, 'cooking')} className="col-span-3 bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
-                                    <ChefHat className="w-4 h-4" /> Empezar a Cocinar
-                                </button>
-                            )}
-                            {order.status === 'cooking' && (
-                                <button onClick={() => updateStatus(order.id, 'packaging')} className="col-span-3 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
-                                    <Check className="w-4 h-4" /> Preparar Envío
-                                </button>
-                            )}
-                            {order.status === 'packaging' && (
-                                <button onClick={() => updateStatus(order.id, 'sent')} className="col-span-3 bg-purple-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-purple-500 transition-colors flex items-center justify-center gap-2">
-                                    <Bell className="w-4 h-4" /> Enviar Pedido
-                                </button>
-                            )}
-                            {order.status === 'sent' && (
-                                <button onClick={() => updateStatus(order.id, 'completed')} className="col-span-3 bg-gray-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-gray-500 transition-colors flex items-center justify-center gap-2">
-                                    <Check className="w-4 h-4" /> Finalizar / Entregado
-                                </button>
-                            )}
-                        </div>
-                    </div>
-                ))}
-
-                {orders.length === 0 && (
-                    <div className="col-span-full py-20 text-center text-[var(--color-text-muted)]">
-                        No hay pedidos recientes.
-                    </div>
+            {/* Actions */}
+            <div className="p-3 bg-[var(--color-background)]/30 grid grid-cols-3 gap-2">
+                {order.status === 'pending' && (
+                    <button onClick={() => updateStatus(order.id, 'cooking')} className="col-span-3 bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
+                        <ChefHat className="w-4 h-4" /> Empezar a Cocinar
+                    </button>
+                )}
+                {order.status === 'cooking' && (
+                    <button onClick={() => updateStatus(order.id, 'packaging')} className="col-span-3 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4" /> Preparar Envío
+                    </button>
+                )}
+                {order.status === 'packaging' && (
+                    <button onClick={() => updateStatus(order.id, 'sent')} className="col-span-3 bg-purple-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-purple-500 transition-colors flex items-center justify-center gap-2">
+                        <Bell className="w-4 h-4" /> Enviar Pedido
+                    </button>
+                )}
+                {order.status === 'sent' && (
+                    <button onClick={() => updateStatus(order.id, 'completed')} className="col-span-3 bg-gray-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-gray-500 transition-colors flex items-center justify-center gap-2">
+                        <Check className="w-4 h-4" /> Finalizar / Entregado
+                    </button>
                 )}
             </div>
         </div>
+    ))
+}
+
+{
+    orders.length === 0 && (
+        <div className="col-span-full py-20 text-center text-[var(--color-text-muted)]">
+            No hay pedidos recientes.
+        </div>
+    )
+}
+            </div >
+        </div >
     )
 }
 
