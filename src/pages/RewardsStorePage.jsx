@@ -28,11 +28,21 @@ const RewardsStorePage = () => {
         fetchData()
     }, [user])
 
-    const handleRedeem = (item) => {
+    const handleRedeem = async (item) => {
         if (stars < item.cost) return
-        if (confirm(`¿Canjear "${item.name}" por ${item.cost} Estrellas?`)) {
-            alert('¡Canje realizado! (Simulado por ahora)')
-            // Future logic: Create transaction record, deduct stars, etc.
+        if (!confirm(`¿Canjear "${item.name}" por ${item.cost} Estrellas?`)) return
+
+        setLoading(true)
+        const { data, error } = await supabase.rpc('redeem_reward', { reward_id_input: item.id })
+        setLoading(false)
+
+        if (error) {
+            alert('Error al canjear: ' + error.message)
+        } else if (!data.success) {
+            alert(data.message)
+        } else {
+            alert(`¡Canje exitoso! 🎉\nTu código de canje es: ${data.redemption_id.slice(0, 8)}\n(Muéstralo en el mostrador)`)
+            setStars(prev => prev - item.cost) // Optimistic update
         }
     }
 
