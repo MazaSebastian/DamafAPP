@@ -7,7 +7,9 @@ const BottomNav = () => {
             <Link to="/">
                 <NavItem icon={<Home className="w-6 h-6" />} label="Inicio" active />
             </Link>
-            <NavItem icon={<UtensilsCrossed className="w-6 h-6" />} label="Pide aquí" />
+            <Link to="/menu">
+                <NavItem icon={<UtensilsCrossed className="w-6 h-6" />} label="Pide aquí" />
+            </Link>
             <Link to="/my-orders">
                 <NavItem icon={<ShoppingBag className="w-6 h-6" />} label="Pedidos" />
             </Link>
