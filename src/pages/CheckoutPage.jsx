@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { useCart } from '../context/CartContext'
 import { supabase } from '../supabaseClient'
 import { ArrowLeft, Trash2, ShoppingBag, Plus, CreditCard, MapPin, Store, Utensils, Ticket } from 'lucide-react'
+import { initMercadoPago } from '@mercadopago/sdk-react'
 
 const CheckoutPage = () => {
     const { cart, removeFromCart, total, clearCart } = useCart()
@@ -72,8 +73,6 @@ const CheckoutPage = () => {
     const finalTotal = total - discountAmount
 
     // Initialize Mercado Pago
-    import { initMercadoPago } from '@mercadopago/sdk-react'
-
     // Replace with your Public Key (or use environment variable)
     // For development, we can check if the env var exists, otherwise use a placeholder or handle gracefully.
     const MP_PUBLIC_KEY = import.meta.env.VITE_MP_PUBLIC_KEY
