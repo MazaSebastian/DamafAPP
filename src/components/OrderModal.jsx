@@ -83,18 +83,18 @@ const OrderModal = ({ isOpen, onClose }) => {
         // Finalize Order
         if (!selectedBurger) return
 
-        // 1. Add Burger
-        addToCart({ ...selectedBurger, modifiers: [], notes: 'Desde modal rápido' })
-
-        // 2. Add Side (if selected)
-        if (selectedSide) {
-            addToCart({ ...selectedSide, modifiers: [], notes: 'Acompañamiento modal' })
+        // Create a single Combo item for the cart
+        // CartContext expects structure: { main: product, modifiers: [], side: product, drink: product }
+        const comboItem = {
+            main: { ...selectedBurger, notes: 'Desde modal rápido' },
+            modifiers: [], // Initialize modifiers for the burger
+            side: selectedSide ? { ...selectedSide } : null,
+            drink: drink ? { ...drink } : null,
+            // You can add a specific type or ID if needed by your CartContext logic, 
+            // usually CartContext handles ID generation.
         }
 
-        // 3. Add Drink (if selected)
-        if (drink) {
-            addToCart({ ...drink, modifiers: [], notes: 'Bebida modal' })
-        }
+        addToCart(comboItem)
 
         toast.success('¡Combo completo agregado!')
         onClose()
