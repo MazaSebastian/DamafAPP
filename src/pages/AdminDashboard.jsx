@@ -88,6 +88,8 @@ const AdminDashboard = () => {
                     <CouponsManager />
                 ) : activeTab === 'Menu' ? (
                     <ProductManager />
+                ) : activeTab === 'Settings' ? (
+                    <SettingsManager />
                 ) : (
                     <>
                         {/* Stats Grid */}
