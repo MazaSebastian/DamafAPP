@@ -1,11 +1,13 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper } from 'lucide-react'
+import NewsManager from '../components/NewsManager'
 
 const AdminDashboard = () => {
     const { user, role, loading } = useAuth()
     const navigate = useNavigate()
+    const [activeTab, setActiveTab] = useState('Overview')
 
     useEffect(() => {
         if (!loading) {
@@ -37,11 +39,12 @@ const AdminDashboard = () => {
                     <h2 className="text-xl font-bold tracking-tight">ADMIN<span className="text-[var(--color-secondary)]">PANEL</span></h2>
                 </div>
                 <nav className="flex-1 px-4 space-y-2">
-                    <NavItem icon={<LayoutDashboard />} label="Overview" active />
-                    <NavItem icon={<ShoppingCart />} label="Orders" />
-                    <NavItem icon={<Package />} label="Inventory" />
-                    <NavItem icon={<Users />} label="Customers" />
-                    <NavItem icon={<Settings />} label="Settings" />
+                    <NavItem icon={<LayoutDashboard />} label="Overview" active={activeTab === 'Overview'} onClick={() => setActiveTab('Overview')} />
+                    <NavItem icon={<ShoppingCart />} label="Orders" active={activeTab === 'Orders'} onClick={() => setActiveTab('Orders')} />
+                    <NavItem icon={<Newspaper />} label="Novedades" active={activeTab === 'Novedades'} onClick={() => setActiveTab('Novedades')} />
+                    <NavItem icon={<Package />} label="Inventory" active={activeTab === 'Inventory'} onClick={() => setActiveTab('Inventory')} />
+                    <NavItem icon={<Users />} label="Customers" active={activeTab === 'Customers'} onClick={() => setActiveTab('Customers')} />
+                    <NavItem icon={<Settings />} label="Settings" active={activeTab === 'Settings'} onClick={() => setActiveTab('Settings')} />
                 </nav>
                 <div className="p-4 border-t border-white/5">
                     <div className="flex items-center gap-3">
@@ -59,62 +62,68 @@ const AdminDashboard = () => {
             {/* Main Content */}
             <main className="flex-1 p-6 md:p-8 overflow-y-auto">
                 <header className="flex justify-between items-center mb-8">
-                    <h1 className="text-2xl font-bold">Dashboard Overview</h1>
+                    <h1 className="text-2xl font-bold">{activeTab}</h1>
                     <div className="md:hidden block">
                         {/* Mobile Menu Trigger Placeholder */}
                         <button className="bg-[var(--color-surface)] p-2 rounded-lg">Menu</button>
                     </div>
                 </header>
 
-                {/* Stats Grid */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <StatCard title="Total Revenue" value="$12,345" trend="+12%" />
-                    <StatCard title="Active Orders" value="23" trend="Pending" color="text-orange-400" />
-                    <StatCard title="Total Products" value="45" />
-                    <StatCard title="Registered Users" value="1,234" trend="+5%" />
-                </div>
+                {activeTab === 'Novedades' ? (
+                    <NewsManager />
+                ) : (
+                    <>
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <StatCard title="Total Revenue" value="$12,345" trend="+12%" />
+                            <StatCard title="Active Orders" value="23" trend="Pending" color="text-orange-400" />
+                            <StatCard title="Total Products" value="45" />
+                            <StatCard title="Registered Users" value="1,234" trend="+5%" />
+                        </div>
 
-                {/* Recent Orders Placeholder */}
-                <div className="bg-[var(--color-surface)] rounded-2xl p-6 border border-white/5">
-                    <h3 className="text-lg font-bold mb-4">Recent Orders</h3>
-                    <div className="overflow-x-auto">
-                        <table className="w-full text-left text-sm text-[var(--color-text-muted)]">
-                            <thead className="bg-[var(--color-background)]/50 text-[var(--color-text-main)] uppercase text-xs">
-                                <tr>
-                                    <th className="p-3 rounded-l-lg">Order ID</th>
-                                    <th className="p-3">Customer</th>
-                                    <th className="p-3">Status</th>
-                                    <th className="p-3">Total</th>
-                                    <th className="p-3 rounded-r-lg">Date</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr className="border-b border-white/5">
-                                    <td className="p-3">#ORD-001</td>
-                                    <td className="p-3 font-medium text-[var(--color-text-main)]">Juan Perez</td>
-                                    <td className="p-3"><span className="bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded text-xs">Cooking</span></td>
-                                    <td className="p-3">$25.00</td>
-                                    <td className="p-3">Today, 10:30 AM</td>
-                                </tr>
-                                <tr className="border-b border-white/5">
-                                    <td className="p-3">#ORD-002</td>
-                                    <td className="p-3 font-medium text-[var(--color-text-main)]">Maria Rodriguez</td>
-                                    <td className="p-3"><span className="bg-green-500/20 text-green-500 px-2 py-0.5 rounded text-xs">Ready</span></td>
-                                    <td className="p-3">$18.50</td>
-                                    <td className="p-3">Today, 10:15 AM</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
+                        {/* Recent Orders Placeholder */}
+                        <div className="bg-[var(--color-surface)] rounded-2xl p-6 border border-white/5">
+                            <h3 className="text-lg font-bold mb-4">Recent Orders</h3>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left text-sm text-[var(--color-text-muted)]">
+                                    <thead className="bg-[var(--color-background)]/50 text-[var(--color-text-main)] uppercase text-xs">
+                                        <tr>
+                                            <th className="p-3 rounded-l-lg">Order ID</th>
+                                            <th className="p-3">Customer</th>
+                                            <th className="p-3">Status</th>
+                                            <th className="p-3">Total</th>
+                                            <th className="p-3 rounded-r-lg">Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr className="border-b border-white/5">
+                                            <td className="p-3">#ORD-001</td>
+                                            <td className="p-3 font-medium text-[var(--color-text-main)]">Juan Perez</td>
+                                            <td className="p-3"><span className="bg-yellow-500/20 text-yellow-500 px-2 py-0.5 rounded text-xs">Cooking</span></td>
+                                            <td className="p-3">$25.00</td>
+                                            <td className="p-3">Today, 10:30 AM</td>
+                                        </tr>
+                                        <tr className="border-b border-white/5">
+                                            <td className="p-3">#ORD-002</td>
+                                            <td className="p-3 font-medium text-[var(--color-text-main)]">Maria Rodriguez</td>
+                                            <td className="p-3"><span className="bg-green-500/20 text-green-500 px-2 py-0.5 rounded text-xs">Ready</span></td>
+                                            <td className="p-3">$18.50</td>
+                                            <td className="p-3">Today, 10:15 AM</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </>
+                )}
             </main>
         </div>
     )
 }
 
 // Helper Components
-const NavItem = ({ icon, label, active }) => (
-    <button className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-purple-900/20' : 'text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'}`}>
+const NavItem = ({ icon, label, active, onClick }) => (
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-purple-900/20' : 'text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'}`}>
         {icon && <span className="w-5 h-5">{icon}</span>}
         <span className="font-medium">{label}</span>
     </button>
