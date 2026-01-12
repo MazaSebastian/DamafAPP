@@ -76,9 +76,9 @@ const LandingPage = () => {
                             ¡Bienvenido! Podés ganar puntos con cada compra y canjearlos por productos en la tienda online!
                         </p>
                     </div>
-                    <button className="bg-[#3e1c0f] border border-[#7c4b38] text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-[#5a2a18] transition-colors whitespace-nowrap">
+                    <Link to="/club-info" className="bg-[#3e1c0f] border border-[#7c4b38] text-white text-xs font-bold px-3 py-1.5 rounded-full hover:bg-[#5a2a18] transition-colors whitespace-nowrap">
                         Detalles
-                    </button>
+                    </Link>
                 </div>
             </div>
 

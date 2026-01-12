@@ -3,6 +3,7 @@ import { AuthProvider } from './context/AuthContext'
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
 import AdminDashboard from './pages/AdminDashboard'
+import ClubInfoPage from './pages/ClubInfoPage'
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/club-info" element={<ClubInfoPage />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
