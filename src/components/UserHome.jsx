@@ -8,7 +8,7 @@ import NewsCard from './NewsCard'
 import BottomNav from './BottomNav'
 
 const UserHome = () => {
-    const { user, signOut } = useAuth()
+    const { user, role, signOut } = useAuth()
     const [stars, setStars] = useState(0)
     const [news, setNews] = useState([])
     const [loading, setLoading] = useState(true)
@@ -53,12 +53,16 @@ const UserHome = () => {
                 </div>
 
                 {/* Admin Link or Sign Out */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-center">
+                    {role === 'admin' && (
+                        <Link to="/admin" className="text-white text-xs font-bold px-3 py-1.5 rounded-full bg-[var(--color-primary)] hover:bg-purple-700 transition-colors border border-transparent">
+                            Admin
+                        </Link>
+                    )}
                     <button onClick={signOut} className="text-white text-xs font-bold px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/10 transition-colors">
                         Salir
                     </button>
-                </div>
-            </header>
+                </div>       </header>
 
             {/* Main Content */}
             <main className="px-4 max-w-lg mx-auto pt-2">
