@@ -19,29 +19,52 @@ const UserHome = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
     useEffect(() => {
-        const fetchData = async () => {
-            // Fetch User Stars
-            if (user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('stars')
-                    .eq('id', user.id)
-                    .single()
-                if (profile) setStars(profile.stars || 0)
+        let mounted = true
+        // Safety timeout
+        const timeout = setTimeout(() => {
+            if (mounted) {
+                console.warn('Home loading timed out')
+                setLoading(false)
             }
+        }, 5000)
 
-            // Fetch News
-            const { data: newsData } = await supabase
-                .from('news_events')
-                .select('*')
-                .order('created_at', { ascending: false })
+        const fetchData = async () => {
+            try {
+                // Fetch User Stars
+                if (user) {
+                    const { data: profile, error: profileError } = await supabase
+                        .from('profiles')
+                        .select('stars')
+                        .eq('id', user.id)
+                        .single()
 
-            if (newsData) setNews(newsData)
+                    if (!profileError && profile && mounted) {
+                        setStars(profile.stars || 0)
+                    }
+                }
 
-            setLoading(false)
+                // Fetch News
+                const { data: newsData, error: newsError } = await supabase
+                    .from('news_events')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+
+                if (!newsError && newsData && mounted) {
+                    setNews(newsData)
+                }
+            } catch (error) {
+                console.error('Error fetching home data:', error)
+            } finally {
+                if (mounted) setLoading(false)
+            }
         }
 
         fetchData()
+
+        return () => {
+            mounted = false
+            clearTimeout(timeout)
+        }
     }, [user])
 
     return (
