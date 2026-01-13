@@ -10,24 +10,12 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Safety timeout
-        const timeout = setTimeout(() => {
-            setLoading((current) => {
-                if (current) {
-                    console.warn('Auth loading timed out, forcing render.')
-                    return false
-                }
-                return current
-            })
-        }, 3000)
-
         // Check active sessions and sets the user
         supabase.auth.getSession().then(({ data: { session } }) => {
             setUser(session?.user ?? null)
+            setLoading(false) // Unblock UI immediately
             if (session?.user) {
                 fetchProfile(session.user.id)
-            } else {
-                setLoading(false)
             }
         }).catch(err => {
             console.error('Session check failed', err)
@@ -38,37 +26,41 @@ export const AuthProvider = ({ children }) => {
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
             console.log('Auth state changed:', _event)
             setUser(session?.user ?? null)
+            // If we just signed in, loading might be true, so ensure it's false
+            setLoading(false)
+
             if (session?.user) {
                 await fetchProfile(session.user.id)
             } else {
                 setProfile(null)
                 setRole(null)
-                setLoading(false)
             }
         })
 
-        return () => {
-            subscription.unsubscribe()
-            clearTimeout(timeout)
-        }
+        return () => subscription.unsubscribe()
     }, [])
 
     const fetchProfile = async (userId) => {
         try {
+            console.log('Fetching profile for:', userId)
             const { data, error } = await supabase
                 .from('profiles')
                 .select('*')
                 .eq('id', userId)
                 .single()
 
-            if (!error && data) {
+            if (error) {
+                console.warn('Error fetching profile (RLS?):', error)
+                return
+            }
+
+            if (data) {
+                console.log('Profile loaded:', data.full_name)
                 setProfile(data)
                 setRole(data.role)
             }
         } catch (error) {
-            console.error('Error loading profile:', error)
-        } finally {
-            setLoading(false)
+            console.error('Error loading profile logic:', error)
         }
     }
 
