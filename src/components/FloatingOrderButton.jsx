@@ -1,11 +1,29 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ShoppingBag } from 'lucide-react'
+import { ShoppingBag, XCircle } from 'lucide-react'
 import OrderModal from './OrderModal'
+import { useStoreStatus } from '../hooks/useStoreStatus'
+import { toast } from 'sonner'
 
 const FloatingOrderButton = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const navigate = useNavigate()
+    const { isOpen, loading } = useStoreStatus()
+
+    if (loading) return null
+
+    if (!isOpen) {
+        return (
+            <button
+                onClick={() => toast.error('El local se encuentra CERRADO. ¡Volvemos pronto! 😴', { duration: 4000 })}
+                className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-800 text-gray-400 px-6 py-3 rounded-full flex items-center gap-2 z-50 font-bold border-2 border-white/10 grayscale cursor-not-allowed"
+                style={{ marginBottom: 'env(safe-area-inset-bottom)' }}
+            >
+                <XCircle className="w-5 h-5" />
+                LOCAL CERRADO
+            </button>
+        )
+    }
 
     return (
         <>
