@@ -47,7 +47,6 @@ const DebugConnection = () => {
     // if (status === 'connected') return null // Commented out to force visibility for now
 
     return (
-    return (
         <div className="bg-black/40 rounded-lg p-3 border border-white/5 mx-2 mb-2 text-xs">
             <div className="flex items-center gap-2 mb-1">
                 {status === 'checking' && <Loader2 className="w-3 h-3 animate-spin text-yellow-400" />}
