@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2 } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut } from 'lucide-react'
 import NewsManager from '../components/NewsManager'
 import RewardsManager from '../components/RewardsManager'
 import ProductManager from '../components/ProductManager'
@@ -15,7 +15,7 @@ import CustomersManager from '../components/CustomersManager'
 
 
 const AdminDashboard = () => {
-    const { user, role, loading } = useAuth()
+    const { user, role, loading, signOut } = useAuth()
     const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState('Overview')
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
@@ -32,6 +32,11 @@ const AdminDashboard = () => {
             }
         }
     }, [user, role, loading, navigate])
+
+    const handleLogout = async () => {
+        await signOut()
+        navigate('/login')
+    }
 
     if (loading) return (
         <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
@@ -83,6 +88,13 @@ const AdminDashboard = () => {
                             <p className="text-xs text-[var(--color-text-muted)] capitalize">{role}</p>
                         </div>
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        className="mt-3 w-full flex items-center justify-center gap-2 p-2 rounded-lg text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors text-sm font-medium"
+                    >
+                        <LogOut className="w-4 h-4" />
+                        Cerrar Sesión
+                    </button>
                 </div>
             </aside>
 
