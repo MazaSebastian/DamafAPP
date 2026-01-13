@@ -1,17 +1,23 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowLeft, Shield } from 'lucide-react'
+import { ArrowLeft, Shield, Home } from 'lucide-react'
 
 const PrivacyPolicyPage = () => {
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-24 text-white">
             {/* Header */}
             <header className="fixed top-0 left-0 right-0 bg-[var(--color-surface)]/80 backdrop-blur-md z-50 border-b border-white/5 px-4 py-4">
-                <div className="max-w-3xl mx-auto flex items-center gap-4">
-                    <Link to="/profile" className="p-2 hover:bg-white/10 rounded-full transition-colors">
-                        <ArrowLeft className="w-6 h-6" />
+                <div className="max-w-3xl mx-auto flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <Link to="/profile" className="p-2 -ml-2 hover:bg-white/10 rounded-full transition-colors">
+                            <ArrowLeft className="w-6 h-6" />
+                        </Link>
+                        <h1 className="text-xl font-bold">Políticas de Privacidad</h1>
+                    </div>
+
+                    <Link to="/" className="p-2 -mr-2 hover:bg-white/10 rounded-full transition-colors">
+                        <Home className="w-6 h-6 text-[var(--color-primary)]" />
                     </Link>
-                    <h1 className="text-xl font-bold">Políticas de Privacidad</h1>
                 </div>
             </header>
 
