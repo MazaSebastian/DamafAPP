@@ -76,9 +76,11 @@ function App() {
         }}
       />
       <AuthProvider>
-        <CartProvider>
-          <AnimatedRoutes />
-        </CartProvider>
+        <LanguageProvider>
+          <CartProvider>
+            <AnimatedRoutes />
+          </CartProvider>
+        </LanguageProvider>
       </AuthProvider>
     </BrowserRouter>
   )
