@@ -53,10 +53,7 @@ const LoginPage = () => {
             <div className="z-10 w-full max-w-sm">
                 {/* Brand Logo Section */}
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-32 h-32 rounded-full bg-[#1a1a2e] border-4 border-[var(--color-surface)] shadow-2xl flex items-center justify-center mb-6 overflow-hidden relative">
-                        <img src="/logo-damaf.png" alt="Damafa" className="w-full h-full object-cover" />
-                    </div>
-                    <h1 className="text-3xl font-black text-white tracking-tight mb-2">DAMAFA</h1>
+                    <img src="/logo-damaf.png" alt="DAMAFAPP" className="h-24 w-auto drop-shadow-2xl mb-4 hover:scale-105 transition-transform" />
                     <p className="text-[var(--color-text-muted)] text-center max-w-xs">
                         {isSignUp ? 'Únete al club y disfruta de las mejores hamburguesas.' : '¡Qué bueno verte de nuevo! ¿Sale bajón? 🍔'}
                     </p>
