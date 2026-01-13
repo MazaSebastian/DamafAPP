@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, UtensilsCrossed, Loader2 } from 'lucide-react'
+import { UtensilsCrossed, Loader2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import LoyaltyBanner from './LoyaltyBanner'
@@ -8,24 +8,24 @@ import NewsCard from './NewsCard'
 import BottomNav from './BottomNav'
 import FloatingOrderButton from './FloatingOrderButton'
 import { NewsSkeleton } from './skeletons/NewsSkeleton'
-import Sidebar from './Sidebar'
 import StoreInfoHeader from './StoreInfoHeader'
 
 const UserHome = () => {
     const { user, profile, role, signOut } = useAuth()
     const [news, setNews] = useState([])
     const [loading, setLoading] = useState(true)
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
     // Use stars from global profile if available
     const stars = profile?.stars || 0
 
     console.log('UserHome Render. Loading:', loading, 'Stars:', stars)
 
+    // ... useEffect remains the same ...
+
     useEffect(() => {
         let mounted = true
 
-        // Timeout to force show content if DB hangs
+        // Timeout force show
         const timeout = setTimeout(() => {
             if (mounted && loading) {
                 console.warn('Home news loading timed out - Forcing display')
@@ -35,7 +35,6 @@ const UserHome = () => {
 
         const fetchNews = async () => {
             try {
-                // Only Fetch News (Stars come from AuthContext now)
                 console.log('Fetching news...')
                 const { data: newsData, error: newsError } = await supabase
                     .from('news_events')
@@ -45,7 +44,6 @@ const UserHome = () => {
                 if (newsError) throw newsError
 
                 if (newsData && mounted) {
-                    console.log('News loaded:', newsData.length)
                     setNews(newsData)
                 }
             } catch (error) {
@@ -61,21 +59,16 @@ const UserHome = () => {
             mounted = false
             clearTimeout(timeout)
         }
-    }, []) // Run once on mount, we don't need to re-run on user change as it's handled by mount
+    }, [])
 
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             {/* Top Header */}
-            {/* Top Header */}
             <header className="px-4 py-6 flex justify-between items-center relative z-10">
-                <button
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="p-2 text-white hover:bg-white/10 rounded-full transition-colors relative z-20"
-                >
-                    <Menu className="w-6 h-6" />
-                </button>
+                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                    <img src="/logo-damaf.png" alt="Logo" className="w-6 h-auto" />
+                </div>
 
 
 
