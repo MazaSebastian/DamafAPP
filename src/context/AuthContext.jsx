@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { supabase } from '../supabaseClient'
+import { toast } from 'sonner'
 
 const AuthContext = createContext()
 
@@ -31,8 +32,8 @@ export const AuthProvider = ({ children }) => {
                     setUser(session?.user ?? null)
 
                     if (session?.user) {
-                        // WAIT for profile before opening the app
-                        await fetchProfile(session.user.id)
+                        // Fetch profile in background
+                        fetchProfile(session.user.id)
                     }
                 }
             } catch (error) {
@@ -52,12 +53,13 @@ export const AuthProvider = ({ children }) => {
             setUser(session?.user ?? null)
 
             if (session?.user) {
-                // If logging in, pause loading until profile is ready
-                await fetchProfile(session.user.id)
+                // Fetch profile in background, don't block
+                fetchProfile(session.user.id)
             } else {
                 setProfile(null)
                 setRole(null)
             }
+            // Immediate load
             setLoading(false)
         })
 
@@ -78,6 +80,7 @@ export const AuthProvider = ({ children }) => {
 
             if (error) {
                 console.error('Error fetching profile:', error)
+                toast.error('Error al cargar perfil: ' + (error.message || 'Error desconocido'))
                 // Even if there's an error, we should clear the profile/role
                 setProfile(null)
                 setRole(null)

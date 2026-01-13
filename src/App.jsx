@@ -21,6 +21,7 @@ import TermsPage from './pages/TermsPage'
 import DeliveryDashboard from './components/DeliveryDashboard'
 import RiderInterface from './components/RiderInterface'
 import { CartProvider } from './context/CartContext'
+import DebugConnection from './components/DebugConnection'
 
 const AnimatedRoutes = () => {
   const location = useLocation()
@@ -77,6 +78,7 @@ function App() {
         }}
       />
       <AuthProvider>
+        <DebugConnection />
         <LanguageProvider>
           <CartProvider>
             <AnimatedRoutes />
