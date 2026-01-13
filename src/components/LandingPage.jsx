@@ -1,17 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Menu, UtensilsCrossed, Loader2 } from 'lucide-react'
+import { UtensilsCrossed, Loader2 } from 'lucide-react'
 import { supabase } from '../supabaseClient'
 import NewsCard from './NewsCard'
 import BottomNav from './BottomNav'
 import FloatingOrderButton from './FloatingOrderButton'
 import { NewsSkeleton } from './skeletons/NewsSkeleton'
-import Sidebar from './Sidebar'
 
 const LandingPage = () => {
     const [news, setNews] = useState([])
     const [loading, setLoading] = useState(true)
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
     useEffect(() => {
         const fetchNews = async () => {
@@ -53,16 +51,10 @@ const LandingPage = () => {
 
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-20"> {/* pb-20 for bottom nav */}
-            <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
             {/* Top Bar */}
             <header className="fixed top-0 w-full bg-[var(--color-background)]/90 backdrop-blur-md z-50 px-4 py-6 flex justify-between items-center border-b border-white/5 relative">
-                <button
-                    onClick={() => setIsSidebarOpen(true)}
-                    className="p-2 text-white relative z-20"
-                >
-                    <Menu className="w-6 h-6" />
-                </button>
+                <div></div>
 
                 <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 transform hover:scale-105 transition-transform z-10">
                     <img src="/logo-damaf.png" alt="DamafAPP" className="h-16 w-auto drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]" />
