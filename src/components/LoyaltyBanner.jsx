@@ -1,53 +1,81 @@
-import { Star } from 'lucide-react'
+import { Star, Trophy } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useLoyaltyLevels } from '../hooks/useLoyaltyLevels'
+import { useAuth } from '../context/AuthContext'
 
 const LoyaltyBanner = ({ stars = 0 }) => {
-    // Logic for progress bar: assuming 100 stars is the goal
-    const progress = Math.min((stars / 100) * 100, 100)
+    const { profile } = useAuth()
+    const { currentLevel, nextLevel, progress, starsToNext, loading } = useLoyaltyLevels()
+
+    // While settings load, we might flicker or show default. 
+    // Ideally we could show a skeleton, but for now we render gracefully.
+    if (loading) return null
 
     return (
-        <div className="bg-gradient-to-r from-[#502314] to-[#7c3a1f] rounded-2xl p-4 text-white shadow-xl relative overflow-hidden mb-6">
+        <div className="bg-gradient-to-r from-[#502314] to-[#7c3a1f] rounded-2xl p-5 text-white shadow-xl relative overflow-hidden mb-6 border border-white/5">
+
+            {/* Level Badge Background */}
+            <Trophy className="absolute -right-6 -bottom-6 w-32 h-32 text-white/5 rotate-12" />
+
             {/* Header */}
-            <div className="flex justify-between items-start mb-6">
+            <div className="flex justify-between items-start mb-6 relative z-10">
                 <div>
-                    <p className="bg-[var(--color-secondary)] text-xs font-bold px-2 py-0.5 rounded-sm inline-block mb-2">
-                        Pide hoy por la APP y duplica Estrellas!
-                    </p>
-                    <div className="flex items-center gap-2">
-                        <Star className="w-8 h-8 fill-yellow-400 text-yellow-500" />
-                        <span className="text-4xl font-bold">{stars}</span>
+                    <div className={`text-[10px] font-bold px-2 py-0.5 rounded-sm inline-block mb-2 uppercase tracking-wide bg-white/10 border border-white/10 ${currentLevel.color.replace('text-', 'text-')}`}>
+                        Nivel {currentLevel.name}
                     </div>
-                    <p className="text-xs opacity-80 mt-1">Estrellas disponibles</p>
+                    <div className="flex items-center gap-2">
+                        <Star className="w-8 h-8 fill-yellow-400 text-yellow-500 shadow-lg" />
+                        <span className="text-4xl font-bold drop-shadow-md">{stars}</span>
+                    </div>
+                    <p className="text-xs opacity-80 mt-1">Estrellas en billetera</p>
                 </div>
-                <Link to="/rewards" className="bg-white text-black text-xs font-bold px-4 py-1.5 rounded-full hover:bg-gray-100 transition-colors">
-                    MI CLUB
+                <Link to="/rewards" className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-4 py-2 rounded-full hover:bg-white/20 transition-colors">
+                    MI CLUB ➜
                 </Link>
             </div>
 
-            {/* Progress Bar */}
-            <div className="relative h-2 bg-black/30 rounded-full mb-6">
-                <div
-                    className="absolute top-0 left-0 h-full bg-white rounded-full transition-all duration-1000"
-                    style={{ width: `${progress}%` }}
-                ></div>
+            {/* Progress Bar Container */}
+            <div className="relative z-10">
+                <div className="flex justify-between text-xs mb-1.5 font-medium">
+                    <span className={currentLevel.color}>{currentLevel.name}</span>
+                    {nextLevel ? (
+                        <span className="text-white/60">Próximo: {nextLevel.name}</span>
+                    ) : (
+                        <span className="text-yellow-400">¡Nivel Gold! 🌟</span>
+                    )}
+                </div>
 
-                {/* Markers */}
-                {[0, 20, 40, 60, 80, 100].map((val) => (
-                    <div key={val} className="absolute top-1/2 -translate-y-1/2 w-2 h-2 bg-white/20 rounded-full" style={{ left: `${val}%` }}></div>
-                ))}
-            </div>
+                <div className="relative h-2.5 bg-black/40 rounded-full mb-2 overflow-hidden border border-white/5">
+                    <div
+                        className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ${currentLevel.bg}`}
+                        style={{ width: `${progress}%` }}
+                    ></div>
+                </div>
 
-            {/* Labels */}
-            <div className="flex justify-between text-[10px] font-semibold opacity-70 px-0.5">
-                <span>0</span>
-                <span>20</span>
-                <span>40</span>
-                <span>60</span>
-                <span>80</span>
-                <span>100</span>
+                <div className="flex justify-between items-start">
+                    {/* Benefits / Rewards Status */}
+                    <div className="text-[10px] text-white/50 max-w-[60%]">
+                        <span className="uppercase font-bold text-white/70 block mb-0.5">Beneficios:</span>
+                        {currentLevel.benefits?.join(' • ')}
+                    </div>
+
+                    <div className="text-right">
+                        {nextLevel ? (
+                            <p className="text-[10px] opacity-70">
+                                Faltan <span className="font-bold text-white">{starsToNext}</span> para subir
+                            </p>
+                        ) : (
+                            <p className="text-[10px] opacity-70">
+                                <span className="font-bold text-yellow-400">{starsToNext} stars</span> para tu próxima bebida
+                            </p>
+                        )}
+                    </div>
+                </div>
             </div>
         </div>
     )
 }
 
 export default LoyaltyBanner
+
+

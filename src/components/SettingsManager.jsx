@@ -61,7 +61,10 @@ const SettingsManager = () => {
         'store_lng': 'Longitud del Local',
         'store_schedule_text': 'Horarios de Atención',
         'store_slogan': 'Slogan del Local',
-        'store_status': 'Estado del Local (Abierto/Cerrado)'
+        'store_status': 'Estado del Local (Abierto/Cerrado)',
+        'loyalty_earning_divisor': 'Divisor de Puntos (Monto para 1 estrella)',
+        'loyalty_level_green': 'Nivel Green (Estrellas necesarias)',
+        'loyalty_level_gold': 'Nivel Gold (Estrellas necesarias)'
     }
 
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-primary)]" /></div>

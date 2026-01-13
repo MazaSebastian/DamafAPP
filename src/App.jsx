@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { AuthProvider } from './context/AuthContext'
 import { LanguageProvider } from './context/LanguageContext'
+import { SettingsProvider } from './context/SettingsContext'
 import { AnimatePresence } from 'framer-motion'
 import PageTransition from './components/PageTransition'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -77,14 +78,16 @@ function App() {
           },
         }}
       />
-      <AuthProvider>
-        <DebugConnection />
-        <LanguageProvider>
-          <CartProvider>
-            <AnimatedRoutes />
-          </CartProvider>
-        </LanguageProvider>
-      </AuthProvider>
+      <SettingsProvider>
+        <AuthProvider>
+          <DebugConnection />
+          <LanguageProvider>
+            <CartProvider>
+              <AnimatedRoutes />
+            </CartProvider>
+          </LanguageProvider>
+        </AuthProvider>
+      </SettingsProvider>
     </BrowserRouter>
   )
 }
