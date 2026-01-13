@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { MapPin, Clock, Instagram } from 'lucide-react'
 import { motion } from 'framer-motion'
+import { useStoreStatus } from '../hooks/useStoreStatus'
 
 const StoreInfoHeader = () => {
+    const { isOpen, loading: statusLoading } = useStoreStatus()
     const [info, setInfo] = useState({
         slogan: 'Perfectamente desubicadas.',
         address: 'Carapachay, Vicente López',
         schedule: 'Jueves a Domingos de 20hs a 23hs',
-        status: 'open',
         instagram: 'https://instagram.com/damafa'
     })
     const [loading, setLoading] = useState(true)
@@ -22,7 +23,6 @@ const StoreInfoHeader = () => {
                     if (item.key === 'store_slogan') newInfo.slogan = item.value
                     if (item.key === 'store_address') newInfo.address = item.value
                     if (item.key === 'store_schedule_text') newInfo.schedule = item.value
-                    if (item.key === 'store_status') newInfo.status = item.value
                     if (item.key === 'store_instagram') newInfo.instagram = item.value
                 })
                 setInfo(newInfo)
@@ -32,7 +32,7 @@ const StoreInfoHeader = () => {
 
         fetchInfo()
 
-        // Realtime updates for status changes (open/closed)
+        // Realtime updates for text fields
         const channel = supabase
             .channel('store_info_header')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'app_settings' }, fetchInfo)
@@ -41,7 +41,7 @@ const StoreInfoHeader = () => {
         return () => supabase.removeChannel(channel)
     }, [])
 
-    if (loading) return <div className="h-48 animate-pulse bg-white/5 rounded-xl mb-6"></div>
+    if (loading || statusLoading) return <div className="h-48 animate-pulse bg-white/5 rounded-xl mb-6"></div>
 
     return (
         <div className="text-center mb-8 relative">
@@ -73,7 +73,7 @@ const StoreInfoHeader = () => {
 
                 {/* Status Indicator */}
                 <div className="flex justify-center my-4">
-                    {info.status === 'open' ? (
+                    {isOpen ? (
                         <div className="bg-green-500/10 border border-green-500/50 text-green-400 px-6 py-2 rounded-full font-bold text-sm flex items-center gap-2 shadow-[0_0_15px_rgba(34,197,94,0.3)]">
                             <span className="relative flex h-3 w-3">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>

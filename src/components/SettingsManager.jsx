@@ -59,9 +59,9 @@ const SettingsManager = () => {
         'store_instagram': 'Instagram',
         'store_lat': 'Latitud del Local',
         'store_lng': 'Longitud del Local',
-        'store_schedule_text': 'Horarios de Atención',
+        'store_schedule_text': 'Texto Horarios (Footer)',
         'store_slogan': 'Slogan del Local',
-        'store_status': 'Estado del Local (Abierto/Cerrado)',
+        'store_schedule': 'Configuración de Horarios Automáticos',
         'loyalty_earning_divisor': 'Divisor de Puntos (Monto para 1 estrella)',
         'loyalty_level_green': 'Nivel Green (Estrellas necesarias)',
         'loyalty_level_gold': 'Nivel Gold (Estrellas necesarias)',
@@ -70,10 +70,21 @@ const SettingsManager = () => {
         'loyalty_benefits_gold': 'Beneficios Nivel Gold (separados por coma)'
     }
 
+    const DAYS_MAP = {
+        0: 'Domingo',
+        1: 'Lunes',
+        2: 'Martes',
+        3: 'Miércoles',
+        4: 'Jueves',
+        5: 'Viernes',
+        6: 'Sábado'
+    }
+
     // Helper to group settings
     const getSettingsByCategory = (category) => {
         return settings.filter(s => {
-            if (category === 'tienda') return s.key.startsWith('store_')
+            // Updated to exclude legacy settings if they still exist in DB
+            if (category === 'tienda') return s.key.startsWith('store_') && s.key !== 'store_mode' && s.key !== 'store_status'
             if (category === 'delivery') return s.key.startsWith('delivery_')
             if (category === 'loyalty') return s.key.startsWith('loyalty_') || s.key.startsWith('stars_')
             return false
@@ -86,27 +97,91 @@ const SettingsManager = () => {
         { id: 'loyalty', label: 'Fidelización' }
     ]
 
+    const handleScheduleChange = (scheduleJSON, dayIndex, field, value) => {
+        try {
+            const schedule = JSON.parse(scheduleJSON)
+            if (!schedule[dayIndex]) schedule[dayIndex] = { active: false, start: '19:00', end: '23:00' }
+
+            schedule[dayIndex][field] = value
+
+            return JSON.stringify(schedule)
+        } catch (e) {
+            console.error("Error updating schedule", e)
+            return scheduleJSON
+        }
+    }
+
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-primary)]" /></div>
 
     const renderSettingInput = (setting) => {
-        if (setting.key === 'store_status') {
+        // Schedule Grid UI
+        if (setting.key === 'store_schedule') {
+            let scheduleData = {}
+            try { scheduleData = JSON.parse(setting.value) } catch (e) { }
+
             return (
-                <select
-                    value={setting.value}
-                    onChange={(e) => handleChange(setting.key, e.target.value)}
-                    className={`w-full border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)] font-bold appearance-none cursor-pointer ${setting.value === 'open'
-                        ? 'bg-green-500/10 text-green-400 border-green-500/30'
-                        : 'bg-red-500/10 text-red-400 border-red-500/30'
-                        }`}
-                >
-                    <option value="open" className="bg-[var(--color-surface)] text-green-400">🟢 Abierto</option>
-                    <option value="closed" className="bg-[var(--color-surface)] text-red-400">🔴 Cerrado</option>
-                </select>
+                <div className="space-y-2 w-full mt-2">
+                    {[1, 2, 3, 4, 5, 6, 0].map(dayIndex => { // Mon to Sun order
+                        const dayData = scheduleData[dayIndex] || { active: false, start: '19:00', end: '23:00' }
+                        return (
+                            <div key={dayIndex} className="flex flex-wrap items-center gap-2 text-sm max-w-2xl bg-black/20 p-2 rounded-lg border border-white/5">
+                                <div className="w-24 font-bold text-white/80">{DAYS_MAP[dayIndex]}</div>
+                                <label className="flex items-center gap-2 cursor-pointer mr-4">
+                                    <input
+                                        type="checkbox"
+                                        checked={dayData.active}
+                                        onChange={(e) => {
+                                            const newJSON = handleScheduleChange(setting.value, dayIndex, 'active', e.target.checked)
+                                            handleChange(setting.key, newJSON)
+                                        }}
+                                        className="w-4 h-4 rounded accent-[var(--color-primary)]"
+                                    />
+                                    <span className={dayData.active ? 'text-green-400' : 'text-gray-500'}>
+                                        {dayData.active ? 'Abierto' : 'Cerrado'}
+                                    </span>
+                                </label>
+
+                                {dayData.active && (
+                                    <>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-white/50 text-xs">De:</span>
+                                            <input
+                                                type="time"
+                                                value={dayData.start}
+                                                onChange={(e) => {
+                                                    const newJSON = handleScheduleChange(setting.value, dayIndex, 'start', e.target.value)
+                                                    handleChange(setting.key, newJSON)
+                                                }}
+                                                className="bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-xs w-24"
+                                            />
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-white/50 text-xs">Hasta:</span>
+                                            <input
+                                                type="time"
+                                                value={dayData.end}
+                                                onChange={(e) => {
+                                                    const newJSON = handleScheduleChange(setting.value, dayIndex, 'end', e.target.value)
+                                                    handleChange(setting.key, newJSON)
+                                                }}
+                                                className="bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-xs w-24"
+                                            />
+                                        </div>
+                                    </>
+                                )}
+                            </div>
+                        )
+                    })}
+                    <div className="mt-2 text-xs text-[var(--color-text-muted)]">* Guarda los cambios para aplicar el nuevo horario.</div>
+                    <div className="mt-2 text-xs text-yellow-500 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
+                        Nota: Para cerrar por feriado o evento, simplemente destilda el día correspondiente.
+                    </div>
+                </div>
             )
         }
 
-        // TextArea for long fields (like benefits)
-        if (setting.key.includes('benefits') || setting.key.includes('schedule')) {
+        // TextArea for long fields
+        if (setting.key.includes('benefits') || setting.key.includes('schedule_text')) {
             return (
                 <textarea
                     value={setting.value}
