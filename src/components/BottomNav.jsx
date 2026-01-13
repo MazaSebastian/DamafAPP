@@ -14,9 +14,6 @@ const BottomNav = () => {
                 <NavItem icon={<ShoppingBag className="w-6 h-6" />} label="Pedidos" />
             </Link>
             <NavItem icon={<QrCode className="w-6 h-6" />} label="Código" />
-            <Link to="/rewards">
-                <NavItem icon={<User className="w-6 h-6" />} label="Canjes" />
-            </Link>
             <Link to="/coupons">
                 <NavItem icon={<Ticket className="w-6 h-6" />} label="Cupones" />
             </Link>

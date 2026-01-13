@@ -1,49 +1,133 @@
 import { Link } from 'react-router-dom'
-import { ChefHat, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, Star, Coffee, Crown, Trophy } from 'lucide-react'
+import { useLoyaltyLevels } from '../hooks/useLoyaltyLevels'
+import { useAuth } from '../context/AuthContext'
+import LoyaltyBanner from '../components/LoyaltyBanner'
 
 const ClubInfoPage = () => {
-    return (
-        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-main)] flex flex-col relative overflow-hidden">
-            {/* Background Decor */}
-            <div className="absolute top-0 right-0 w-64 h-64 bg-[var(--color-secondary)]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+    const { user, profile } = useAuth()
+    const { levels } = useLoyaltyLevels()
+    const stars = profile?.stars || 0
 
+    return (
+        <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-text-main)] pb-20">
             {/* Header */}
-            <header className="fixed top-0 w-full p-4 flex items-center z-50">
+            <header className="sticky top-0 bg-[var(--color-background)]/90 backdrop-blur-md z-50 px-4 py-4 flex items-center gap-4 border-b border-white/5">
                 <Link to="/" className="p-2 bg-[var(--color-surface)] rounded-full hover:bg-white/10 transition-colors">
-                    <ArrowLeft className="w-6 h-6" />
+                    <ArrowLeft className="w-5 h-5" />
                 </Link>
+                <h1 className="text-lg font-bold">Información del Club</h1>
             </header>
 
-            {/* Content */}
-            <div className="flex-1 flex flex-col justify-center items-center px-6 max-w-md mx-auto text-center z-10 animate-fade-in-up">
-                {/* Logo/Icon */}
-                <div className="bg-[var(--color-surface)] p-6 rounded-3xl shadow-2xl shadow-orange-500/10 mb-8 border border-white/5 transform hover:scale-105 transition-transform duration-500">
-                    <ChefHat className="w-16 h-16 text-[var(--color-secondary)]" />
+            <main className="px-4 py-6 max-w-lg mx-auto space-y-8">
+
+                {/* Intro Section */}
+                <div className="text-center space-y-2">
+                    <h2 className="text-2xl font-bold italic">DAMAFAPP <span className="text-[var(--color-secondary)]">CLUB</span></h2>
+                    <p className="text-[var(--color-text-muted)] text-sm">
+                        Suma estrellas con cada compra y desbloquea beneficios exclusivos.
+                    </p>
                 </div>
 
-                {/* Title */}
-                <h1 className="text-3xl font-bold mb-4">
-                    DAMAFAPP <span className="text-[var(--color-secondary)]">CLUB</span>
-                </h1>
+                {/* Show User Progress if Logged In */}
+                {user ? (
+                    <LoyaltyBanner stars={stars} />
+                ) : (
+                    <div className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 text-center">
+                        <p className="text-white font-bold mb-2">¡Únete hoy mismo!</p>
+                        <p className="text-xs text-[var(--color-text-muted)] mb-4">Regístrate para empezar a sumar.</p>
+                        <Link to="/login" className="inline-block bg-[var(--color-primary)] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-purple-700 transition-colors">
+                            Iniciar Sesión / Registrarme
+                        </Link>
+                    </div>
+                )}
 
-                {/* Description */}
-                <p className="text-[var(--color-text-muted)] text-lg leading-relaxed mb-10">
-                    ¡Crea una cuenta o ingresa si es que ya tienes una para que puedas canjear tus puntos por hamburguesas gratis!
-                    <br /><br />
-                    Haz click en el botón de abajo para unirte al club más delicioso.
+                {/* How it works */}
+                <div>
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Star className="w-5 h-5 text-yellow-500 fill-yellow-500" />
+                        ¿Cómo funciona?
+                    </h3>
+                    <div className="bg-[var(--color-surface)] p-4 rounded-xl border border-white/5 flex items-center gap-4">
+                        <div className="bg-[var(--color-background)] p-3 rounded-full">
+                            <span className="text-2xl">💰</span>
+                        </div>
+                        <div>
+                            <p className="font-bold text-white">1 Estrella por cada $100</p>
+                            <p className="text-xs text-[var(--color-text-muted)]">Cada compra te acerca a tu próximo nivel.</p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Levels Grid */}
+                <div>
+                    <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                        <Trophy className="w-5 h-5 text-orange-500" />
+                        Niveles y Beneficios
+                    </h3>
+
+                    <div className="space-y-4">
+                        {/* Welcome Level */}
+                        <LevelCard
+                            icon={<Coffee className="w-6 h-6 text-orange-400" />}
+                            title="Nivel Welcome"
+                            subtitle="Empiezas aquí"
+                            benefits={levels.WELCOME.benefits}
+                            color="border-orange-500/30 bg-orange-500/5"
+                        />
+
+                        {/* Green Level */}
+                        <LevelCard
+                            icon={<Star className="w-6 h-6 text-green-400" />}
+                            title="Nivel Green"
+                            subtitle={`Al llegar a ${levels.GREEN.min} estrellas`}
+                            benefits={levels.GREEN.benefits}
+                            color="border-green-500/30 bg-green-500/5"
+                        />
+
+                        {/* Gold Level */}
+                        <LevelCard
+                            icon={<Crown className="w-6 h-6 text-yellow-400" />}
+                            title="Nivel Gold"
+                            subtitle={`Al llegar a ${levels.GOLD.min} estrellas`}
+                            benefits={levels.GOLD.benefits}
+                            color="border-yellow-500/30 bg-yellow-500/5"
+                        />
+                    </div>
+                </div>
+
+                <p className="text-center text-xs text-[var(--color-text-muted)] mt-8">
+                    * Los beneficios pueden cambiar sin previo aviso.
+                    <br />
+                    Las estrellas caducan después de 12 meses de inactividad.
                 </p>
 
-                {/* CTA Button */}
-                <Link to="/login" className="w-full bg-[var(--color-secondary)] hover:bg-orange-600 text-white font-bold text-xl py-4 rounded-full shadow-lg hover:shadow-orange-500/30 transition-all transform hover:-translate-y-1">
-                    UNIRME AL CLUB
-                </Link>
-
-                <p className="mt-6 text-sm text-[var(--color-text-muted)]">
-                    ¿Ya tienes cuenta? <Link to="/login" className="text-[var(--color-secondary)] font-semibold hover:underline">Ingresa aquí</Link>
-                </p>
-            </div>
+            </main>
         </div>
     )
 }
+
+const LevelCard = ({ icon, title, subtitle, benefits, color }) => (
+    <div className={`p-5 rounded-2xl border ${color} relative overflow-hidden`}>
+        <div className="flex items-start gap-4 z-10 relative">
+            <div className="bg-[var(--color-surface)] p-3 rounded-full border border-white/10">
+                {icon}
+            </div>
+            <div>
+                <h4 className="font-bold text-white text-lg">{title}</h4>
+                <p className="text-xs text-[var(--color-text-muted)] mb-3">{subtitle}</p>
+
+                <ul className="space-y-2">
+                    {benefits.map((benefit, index) => (
+                        <li key={index} className="text-sm text-gray-300 flex items-start gap-2">
+                            <span className="text-[var(--color-secondary)] mt-1">•</span>
+                            {benefit}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    </div>
+)
 
 export default ClubInfoPage
