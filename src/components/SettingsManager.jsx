@@ -77,13 +77,27 @@ const SettingsManager = () => {
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3 w-full md:w-auto">
-                                    <div className="relative w-full md:w-48">
-                                        <input
-                                            type="text"
-                                            value={setting.value}
-                                            onChange={(e) => handleChange(setting.key, e.target.value)}
-                                            className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)]"
-                                        />
+                                    <div className="relative w-full md:w-64">
+                                        {setting.key === 'store_status' ? (
+                                            <select
+                                                value={setting.value}
+                                                onChange={(e) => handleChange(setting.key, e.target.value)}
+                                                className={`w-full border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)] font-bold appearance-none cursor-pointer ${setting.value === 'open'
+                                                        ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                                                        : 'bg-red-500/10 text-red-400 border-red-500/30'
+                                                    }`}
+                                            >
+                                                <option value="open" className="bg-[var(--color-surface)] text-green-400">🟢 Abierto</option>
+                                                <option value="closed" className="bg-[var(--color-surface)] text-red-400">🔴 Cerrado</option>
+                                            </select>
+                                        ) : (
+                                            <input
+                                                type="text"
+                                                value={setting.value}
+                                                onChange={(e) => handleChange(setting.key, e.target.value)}
+                                                className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)]"
+                                            />
+                                        )}
                                     </div>
                                     <button
                                         onClick={() => handleSave(setting.key, setting.value)}
