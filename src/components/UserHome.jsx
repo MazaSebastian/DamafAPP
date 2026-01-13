@@ -66,9 +66,7 @@ const UserHome = () => {
 
             {/* Top Header */}
             <header className="px-4 py-6 flex justify-between items-center relative z-10">
-                <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
-                    <img src="/logo-damaf.png" alt="Logo" className="w-6 h-auto" />
-                </div>
+                <div></div>
 
 
 
