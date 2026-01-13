@@ -75,14 +75,9 @@ const UserHome = () => {
                 </div>
             </header>
 
-            {/* Welcome Section */}
-            <div className="px-4 pt-12 mb-6 text-center">
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-1">
-                    Bienvenido, <span className="text-[var(--color-secondary)]">{user?.email?.split('@')[0]}</span>!
-                </h1>
-                <p className="text-[var(--color-text-muted)] text-sm flex items-center justify-center gap-2">
-                    ¿Con qué pensas bajonear hoy? <span className="text-xl">🍔</span>
-                </p>
+            {/* Store Info Header */}
+            <div className="pt-2">
+                <StoreInfoHeader />
             </div>
 
             {/* Main Content */}
