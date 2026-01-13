@@ -188,11 +188,12 @@ const LoginPage = () => {
                                     <div className="grid grid-cols-3 gap-2">
                                         <input
                                             type="number"
-                                            value={dob.year}
-                                            onChange={(e) => setDob({ ...dob, year: e.target.value })}
-                                            placeholder="Año"
+                                            value={dob.day}
+                                            onChange={(e) => setDob({ ...dob, day: e.target.value })}
+                                            placeholder="Día"
                                             className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl px-2 py-3.5 text-center text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
                                             required
+                                            min="1" max="31"
                                         />
                                         <input
                                             type="number"
@@ -205,12 +206,13 @@ const LoginPage = () => {
                                         />
                                         <input
                                             type="number"
-                                            value={dob.day}
-                                            onChange={(e) => setDob({ ...dob, day: e.target.value })}
-                                            placeholder="Día"
+                                            value={dob.year}
+                                            onChange={(e) => setDob({ ...dob, year: e.target.value })}
+                                            placeholder="Año"
                                             className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl px-2 py-3.5 text-center text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
                                             required
-                                            min="1" max="31"
+                                            min="1900"
+                                            max={new Date().getFullYear()}
                                         />
                                     </div>
                                 </div>
