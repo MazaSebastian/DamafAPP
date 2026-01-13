@@ -30,7 +30,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { icon: User, label: 'Información de cuenta', to: '/profile' },
         // { icon: CreditCard, label: 'Métodos de pago', action: () => { } }, // Hidden as per MP integration
         { icon: ShoppingBag, label: 'Órdenes recientes', to: '/my-orders' },
-        { icon: Globe, label: 'Preferencia de comunicación', action: () => { } },
+
         { icon: Info, label: 'Sobre la aplicación', to: '/club-info' },
     ]
 
