@@ -51,6 +51,19 @@ const SettingsManager = () => {
         setSaving(false)
     }
 
+    const SETTING_LABELS = {
+        'delivery_free_range_km': 'Radio de Envío Gratis (KM)',
+        'delivery_price_per_km': 'Precio por KM Adicional',
+        'stars_exchange_rate': 'Tasa de Canje de Estrellas',
+        'store_address': 'Dirección del Local',
+        'store_instagram': 'Instagram',
+        'store_lat': 'Latitud del Local',
+        'store_lng': 'Longitud del Local',
+        'store_schedule_text': 'Horarios de Atención',
+        'store_slogan': 'Slogan del Local',
+        'store_status': 'Estado del Local (Abierto/Cerrado)'
+    }
+
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-primary)]" /></div>
 
     return (
@@ -71,7 +84,7 @@ const SettingsManager = () => {
                         <div key={setting.key} className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5">
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-white capitalize">{setting.key.replace(/_/g, ' ')}</h3>
+                                    <h3 className="text-lg font-bold text-white transition-colors">{SETTING_LABELS[setting.key] || setting.key.replace(/_/g, ' ')}</h3>
                                     <p className="text-sm text-[var(--color-text-muted)] mt-1">
                                         {setting.description || 'Sin descripción'}
                                     </p>
@@ -83,8 +96,8 @@ const SettingsManager = () => {
                                                 value={setting.value}
                                                 onChange={(e) => handleChange(setting.key, e.target.value)}
                                                 className={`w-full border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)] font-bold appearance-none cursor-pointer ${setting.value === 'open'
-                                                        ? 'bg-green-500/10 text-green-400 border-green-500/30'
-                                                        : 'bg-red-500/10 text-red-400 border-red-500/30'
+                                                    ? 'bg-green-500/10 text-green-400 border-green-500/30'
+                                                    : 'bg-red-500/10 text-red-400 border-red-500/30'
                                                     }`}
                                             >
                                                 <option value="open" className="bg-[var(--color-surface)] text-green-400">🟢 Abierto</option>
