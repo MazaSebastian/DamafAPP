@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import { useRef, useEffect } from 'react'
 
 const Sidebar = ({ isOpen, onClose }) => {
-    const { user, signOut } = useAuth()
+    const { user, profile, signOut } = useAuth()
     const navigate = useNavigate()
     const sidebarRef = useRef(null)
 
@@ -69,7 +69,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                             {user ? (
                                 <div>
-                                    <h3 className="font-bold text-lg text-white">Hola, {user.email?.split('@')[0]}!</h3>
+                                    <h3 className="font-bold text-lg text-white">Hola, {profile?.full_name || user.email?.split('@')[0]}!</h3>
                                     <p className="text-xs text-[var(--color-text-muted)]">{user.email}</p>
                                 </div>
                             ) : (

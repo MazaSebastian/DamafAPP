@@ -5,27 +5,28 @@ const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null)
+    const [profile, setProfile] = useState(null)
     const [role, setRole] = useState(null)
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Check active session
+        // Check active sessions and sets the user
         supabase.auth.getSession().then(({ data: { session } }) => {
+            setUser(session?.user ?? null)
             if (session?.user) {
-                setUser(session.user)
-                fetchUserRole(session.user.id)
+                fetchProfile(session.user.id)
             } else {
                 setLoading(false)
             }
         })
 
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+        // Listen for changes on auth state (logged in, signed out, etc.)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            setUser(session?.user ?? null)
             if (session?.user) {
-                setUser(session.user)
-                fetchUserRole(session.user.id)
+                await fetchProfile(session.user.id)
             } else {
-                setUser(null)
+                setProfile(null)
                 setRole(null)
                 setLoading(false)
             }
@@ -34,19 +35,20 @@ export const AuthProvider = ({ children }) => {
         return () => subscription.unsubscribe()
     }, [])
 
-    const fetchUserRole = async (userId) => {
+    const fetchProfile = async (userId) => {
         try {
             const { data, error } = await supabase
                 .from('profiles')
-                .select('role')
+                .select('*')
                 .eq('id', userId)
                 .single()
 
-            if (error) throw error
-            setRole(data?.role || 'user')
+            if (!error && data) {
+                setProfile(data)
+                setRole(data.role)
+            }
         } catch (error) {
-            console.error('Error fetching role:', error.message)
-            setRole('user') // Default to user on error
+            console.error('Error loading profile:', error)
         } finally {
             setLoading(false)
         }
@@ -55,11 +57,13 @@ export const AuthProvider = ({ children }) => {
     const signOut = async () => {
         await supabase.auth.signOut()
         setUser(null)
+        setProfile(null)
         setRole(null)
     }
 
     const value = {
         user,
+        profile,
         role,
         loading,
         signOut,
