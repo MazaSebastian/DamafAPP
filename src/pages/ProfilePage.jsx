@@ -251,9 +251,9 @@ const ProfilePage = () => {
                     <Link to="/privacy" className="w-full flex justify-between items-center text-sm font-bold text-white/80 hover:text-white py-2">
                         Política de privacidad <ArrowLeft className="w-4 h-4 rotate-180" />
                     </Link>
-                    <button className="w-full flex justify-between items-center text-sm font-bold text-white/80 hover:text-white py-2">
+                    <Link to="/terms" className="w-full flex justify-between items-center text-sm font-bold text-white/80 hover:text-white py-2">
                         Términos de servicio <ArrowLeft className="w-4 h-4 rotate-180" />
-                    </button>
+                    </Link>
                 </div>
             </main>
         </div>

@@ -16,6 +16,7 @@ import MyOrdersPage from './pages/MyOrdersPage'
 import CouponsPage from './pages/CouponsPage'
 import ProfilePage from './pages/ProfilePage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import TermsPage from './pages/TermsPage'
 import DeliveryDashboard from './components/DeliveryDashboard'
 import RiderInterface from './components/RiderInterface'
 import { CartProvider } from './context/CartContext'
@@ -45,6 +46,7 @@ const AnimatedRoutes = () => {
         <Route path="/coupons" element={<PageTransition><CouponsPage /></PageTransition>} />
         <Route path="/profile" element={<PageTransition><ProfilePage /></PageTransition>} />
         <Route path="/privacy" element={<PageTransition><PrivacyPolicyPage /></PageTransition>} />
+        <Route path="/terms" element={<PageTransition><TermsPage /></PageTransition>} />
       </Routes>
     </AnimatePresence>
   )
