@@ -12,60 +12,56 @@ import Sidebar from './Sidebar'
 import StoreInfoHeader from './StoreInfoHeader'
 
 const UserHome = () => {
-    const { user, role, signOut } = useAuth()
-    const [stars, setStars] = useState(0)
+    const { user, profile, role, signOut } = useAuth()
     const [news, setNews] = useState([])
     const [loading, setLoading] = useState(true)
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
+    // Use stars from global profile if available
+    const stars = profile?.stars || 0
+
+    console.log('UserHome Render. Loading:', loading, 'Stars:', stars)
+
     useEffect(() => {
         let mounted = true
-        // Safety timeout
+
+        // Timeout to force show content if DB hangs
         const timeout = setTimeout(() => {
-            if (mounted) {
-                console.warn('Home loading timed out')
+            if (mounted && loading) {
+                console.warn('Home news loading timed out - Forcing display')
                 setLoading(false)
             }
-        }, 5000)
+        }, 3000)
 
-        const fetchData = async () => {
+        const fetchNews = async () => {
             try {
-                // Fetch User Stars
-                if (user) {
-                    const { data: profile, error: profileError } = await supabase
-                        .from('profiles')
-                        .select('stars')
-                        .eq('id', user.id)
-                        .single()
-
-                    if (!profileError && profile && mounted) {
-                        setStars(profile.stars || 0)
-                    }
-                }
-
-                // Fetch News
+                // Only Fetch News (Stars come from AuthContext now)
+                console.log('Fetching news...')
                 const { data: newsData, error: newsError } = await supabase
                     .from('news_events')
                     .select('*')
                     .order('created_at', { ascending: false })
 
-                if (!newsError && newsData && mounted) {
+                if (newsError) throw newsError
+
+                if (newsData && mounted) {
+                    console.log('News loaded:', newsData.length)
                     setNews(newsData)
                 }
             } catch (error) {
-                console.error('Error fetching home data:', error)
+                console.error('Error fetching news:', error)
             } finally {
                 if (mounted) setLoading(false)
             }
         }
 
-        fetchData()
+        fetchNews()
 
         return () => {
             mounted = false
             clearTimeout(timeout)
         }
-    }, [user])
+    }, []) // Run once on mount, we don't need to re-run on user change as it's handled by mount
 
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
