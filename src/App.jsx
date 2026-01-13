@@ -3,6 +3,7 @@ import { Toaster } from 'sonner'
 import { AuthProvider } from './context/AuthContext'
 import { AnimatePresence } from 'framer-motion'
 import PageTransition from './components/PageTransition'
+import ProtectedRoute from './components/ProtectedRoute'
 
 import HomePage from './pages/HomePage'
 import LoginPage from './pages/LoginPage'
