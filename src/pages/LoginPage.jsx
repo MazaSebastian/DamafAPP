@@ -2,13 +2,19 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import { supabase } from '../supabaseClient'
-import { ArrowRight, Loader2, Mail, Lock } from 'lucide-react'
+import { ArrowRight, Loader2, Mail, Lock, Phone, Calendar, User } from 'lucide-react'
+import { countryCodes } from '../utils/countryCodes'
 
 const LoginPage = () => {
     const navigate = useNavigate()
     const [loading, setLoading] = useState(false)
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
+    // New fields state
+    const [fullName, setFullName] = useState('')
+    const [phoneData, setPhoneData] = useState({ countryCode: '+54', number: '' })
+    const [dob, setDob] = useState({ day: '', month: '', year: '' })
+
     const [isSignUp, setIsSignUp] = useState(false)
     const [error, setError] = useState(null)
 
@@ -19,9 +25,28 @@ const LoginPage = () => {
 
         try {
             if (isSignUp) {
+                // Validate new fields
+                if (!fullName.trim()) throw new Error('El nombre es requerido')
+                if (!phoneData.number) throw new Error('El teléfono es requerido')
+                if (!dob.day || !dob.month || !dob.year) throw new Error('La fecha de nacimiento es requerida')
+
+                const fullPhone = `${phoneData.countryCode} ${phoneData.number}`.trim()
+                // Ensure 2 digits for day/month
+                const formattedDay = dob.day.padStart(2, '0')
+                const formattedMonth = dob.month.padStart(2, '0')
+                const birthDate = `${dob.year}-${formattedMonth}-${formattedDay}`
+
                 const { data: signUpData, error } = await supabase.auth.signUp({
                     email,
-                    password
+                    password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            phone: fullPhone,
+                            birth_date: birthDate
+                            // zip_code can be added later if needed in signup, but user only asked for birth/phone matching account info
+                        }
+                    }
                 })
                 if (error) throw error
                 if (signUpData.user) {
@@ -76,7 +101,26 @@ const LoginPage = () => {
                 </div>
 
                 <div className="bg-[var(--color-surface)]/80 backdrop-blur-md p-8 rounded-3xl border border-white/5 shadow-2xl">
-                    <form onSubmit={handleAuth} className="space-y-5">
+                    <form onSubmit={handleAuth} className="space-y-4">
+
+                        {/* Name (SignUp only) */}
+                        {isSignUp && (
+                            <div className="space-y-2">
+                                <div className="relative">
+                                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                    <input
+                                        type="text"
+                                        value={fullName}
+                                        onChange={(e) => setFullName(e.target.value)}
+                                        className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
+                                        placeholder="Nombre completo"
+                                        required
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Email */}
                         <div className="space-y-2">
                             <div className="relative">
                                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -90,6 +134,8 @@ const LoginPage = () => {
                                 />
                             </div>
                         </div>
+
+                        {/* Password */}
                         <div className="space-y-2">
                             <div className="relative">
                                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
@@ -104,10 +150,76 @@ const LoginPage = () => {
                             </div>
                         </div>
 
+                        {/* Extra Fields (SignUp only) */}
+                        {isSignUp && (
+                            <>
+                                {/* Phone */}
+                                <div className="space-y-2">
+                                    <div className="flex gap-2">
+                                        <select
+                                            value={phoneData.countryCode}
+                                            onChange={(e) => setPhoneData({ ...phoneData, countryCode: e.target.value })}
+                                            className="w-[90px] bg-[var(--color-background)] border border-white/10 rounded-xl px-2 py-3.5 text-white focus:outline-none focus:border-[var(--color-secondary)] text-sm appearance-none cursor-pointer"
+                                        >
+                                            {countryCodes.map((c) => (
+                                                <option key={c.code} value={c.code}>
+                                                    {c.flag} {c.code}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <div className="relative flex-1">
+                                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                                            <input
+                                                type="tel"
+                                                value={phoneData.number}
+                                                onChange={(e) => setPhoneData({ ...phoneData, number: e.target.value })}
+                                                className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
+                                                placeholder="Número"
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Birth Date */}
+                                <div className="space-y-2">
+                                    <label className="text-xs font-bold text-[var(--color-text-muted)] ml-1 block">Fecha de nacimiento</label>
+                                    <div className="grid grid-cols-3 gap-2">
+                                        <input
+                                            type="number"
+                                            value={dob.year}
+                                            onChange={(e) => setDob({ ...dob, year: e.target.value })}
+                                            placeholder="Año"
+                                            className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl px-2 py-3.5 text-center text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
+                                            required
+                                        />
+                                        <input
+                                            type="number"
+                                            value={dob.month}
+                                            onChange={(e) => setDob({ ...dob, month: e.target.value })}
+                                            placeholder="Mes"
+                                            className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl px-2 py-3.5 text-center text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
+                                            required
+                                            min="1" max="12"
+                                        />
+                                        <input
+                                            type="number"
+                                            value={dob.day}
+                                            onChange={(e) => setDob({ ...dob, day: e.target.value })}
+                                            placeholder="Día"
+                                            className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl px-2 py-3.5 text-center text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all"
+                                            required
+                                            min="1" max="31"
+                                        />
+                                    </div>
+                                </div>
+                            </>
+                        )}
+
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full bg-gradient-to-r from-[var(--color-secondary)] to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-orange-500/25 transition-all flex justify-center items-center gap-2 group transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                            className="w-full bg-gradient-to-r from-[var(--color-secondary)] to-orange-600 text-white font-bold py-4 rounded-xl shadow-lg hover:shadow-orange-500/25 transition-all flex justify-center items-center gap-2 group transform active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed mt-6"
                         >
                             {loading ? <Loader2 className="animate-spin w-5 h-5" /> : (
                                 <>
