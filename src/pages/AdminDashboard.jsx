@@ -63,15 +63,15 @@ const AdminDashboard = () => {
                     </button>
                 </div>
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                    <NavItem icon={<LayoutDashboard />} label="Overview" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<ShoppingCart />} label="Orders" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<LayoutDashboard />} label="Vista General" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Newspaper />} label="Novedades" active={activeTab === 'Novedades'} onClick={() => { setActiveTab('Novedades'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Gift />} label="Canjes" active={activeTab === 'Canjes'} onClick={() => { setActiveTab('Canjes'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Ticket />} label="Cupones" active={activeTab === 'Cupones'} onClick={() => { setActiveTab('Cupones'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<UtensilsCrossed />} label="Menú" active={activeTab === 'Menu'} onClick={() => { setActiveTab('Menu'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Package />} label="Inventory" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Users />} label="Customers" active={activeTab === 'Customers'} onClick={() => { setActiveTab('Customers'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Settings />} label="Settings" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<Users />} label="Clientes" active={activeTab === 'Customers'} onClick={() => { setActiveTab('Customers'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<Settings />} label="Configuración" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false) }} />
                 </nav>
                 <div className="p-4 border-t border-white/5">
                     <div className="flex items-center gap-3">
