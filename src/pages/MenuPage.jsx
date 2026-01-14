@@ -145,13 +145,24 @@ const MenuPage = () => {
 
                                         {/* Right Side: Image */}
                                         <div className="w-32 h-32 flex-shrink-0 relative">
-                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-black/20 shadow-inner">
+                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-black/20 shadow-inner relative">
                                                 {product.image_url ? (
-                                                    <img
-                                                        src={product.image_url}
-                                                        alt={product.name}
-                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                                    />
+                                                    (product.media_type === 'video' || product.image_url.endsWith('.mp4') || product.image_url.endsWith('.webm')) ? (
+                                                        <video
+                                                            src={product.image_url}
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                            muted
+                                                            loop
+                                                            autoPlay
+                                                            playsInline
+                                                        />
+                                                    ) : (
+                                                        <img
+                                                            src={product.image_url}
+                                                            alt={product.name}
+                                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                                                        />
+                                                    )
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center bg-white/5">
                                                         <span className="text-2xl">🍔</span>
