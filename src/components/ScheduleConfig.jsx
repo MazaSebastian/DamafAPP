@@ -123,7 +123,7 @@ const ScheduleConfig = ({ value, onChange }) => {
                             <div className={`sm:ml-auto transition-opacity ${isActive ? 'opacity-100' : 'opacity-0'}`}>
                                 <button
                                     onClick={() => copyToAllParams(dayIndex)}
-                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-primary)]/10 rounded-lg transition-colors border border-[var(--color-primary)]/20 hover:border-[var(--color-primary)]"
+                                    className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 rounded-lg transition-colors border border-white/10 hover:border-white/30"
                                     title="Copiar este horario a todos los días"
                                 >
                                     <Copy className="w-3 h-3" />
