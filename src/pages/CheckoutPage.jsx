@@ -1,28 +1,32 @@
+```javascript
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Trash2, ShoppingBag, Plus, Car, MapPin, Store, Loader2 } from 'lucide-react'
+import { ArrowLeft, Trash2, MapPin, Car, Info, AlertTriangle, Play, Pause, RotateCcw } from 'lucide-react'
 import { initMercadoPago } from '@mercadopago/sdk-react'
 import DeliveryMap from '../components/DeliveryMap'
 import { useStoreStatus } from '../hooks/useStoreStatus'
 import OrderConfirmationModal from '../components/OrderConfirmationModal'
+import OrderModal from '../components/OrderModal'
 
 const CheckoutPage = () => {
-    const { cart, removeFromCart, total, clearCart } = useCart()
-    const { refreshProfile } = useAuth()
     const navigate = useNavigate()
+    const { cart, removeFromCart, total, clearCart } = useCart()
+    const { user, refreshProfile } = useAuth()
     const { isOpen, loading: statusLoading } = useStoreStatus()
     const [loading, setLoading] = useState(false)
-    const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false)
+    const [showConfirmModal, setShowConfirmModal] = useState(false)
 
-    const [orderType, setOrderType] = useState(null)
+    const [orderType, setOrderType] = useState('takeaway')
     const [address, setAddress] = useState('')
     const [couponCode, setCouponCode] = useState('')
     const [appliedCoupon, setAppliedCoupon] = useState(null)
     const [discountAmount, setDiscountAmount] = useState(0)
+    const [checkingCoupon, setCheckingCoupon] = useState(false)
+    const [showAddOrderModal, setShowAddOrderModal] = useState(false)
 
     // New State for Delivery
     const [shippingCost, setShippingCost] = useState(0)
@@ -102,7 +106,7 @@ const CheckoutPage = () => {
             if (productInCart) {
                 discount = productInCart.main.price
             } else {
-                toast.info(`Este cupón te regala un ${validCoupon.products?.name || 'producto'}. ¡Si no está en el carrito, agrégalo para ver el descuento!`)
+                toast.info(`Este cupón te regala un ${ validCoupon.products?.name || 'producto' }. ¡Si no está en el carrito, agrégalo para ver el descuento!`)
                 return
             }
         }
@@ -111,7 +115,7 @@ const CheckoutPage = () => {
 
         setAppliedCoupon(validCoupon)
         setDiscountAmount(discount)
-        toast.success(`¡Cupón ${validCoupon.code} aplicado! Ahorras $${discount.toFixed(2)}`)
+        toast.success(`¡Cupón ${ validCoupon.code } aplicado! Ahorras $${ discount.toFixed(2) } `)
     }
 
     // Shipping Logic
@@ -126,7 +130,7 @@ const CheckoutPage = () => {
         } else {
             // Dynamic Cost per KM
             cost = Math.ceil(distance * deliverySettings.delivery_price_per_km)
-            toast.info(`Distancia: ${distance.toFixed(1)}km - Envío: $${cost}`)
+            toast.info(`Distancia: ${ distance.toFixed(1) } km - Envío: $${ cost } `)
         }
 
         setShippingCost(cost)
@@ -363,13 +367,13 @@ const CheckoutPage = () => {
                 <div className="bg-[var(--color-surface)] p-1 rounded-xl flex border border-white/5">
                     <button
                         onClick={() => { setOrderType('takeaway'); setShippingCost(0); }}
-                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${orderType === 'takeaway' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
+                        className={`flex - 1 py - 3 rounded - lg font - bold text - sm transition - all ${ orderType === 'takeaway' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]' } `}
                     >
                         Retiro en Local
                     </button>
                     <button
                         onClick={() => setOrderType('delivery')}
-                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${orderType === 'delivery' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
+                        className={`flex - 1 py - 3 rounded - lg font - bold text - sm transition - all ${ orderType === 'delivery' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]' } `}
                     >
                         Delivery
                     </button>
@@ -405,7 +409,7 @@ const CheckoutPage = () => {
                 {/* List Items */}
                 <div className="space-y-4">
                     {cart.map((item, index) => (
-                        <div key={item.id} className="bg-[var(--color-surface)] rounded-2xl p-4 border border-white/5 animated-slide-up" style={{ animationDelay: `${index * 100}ms` }}>
+                        <div key={item.id} className="bg-[var(--color-surface)] rounded-2xl p-4 border border-white/5 animated-slide-up" style={{ animationDelay: `${ index * 100 } ms` }}>
                             <div className="flex gap-4 mb-3">
                                 {item.main.media_type === 'video' ? (
                                     <video src={item.main.image_url} className="w-16 h-16 rounded-lg object-cover bg-black/20" muted loop autoPlay playsInline />
@@ -445,7 +449,7 @@ const CheckoutPage = () => {
                 </div>
 
                 <button
-                    onClick={() => navigate('/menu')}
+                    onClick={() => setShowAddOrderModal(true)}
                     className="w-full py-4 border-2 border-dashed border-white/10 rounded-2xl flex items-center justify-center gap-2 text-[var(--color-text-muted)] hover:border-[var(--color-secondary)] hover:text-[var(--color-secondary)] transition-all font-bold"
                 >
                     <Plus className="w-5 h-5" />
@@ -492,8 +496,8 @@ const CheckoutPage = () => {
                         </div>
                     </div>
 
-                    <button onClick={handleCheckout} className={`w-full text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all
-                        ${!orderType ? 'bg-gray-600 cursor-not-allowed opacity-50' : 'bg-[#009ee3] hover:bg-[#009ee3]/90 shadow-blue-900/20'}`}>
+                    <button onClick={handleCheckout} className={`w - full text - white py - 4 rounded - xl font - bold text - lg shadow - lg active: scale - 95 transition - all
+                        ${ !orderType ? 'bg-gray-600 cursor-not-allowed opacity-50' : 'bg-[#009ee3] hover:bg-[#009ee3]/90 shadow-blue-900/20' } `}>
                         {orderType === 'delivery' ? 'Pagar con Mercado Pago' :
                             orderType === 'takeaway' ? 'Pagar Retiro con MP' :
                                 'Seleccione método de entrega'}
@@ -501,14 +505,24 @@ const CheckoutPage = () => {
                 </div>
             </div>
 
+            {/* Modals */}
             <OrderConfirmationModal
                 isOpen={isConfirmModalOpen}
-                onClose={() => setIsConfirmModalOpen(false)}
-                onConfirm={() => {
-                    setIsConfirmModalOpen(false)
-                    processOrder()
+                orderData={{
+                    total: finalTotal, // Use finalTotal here
+                    type: orderType,
+                    items: cart,
+                    address: address, // Pass address
+                    customerName: user?.user_metadata?.name || 'Cliente',
+                    customerPhone: user?.phone || '', // User phone if available
+                    paymentMethod: 'Mercado Pago' // Default for now
                 }}
-                total={finalTotal}
+                onClose={() => setIsConfirmModalOpen(false)}
+            />
+
+            <OrderModal
+                isOpen={showAddOrderModal}
+                onClose={() => setShowAddOrderModal(false)}
             />
 
             {/* DEV TOOL: Simulation Button */}
