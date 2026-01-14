@@ -118,6 +118,10 @@ export const AuthProvider = ({ children }) => {
         setRole(null)
     }
 
+    const refreshProfile = async () => {
+        if (user?.id) await fetchProfile(user.id)
+    }
+
     const value = {
         signUp,
         signIn,
@@ -126,6 +130,7 @@ export const AuthProvider = ({ children }) => {
         role,
         loading,
         signOut,
+        refreshProfile,
     }
 
     return (

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import { ArrowLeft, Trash2, ShoppingBag, Plus, Car, MapPin, Store, Loader2 } from 'lucide-react'
 import { initMercadoPago } from '@mercadopago/sdk-react'
@@ -11,6 +12,7 @@ import OrderConfirmationModal from '../components/OrderConfirmationModal'
 
 const CheckoutPage = () => {
     const { cart, removeFromCart, total, clearCart } = useCart()
+    const { refreshProfile } = useAuth()
     const navigate = useNavigate()
     const { isOpen, loading: statusLoading } = useStoreStatus()
     const [loading, setLoading] = useState(false)
@@ -266,7 +268,7 @@ const CheckoutPage = () => {
 
             if (orderError) throw orderError
 
-            // 2. Create Order Items
+            // 2. Create Order Items (simplified for simulation)
             const orderItems = cart.map(item => ({
                 order_id: order.id,
                 product_id: item.main.id,
@@ -283,16 +285,31 @@ const CheckoutPage = () => {
 
             if (itemsError) throw itemsError
 
-            // Success
-            clearCart()
-            toast.dismiss()
-            toast.success('¡Pago simulado! Estrellas acreditadas ⭐️')
-            navigate('/')
+            // Refresh Profile to get new stars
+            // We need to access refreshProfile from context.
+            // Since simulatePayment is inside the component, we can use the hook result.
+            // But we didn't destructure it at the top.
+            // Wait, we need to update the top destructuring first!
+
+            // This replacement handles the function body, but I need access to 'refreshProfile'
+            // which is returned by useAuth() (imported but not fully destructured in CheckoutPage?)
+            // Let's check line 12. CheckoutPage didn't import useAuth! 
+            // It uses supabase.auth.getUser() directly.
+            // I MUST import useAuth and consume it.
+
+            await supabase.from('profiles').select('stars').eq('id', user.id).single()
+            // Actually, if I can't easily access context here (I can't change line 12 easily in this chunk),
+            // I can force a page reload? navigate(0)?
+            // Or better: use the 'refreshProfile' if I destructure it.
+            // I will DO A MULTI CHUNK to add useAuth.
+
+            // Re-read: CheckoutPage line 12: const CheckoutPage = () => { const { cart... } ... }
+            // It does NOT use useAuth().
+
+            // So my plan requires importing useAuth.
 
         } catch (error) {
-            console.error(error)
-            toast.dismiss()
-            toast.error('Error simulando: ' + error.message)
+            // ...
         }
     }
 
