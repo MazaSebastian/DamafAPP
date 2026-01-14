@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { useAuth } from '../context/AuthContext'
-import { Loader2, Clock, ChefHat, Check, ShoppingBag, ArrowRight } from 'lucide-react' // Added ArrowRight import
+import { Loader2, Clock, ChefHat, Check, ShoppingBag, ArrowRight, Bell, X, Lock } from 'lucide-react'
 import BottomNav from '../components/BottomNav'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { OrderSkeleton } from '../components/skeletons/OrderSkeleton'
 import LiveTrackingMap from '../components/LiveTrackingMap'
 
 const MyOrdersPage = () => {
     const { user } = useAuth()
+    const navigate = useNavigate()
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('active') // 'active' or 'history'
@@ -37,7 +38,8 @@ const MyOrdersPage = () => {
                 supabase.removeChannel(channel)
             }
         } else {
-            setLoading(false)
+            // Guest Logic: Load from localStorage
+            fetchGuestOrders()
         }
     }, [user])
 
@@ -59,6 +61,18 @@ const MyOrdersPage = () => {
         setLoading(false)
     }
 
+    const fetchGuestOrders = () => {
+        setLoading(true)
+        try {
+            const guestOrders = JSON.parse(localStorage.getItem('damaf_guest_orders') || '[]')
+            setOrders(guestOrders)
+        } catch (e) {
+            console.error('Error reading guest orders:', e)
+            setOrders([])
+        }
+        setLoading(false)
+    }
+
     const getStatusInfo = (status) => {
         switch (status) {
             case 'pending': return { label: 'Pendiente', color: 'text-yellow-500', bg: 'bg-yellow-500/10', icon: Clock }
@@ -77,20 +91,14 @@ const MyOrdersPage = () => {
 
     const displayOrders = activeTab === 'active' ? activeOrders : historyOrders
 
-    if (!user) return (
-        <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center p-4">
-            <div className="text-center">
-                <p className="mb-4">Inicia sesión para ver tus pedidos</p>
-                <Link to="/login" className="bg-[var(--color-primary)] px-6 py-2 rounded-full font-bold">Ir a Login</Link>
-            </div>
-            <BottomNav />
-        </div>
-    )
-
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
             <header className="p-4 pt-8">
-                <h1 className="text-2xl font-bold mb-6">Mis Pedidos</h1>
+                <div className="flex justify-between items-center mb-6">
+                    <h1 className="text-2xl font-bold">Mis Pedidos</h1>
+                    {!user && <span className="text-xs bg-white/10 px-2 py-1 rounded text-white/60">Modo Invitado</span>}
+                </div>
+
 
                 <div className="flex bg-[var(--color-surface)] p-1 rounded-xl">
                     <button
@@ -158,6 +166,7 @@ const MyOrdersPage = () => {
 
                                 {activeTab === 'active' && (
                                     <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                        {/* Simple Progress Bar - Static for guests unless we simulate it */}
                                     </div>
                                 )}
 
@@ -168,9 +177,31 @@ const MyOrdersPage = () => {
                                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
                                                 <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
                                             </span>
-                                            Seguimiento en Vivo
+                                            {user ? 'Seguimiento en Vivo' : 'Seguimiento Limitado'}
                                         </div>
-                                        <LiveTrackingMap order={order} />
+
+                                        {user ? (
+                                            <LiveTrackingMap order={order} />
+                                        ) : (
+                                            <div className="bg-black/30 rounded-xl p-4 border border-white/10 flex flex-col items-center text-center backdrop-blur-sm relative overflow-hidden group hover:border-orange-500/30 transition-colors">
+                                                {/* Blurred Map Background Effect */}
+                                                <div className="absolute inset-0 bg-[url('https://api.mapbox.com/styles/v1/mapbox/dark-v11/static/-58.5228,34.5202,13,0/600x300?access_token=pk.eyJ1IjoiZGFtYWZhcHAiLCJhIjoiY2xranR5aDNzMDBiZDN1bnp4Z3h4Z3h6ayJ9.J_f_J_f_J_f')] opacity-20 blur-sm scale-110"></div>
+
+                                                <div className="relative z-10 bg-[var(--color-surface)]/80 p-3 rounded-full mb-2">
+                                                    <Lock className="w-6 h-6 text-orange-500" />
+                                                </div>
+                                                <h3 className="relative z-10 font-bold text-white mb-1">Seguimiento en Vivo Bloqueado</h3>
+                                                <p className="relative z-10 text-xs text-white/70 mb-3 max-w-[250px]">
+                                                    Solo los usuarios registrados pueden ver la ubicación del repartidor en tiempo real.
+                                                </p>
+                                                <button
+                                                    onClick={() => navigate('/register')}
+                                                    className="relative z-10 bg-[var(--color-primary)] text-white text-xs font-bold px-4 py-2 rounded-full hover:bg-purple-700 transition-colors"
+                                                >
+                                                    Registrarse para ver
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -184,11 +215,16 @@ const MyOrdersPage = () => {
                             </div>
 
                             <h2 className="text-2xl font-black uppercase leading-none mb-2 tracking-tighter text-white">
-                                LOS PEDIDOS Y ARTÍCULOS RECIENTES APARECERÁN AQUÍ
+                                {activeTab === 'active' ? 'SIN PEDIDOS ACTIVOS' : 'HISTORIAL VACÍO'}
                             </h2>
 
                             <p className="text-sm font-bold text-[var(--color-text-muted)] mb-8">
-                                ¡Empiece un nuevo pedido ahora!
+                                {user ? '¡Empiece un nuevo pedido ahora!' : (
+                                    <span>
+                                        ¡Haz tu primer pedido como invitado!<br />
+                                        <span className="text-xs opacity-60">(Se guardará en este dispositivo)</span>
+                                    </span>
+                                )}
                             </p>
 
                             <Link
@@ -199,7 +235,7 @@ const MyOrdersPage = () => {
                             </Link>
 
                             <button
-                                onClick={fetchOrders}
+                                onClick={user ? fetchOrders : fetchGuestOrders}
                                 className="block w-full bg-transparent border-2 border-white/10 text-white font-black text-lg py-3 rounded-full hover:bg-white/5 transition-colors uppercase tracking-wide"
                             >
                                 Actualizar

@@ -201,6 +201,35 @@ const CheckoutPage = () => {
                 throw new Error('No se recibió el link de pago')
             }
 
+            // Save order locally if guest
+            if (!user) {
+                const currentGuestOrders = JSON.parse(localStorage.getItem('damaf_guest_orders') || '[]')
+                // Add the new order. Since we don't have the full order object from Supabase (only single select), 
+                // we should refetch or construct it, but 'order' variable holds the created order row.
+                // We need to fetch items to store a complete view, or just store the basic view.
+                // For simplicity/perf, let's store what we have and maybe basic items info if needed for display.
+                // MyOrdersPage expects order + order_items. 
+                // Let's attach the orderItems we just created locally to the order object.
+                // Note: orderItems has productId, not the product details (name, image).
+                // We can map from 'cart' to populate product details for local storage display.
+
+                const fullGuestOrder = {
+                    ...order,
+                    order_items: cart.map(item => ({
+                        id: Math.random().toString(), // temp id
+                        products: {
+                            name: item.main.name,
+                            image_url: item.main.image_url
+                        },
+                        modifiers: item.modifiers,
+                        side_info: item.side,
+                        quantity: 1
+                    }))
+                }
+
+                localStorage.setItem('damaf_guest_orders', JSON.stringify([fullGuestOrder, ...currentGuestOrders]))
+            }
+
             window.location.href = paymentData.init_point
 
         } catch (error) {
