@@ -161,27 +161,53 @@ const SettingsManager = () => {
                 {getSettingsByCategory(activeTab).length > 0 ? (
                     getSettingsByCategory(activeTab).map((setting) => (
                         <div key={setting.key} className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5">
-                            <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-white transition-colors">{SETTING_LABELS[setting.key] || setting.key.replace(/_/g, ' ')}</h3>
-                                    <p className="text-sm text-[var(--color-text-muted)] mt-1">
-                                        {setting.description || 'Sin descripción'}
-                                    </p>
-                                </div>
-                                <div className="flex items-start gap-3 w-full md:w-auto">
-                                    <div className="relative w-full md:w-80">
+                            {setting.key === 'store_schedule' ? (
+                                // Full Width Layout for Schedule
+                                <div className="flex flex-col gap-4">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-white transition-colors">{SETTING_LABELS[setting.key] || setting.key.replace(/_/g, ' ')}</h3>
+                                            <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                                                {setting.description || 'Sin descripción'}
+                                            </p>
+                                        </div>
+                                        <button
+                                            onClick={() => handleSave(setting.key, setting.value)}
+                                            disabled={saving}
+                                            className="p-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                                            title="Guardar"
+                                        >
+                                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                    <div className="w-full">
                                         {renderSettingInput(setting)}
                                     </div>
-                                    <button
-                                        onClick={() => handleSave(setting.key, setting.value)}
-                                        disabled={saving}
-                                        className="p-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 mt-1"
-                                        title="Guardar"
-                                    >
-                                        {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                                    </button>
                                 </div>
-                            </div>
+                            ) : (
+                                // Standard Side-by-Side Layout
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                    <div className="flex-1">
+                                        <h3 className="text-lg font-bold text-white transition-colors">{SETTING_LABELS[setting.key] || setting.key.replace(/_/g, ' ')}</h3>
+                                        <p className="text-sm text-[var(--color-text-muted)] mt-1">
+                                            {setting.description || 'Sin descripción'}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-start gap-3 w-full md:w-auto">
+                                        <div className="relative w-full md:w-80">
+                                            {renderSettingInput(setting)}
+                                        </div>
+                                        <button
+                                            onClick={() => handleSave(setting.key, setting.value)}
+                                            disabled={saving}
+                                            className="p-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 mt-1"
+                                            title="Guardar"
+                                        >
+                                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     ))
                 ) : (
