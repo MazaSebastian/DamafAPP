@@ -1,4 +1,4 @@
-```javascript
+
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -106,7 +106,7 @@ const CheckoutPage = () => {
             if (productInCart) {
                 discount = productInCart.main.price
             } else {
-                toast.info(`Este cupón te regala un ${ validCoupon.products?.name || 'producto' }. ¡Si no está en el carrito, agrégalo para ver el descuento!`)
+                toast.info(`Este cupón te regala un ${validCoupon.products?.name || 'producto'}. ¡Si no está en el carrito, agrégalo para ver el descuento!`)
                 return
             }
         }
@@ -115,7 +115,7 @@ const CheckoutPage = () => {
 
         setAppliedCoupon(validCoupon)
         setDiscountAmount(discount)
-        toast.success(`¡Cupón ${ validCoupon.code } aplicado! Ahorras $${ discount.toFixed(2) } `)
+        toast.success(`¡Cupón ${validCoupon.code} aplicado! Ahorras $${discount.toFixed(2)} `)
     }
 
     // Shipping Logic
@@ -130,7 +130,7 @@ const CheckoutPage = () => {
         } else {
             // Dynamic Cost per KM
             cost = Math.ceil(distance * deliverySettings.delivery_price_per_km)
-            toast.info(`Distancia: ${ distance.toFixed(1) } km - Envío: $${ cost } `)
+            toast.info(`Distancia: ${distance.toFixed(1)} km - Envío: $${cost} `)
         }
 
         setShippingCost(cost)
@@ -367,13 +367,13 @@ const CheckoutPage = () => {
                 <div className="bg-[var(--color-surface)] p-1 rounded-xl flex border border-white/5">
                     <button
                         onClick={() => { setOrderType('takeaway'); setShippingCost(0); }}
-                        className={`flex - 1 py - 3 rounded - lg font - bold text - sm transition - all ${ orderType === 'takeaway' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]' } `}
+                        className={`flex - 1 py - 3 rounded - lg font - bold text - sm transition - all ${orderType === 'takeaway' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'} `}
                     >
                         Retiro en Local
                     </button>
                     <button
                         onClick={() => setOrderType('delivery')}
-                        className={`flex - 1 py - 3 rounded - lg font - bold text - sm transition - all ${ orderType === 'delivery' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]' } `}
+                        className={`flex - 1 py - 3 rounded - lg font - bold text - sm transition - all ${orderType === 'delivery' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'} `}
                     >
                         Delivery
                     </button>
@@ -409,7 +409,7 @@ const CheckoutPage = () => {
                 {/* List Items */}
                 <div className="space-y-4">
                     {cart.map((item, index) => (
-                        <div key={item.id} className="bg-[var(--color-surface)] rounded-2xl p-4 border border-white/5 animated-slide-up" style={{ animationDelay: `${ index * 100 } ms` }}>
+                        <div key={item.id} className="bg-[var(--color-surface)] rounded-2xl p-4 border border-white/5 animated-slide-up" style={{ animationDelay: `${index * 100} ms` }}>
                             <div className="flex gap-4 mb-3">
                                 {item.main.media_type === 'video' ? (
                                     <video src={item.main.image_url} className="w-16 h-16 rounded-lg object-cover bg-black/20" muted loop autoPlay playsInline />
@@ -497,7 +497,7 @@ const CheckoutPage = () => {
                     </div>
 
                     <button onClick={handleCheckout} className={`w - full text - white py - 4 rounded - xl font - bold text - lg shadow - lg active: scale - 95 transition - all
-                        ${ !orderType ? 'bg-gray-600 cursor-not-allowed opacity-50' : 'bg-[#009ee3] hover:bg-[#009ee3]/90 shadow-blue-900/20' } `}>
+                        ${!orderType ? 'bg-gray-600 cursor-not-allowed opacity-50' : 'bg-[#009ee3] hover:bg-[#009ee3]/90 shadow-blue-900/20'} `}>
                         {orderType === 'delivery' ? 'Pagar con Mercado Pago' :
                             orderType === 'takeaway' ? 'Pagar Retiro con MP' :
                                 'Seleccione método de entrega'}
