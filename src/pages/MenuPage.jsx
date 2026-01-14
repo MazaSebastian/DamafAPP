@@ -4,6 +4,7 @@ import { ArrowLeft, Search, ShoppingBag } from 'lucide-react' // ShoppingBag ico
 import { Link, useNavigate } from 'react-router-dom'
 import { MenuSkeleton } from '../components/skeletons/MenuSkeleton'
 import { motion } from 'framer-motion'
+import BottomNav from '../components/BottomNav'
 import { Badge } from 'lucide-react' // Optional
 
 const MenuPage = () => {
@@ -51,9 +52,9 @@ const MenuPage = () => {
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
             {/* Header */}
             <header className="px-4 py-4 flex items-center gap-3 sticky top-0 bg-[var(--color-background)]/95 backdrop-blur-md z-40 border-b border-white/5">
-                <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                <Link to="/" className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
                     <ArrowLeft className="w-6 h-6" />
-                </button>
+                </Link>
                 <div className="flex-1 relative">
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
@@ -208,6 +209,7 @@ const MenuPage = () => {
                     </>
                 )}
             </main>
+            <BottomNav />
         </div>
     )
 }
