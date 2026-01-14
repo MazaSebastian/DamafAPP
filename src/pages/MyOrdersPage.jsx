@@ -6,6 +6,7 @@ import BottomNav from '../components/BottomNav'
 import { Link, useNavigate } from 'react-router-dom'
 import { OrderSkeleton } from '../components/skeletons/OrderSkeleton'
 import LiveTrackingMap from '../components/LiveTrackingMap'
+import OrderModal from '../components/OrderModal'
 
 const MyOrdersPage = () => {
     const { user } = useAuth()
@@ -13,6 +14,7 @@ const MyOrdersPage = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [activeTab, setActiveTab] = useState('active') // 'active' or 'history'
+    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false)
 
     useEffect(() => {
         if (user) {
@@ -222,12 +224,12 @@ const MyOrdersPage = () => {
                                 {user ? '¡Empiece un nuevo pedido ahora!' : '¡Haz tu primer pedido como invitado!'}
                             </p>
 
-                            <Link
-                                to="/menu"
+                            <button
+                                onClick={() => setIsOrderModalOpen(true)}
                                 className="block w-full bg-[var(--color-secondary)] text-white font-black text-lg py-3 rounded-full shadow-md mb-3 hover:bg-orange-600 transition-colors uppercase tracking-wide"
                             >
                                 Pide aquí
-                            </Link>
+                            </button>
 
                             <button
                                 onClick={user ? fetchOrders : fetchGuestOrders}
@@ -240,6 +242,7 @@ const MyOrdersPage = () => {
                 )}
             </main>
 
+            <OrderModal isOpen={isOrderModalOpen} onClose={() => setIsOrderModalOpen(false)} />
             <BottomNav />
         </div>
     )
