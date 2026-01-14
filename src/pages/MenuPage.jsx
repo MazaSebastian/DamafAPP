@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
 import { ArrowLeft, Search, Loader2, Plus, Minus, ShoppingBag } from 'lucide-react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import { useCart } from '../context/CartContext'
+import { toast } from 'sonner'
 import MealBuilder from '../components/MealBuilder'
 import { MenuSkeleton } from '../components/skeletons/MenuSkeleton'
 
@@ -12,6 +15,8 @@ const MenuPage = () => {
     const [loading, setLoading] = useState(true)
     const scrollContainerRef = useRef(null)
     const navigate = useNavigate()
+    const { user } = useAuth()
+    const { cart } = useCart()
 
     // Meal Builder State
     const [selectedProduct, setSelectedProduct] = useState(null)
@@ -54,6 +59,32 @@ const MenuPage = () => {
         }
     }
 
+    const handleCheckoutClick = () => {
+        if (cart.length === 0) {
+            toast('Tu carrito está vacío', { icon: '🛒' })
+            return
+        }
+
+        if (user) {
+            navigate('/checkout')
+            return
+        }
+
+        // Guest logic
+        toast('No estás registrado en DAMAFAPP', {
+            description: '¿Querés registrarte para aprovechar las promos y beneficios?',
+            duration: 8000,
+            action: {
+                label: 'Sí, Registrarme',
+                onClick: () => navigate('/login')
+            },
+            cancel: {
+                label: 'Ahora no',
+                onClick: () => navigate('/checkout')
+            }
+        })
+    }
+
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
             <MealBuilder
@@ -69,9 +100,14 @@ const MenuPage = () => {
                     <Link to="/" className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
                         <ArrowLeft className="w-6 h-6" />
                     </Link>
-                    <Link to="/checkout">
+                    <button onClick={handleCheckoutClick} className="relative">
                         <ShoppingBag className="w-6 h-6 text-white hover:text-[var(--color-secondary)] transition-colors" />
-                    </Link>
+                        {cart.length > 0 && (
+                            <span className="absolute -top-1 -right-1 bg-[var(--color-secondary)] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full animate-pulse">
+                                {cart.length}
+                            </span>
+                        )}
+                    </button>
                 </div>
                 <div className="flex-1 px-4">
                     <div className="relative">
