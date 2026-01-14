@@ -46,7 +46,7 @@ const LockedLoyaltyBanner = () => {
 
             {/* The Lock Overlay */}
             <Link
-                to="/register"
+                to="/club-info"
                 className="absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 bg-black/40 rounded-2xl backdrop-blur-[2px] transition-all hover:bg-black/50 hover:backdrop-blur-[1px] border-2 border-dashed border-white/20 hover:border-orange-500/50"
             >
                 <div className="bg-[var(--color-surface)] p-3 rounded-full mb-3 shadow-2xl border border-white/10 animate-bounce group-hover:scale-110 transition-transform">

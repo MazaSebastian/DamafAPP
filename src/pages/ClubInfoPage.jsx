@@ -38,8 +38,8 @@ const ClubInfoPage = () => {
                     <div className="bg-[var(--color-surface)] p-6 rounded-2xl border border-white/5 text-center">
                         <p className="text-white font-bold mb-2">¡Únete hoy mismo!</p>
                         <p className="text-xs text-[var(--color-text-muted)] mb-4">Regístrate para empezar a sumar.</p>
-                        <Link to="/login" className="inline-block bg-[var(--color-primary)] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-purple-700 transition-colors">
-                            Iniciar Sesión / Registrarme
+                        <Link to="/register" className="inline-block bg-[var(--color-primary)] text-white text-sm font-bold px-6 py-2.5 rounded-full hover:bg-purple-700 transition-colors">
+                            Registrarme
                         </Link>
                     </div>
                 )}
