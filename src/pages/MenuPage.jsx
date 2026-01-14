@@ -1,13 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Search, Loader2, Plus, Minus, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, Search, ShoppingBag } from 'lucide-react' // ShoppingBag icon can stay as "Link to orders" or removed
 import { Link, useNavigate } from 'react-router-dom'
-import { useAuth } from '../context/AuthContext'
-import { useCart } from '../context/CartContext'
-import { toast } from 'sonner'
-import MealBuilder from '../components/MealBuilder'
 import { MenuSkeleton } from '../components/skeletons/MenuSkeleton'
-import GuestAlertModal from '../components/GuestAlertModal'
+import { motion } from 'framer-motion'
+import { Badge } from 'lucide-react' // Optional
 
 const MenuPage = () => {
     const [categories, setCategories] = useState([])
@@ -16,16 +13,6 @@ const MenuPage = () => {
     const [loading, setLoading] = useState(true)
     const scrollContainerRef = useRef(null)
     const navigate = useNavigate()
-    const { user } = useAuth()
-    const { cart } = useCart()
-
-    // Meal Builder State
-    const [selectedProduct, setSelectedProduct] = useState(null)
-    const [isBuilderOpen, setIsBuilderOpen] = useState(false)
-    const [currentCategorySlug, setCurrentCategorySlug] = useState('')
-
-    // Guest Alert State
-    const [showGuestAlert, setShowGuestAlert] = useState(false)
 
     useEffect(() => {
         fetchData()
@@ -48,168 +35,148 @@ const MenuPage = () => {
         ? products
         : products.filter(p => p.category_id === selectedCategory)
 
-    // Helper to scroll tabs
-    const scrollTabs = (direction) => {
-        // Implementation for smooth scroll if needed, or just let user swipe
-    }
-
-    const handleProductClick = (product) => {
-        // Find category slug for the product to filter modifiers
-        const cat = categories.find(c => c.id === product.category_id)
-        if (cat) {
-            setCurrentCategorySlug(cat.slug)
-            setSelectedProduct(product)
-            setIsBuilderOpen(true)
-        }
-    }
-
-    const handleCheckoutClick = () => {
-        if (cart.length === 0) {
-            toast('Tu carrito está vacío', { icon: '🛒' })
-            return
-        }
-
-        if (user) {
-            navigate('/checkout')
-            return
-        }
-
-        // Guest logic - Show Modal
-        setShowGuestAlert(true)
-    }
-
     return (
         <div className="min-h-screen bg-[var(--color-background)] pb-24">
-            <GuestAlertModal
-                isOpen={showGuestAlert}
-                onClose={() => setShowGuestAlert(false)}
-                onContinueAsGuest={() => {
-                    setShowGuestAlert(false)
-                    navigate('/checkout')
-                }}
-            />
-
-            <MealBuilder
-                isOpen={isBuilderOpen}
-                onClose={() => setIsBuilderOpen(false)}
-                product={selectedProduct}
-                categorySlug={currentCategorySlug}
-            />
-
             {/* Header */}
-            <header className="p-4 flex items-center justify-between sticky top-0 bg-[var(--color-background)]/95 backdrop-blur-md z-40 border-b border-white/5">
-                <div className="flex items-center gap-2">
-                    <Link to="/" className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
-                        <ArrowLeft className="w-6 h-6" />
-                    </Link>
-                    <button onClick={handleCheckoutClick} className="relative p-2 rounded-full hover:bg-white/10 transition-colors">
-                        <ShoppingBag className="w-6 h-6 text-white hover:text-[var(--color-secondary)] transition-colors" />
-                        {cart.length > 0 && (
-                            <span className="absolute top-1 right-0 bg-[var(--color-secondary)] text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full animate-pulse border border-[var(--color-background)]">
-                                {cart.length}
-                            </span>
-                        )}
-                    </button>
-                </div>
-                <div className="flex-1 px-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input type="text" placeholder="Buscar..." className="w-full bg-[var(--color-surface)] rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 ring-[var(--color-secondary)]" />
-                    </div>
+            <header className="px-4 py-4 flex items-center gap-3 sticky top-0 bg-[var(--color-background)]/95 backdrop-blur-md z-40 border-b border-white/5">
+                <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-white hover:bg-white/10 rounded-full transition-colors">
+                    <ArrowLeft className="w-6 h-6" />
+                </button>
+                <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Buscar por productos"
+                        className="w-full bg-[var(--color-surface)] rounded-2xl py-3 pl-10 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-[var(--color-secondary)] text-white placeholder-gray-500 shadow-sm"
+                    />
                 </div>
             </header>
 
             {/* Category Tabs */}
-            <div className="sticky top-[73px] bg-[var(--color-background)] z-30 pt-2 pb-2">
+            <div className="sticky top-[76px] bg-[var(--color-background)] z-30 pt-2 pb-4 border-b border-white/5 shadow-2xl shadow-black/20">
                 <div
                     ref={scrollContainerRef}
-                    className="flex overflow-x-auto gap-3 px-4 hide-scrollbar"
+                    className="flex overflow-x-auto gap-4 px-4 hide-scrollbar"
                 >
                     <button
                         onClick={() => setSelectedCategory('all')}
-                        className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-colors ${selectedCategory === 'all' ? 'bg-[var(--color-secondary)] text-white' : 'bg-[var(--color-surface)] text-gray-400 hover:text-white'}`}
+                        className={`flex flex-col items-center gap-2 min-w-[70px] transition-all duration-300 group`}
                     >
-                        Todos
+                        <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all ${selectedCategory === 'all'
+                            ? 'bg-[var(--color-secondary)]/10 border-[var(--color-secondary)] text-[var(--color-secondary)] shadow-[0_0_15px_rgba(255,107,0,0.3)]'
+                            : 'bg-[var(--color-surface)] border-white/5 text-gray-400 grayscale group-hover:grayscale-0 group-hover:bg-white/5'}`}>
+                            <span className="text-2xl">🍽️</span>
+                        </div>
+                        <span className={`text-xs font-bold transition-colors ${selectedCategory === 'all' ? 'text-[var(--color-secondary)]' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                            Todos
+                        </span>
                     </button>
+
                     {categories.map(cat => (
                         <button
                             key={cat.id}
                             onClick={() => setSelectedCategory(cat.id)}
-                            className={`whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold transition-colors ${selectedCategory === cat.id ? 'bg-[var(--color-secondary)] text-white' : 'bg-[var(--color-surface)] text-gray-400 hover:text-white'}`}
+                            className={`flex flex-col items-center gap-2 min-w-[70px] transition-all duration-300 group`}
                         >
-                            {cat.name}
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all relative overflow-hidden ${selectedCategory === cat.id
+                                ? 'bg-[var(--color-secondary)]/10 border-[var(--color-secondary)] text-[var(--color-secondary)] shadow-[0_0_15px_rgba(255,107,0,0.3)]'
+                                : 'bg-[var(--color-surface)] border-white/5 text-gray-400 grayscale group-hover:grayscale-0 group-hover:bg-white/5'}`}>
+                                {cat.image_url ? (
+                                    <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                                ) : (
+                                    <span className="text-xl capitalize">{cat.name.substring(0, 2)}</span>
+                                )}
+                            </div>
+                            <span className={`text-xs font-bold transition-colors truncate w-full text-center ${selectedCategory === cat.id ? 'text-[var(--color-secondary)]' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                                {cat.name}
+                            </span>
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Product Grid */}
-            <main className="px-4 py-4">
+            {/* Product List - Elegant Catalog Style */}
+            <main className="px-4 py-6 max-w-2xl mx-auto">
                 {loading ? (
                     <MenuSkeleton />
                 ) : (
                     <>
-                        <h2 className="text-xl font-bold mb-4 capitalize">
-                            {selectedCategory === 'all' ? 'Menú Completo' : categories.find(c => c.id === selectedCategory)?.name}
-                        </h2>
+                        <motion.h2
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="text-2xl font-black mb-6 capitalize text-white tracking-tight"
+                        >
+                            {selectedCategory === 'all' ? 'Menú Mediodía' : categories.find(c => c.id === selectedCategory)?.name}
+                        </motion.h2>
 
-                        <div className="grid grid-cols-1 gap-6">
-                            {filteredProducts.map(product => {
+                        <div className="space-y-6">
+                            {filteredProducts.map((product, index) => {
                                 const isOutOfStock = product.stock !== null && product.stock === 0
 
                                 return (
-                                    <div
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.05 }}
                                         key={product.id}
-                                        onClick={() => !isOutOfStock && handleProductClick(product)}
-                                        className={`bg-[var(--color-surface)] rounded-xl p-3 flex gap-4 border border-white/5 transition-all group ${isOutOfStock ? 'opacity-60 cursor-not-allowed grayscale' : 'hover:border-[var(--color-secondary)]/50 cursor-pointer'}`}
+                                        className={`bg-[var(--color-surface)] rounded-2xl p-4 flex gap-4 border border-white/5 hover:border-[var(--color-secondary)]/30 transition-all group shadow-lg ${isOutOfStock ? 'opacity-60 grayscale' : ''}`}
                                     >
-                                        {/* Image */}
-                                        <div className="w-28 h-28 bg-black/30 rounded-lg overflow-hidden flex-shrink-0 relative">
-                                            {product.image_url ? (
-                                                product.media_type === 'video' ? (
-                                                    <video
+                                        {/* Left Side: Info */}
+                                        <div className="flex-1 flex flex-col justify-start py-1">
+                                            <div className="mb-2">
+                                                {product.is_popular && (
+                                                    <span className="inline-block bg-yellow-500/20 text-yellow-500 text-[10px] font-bold px-2 py-0.5 rounded-full mb-2 uppercase tracking-wide border border-yellow-500/20">
+                                                        Popular
+                                                    </span>
+                                                )}
+                                                <h3 className="font-bold text-lg mb-1.5 text-white leading-snug group-hover:text-[var(--color-secondary)] transition-colors">
+                                                    {product.name}
+                                                </h3>
+                                                <p className="text-sm text-[var(--color-text-muted)] leading-relaxed line-clamp-3">
+                                                    {product.description}
+                                                </p>
+                                            </div>
+                                            <div className="mt-auto pt-3">
+                                                <span className="text-[var(--color-secondary)] font-black text-xl tracking-tight">
+                                                    $ {product.price.toLocaleString('es-AR')}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Right Side: Image */}
+                                        <div className="w-32 h-32 flex-shrink-0 relative">
+                                            <div className="w-full h-full rounded-2xl overflow-hidden bg-black/20 shadow-inner">
+                                                {product.image_url ? (
+                                                    <img
                                                         src={product.image_url}
-                                                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                        muted
-                                                        loop
-                                                        autoPlay
-                                                        playsInline
+                                                        alt={product.name}
+                                                        className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
                                                     />
                                                 ) : (
-                                                    <img src={product.image_url} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                                                )
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-3xl">🍔</div>
-                                            )}
+                                                    <div className="w-full h-full flex items-center justify-center bg-white/5">
+                                                        <span className="text-2xl">🍔</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
                                             {isOutOfStock && (
-                                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                                                    <span className="text-[10px] uppercase font-bold text-white bg-red-600 px-2 py-1 rounded shadow-lg transform -rotate-12">
+                                                <div className="absolute inset-0 bg-black/60 backdrop-blur-[1px] rounded-2xl flex items-center justify-center z-10">
+                                                    <span className="text-[10px] uppercase font-bold text-white bg-red-600 px-3 py-1 rounded-full shadow-lg transform -rotate-6 border border-white/20">
                                                         Agotado
                                                     </span>
                                                 </div>
                                             )}
                                         </div>
-
-                                        {/* Content */}
-                                        <div className="flex-1 flex flex-col justify-between">
-                                            <div>
-                                                <h3 className="font-bold text-lg leading-tight mb-1">{product.name}</h3>
-                                                <p className="text-xs text-[var(--color-text-muted)] line-clamp-2">{product.description}</p>
-                                            </div>
-                                            <div className="flex justify-between items-end mt-2">
-                                                <span className="text-[var(--color-secondary)] font-bold text-lg">${product.price}</span>
-                                                <button disabled={isOutOfStock} className={`p-2 rounded-lg text-white shadow-lg transition-colors ${isOutOfStock ? 'bg-gray-600 cursor-not-allowed' : 'bg-[var(--color-primary)] hover:bg-purple-700 active:scale-95'}`}>
-                                                    <Plus className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    </motion.div>
                                 )
                             })}
 
                             {filteredProducts.length === 0 && (
-                                <div className="text-center py-10 text-[var(--color-text-muted)]">
-                                    No hay productos en esta categoría.
+                                <div className="text-center py-20">
+                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                                        <ShoppingBag className="w-8 h-8 text-white/20" />
+                                    </div>
+                                    <p className="text-[var(--color-text-muted)] font-medium">No hay productos disponibles.</p>
                                 </div>
                             )}
                         </div>
