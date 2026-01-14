@@ -76,8 +76,8 @@ const MenuPage = () => {
                     >
                         <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all ${selectedCategory === 'all'
                             ? 'bg-[var(--color-secondary)]/10 border-[var(--color-secondary)] text-[var(--color-secondary)] shadow-[0_0_15px_rgba(255,107,0,0.3)]'
-                            : 'bg-[var(--color-surface)] border-white/5 text-gray-400 grayscale group-hover:grayscale-0 group-hover:bg-white/5'}`}>
-                            <span className="text-2xl">🔥</span>
+                            : 'bg-white/5 border-transparent text-white/40 group-hover:text-white group-hover:bg-white/10'}`}>
+                            <span className="text-2xl filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100 transition-all">🔥</span>
                         </div>
                         <span className={`text-xs font-bold transition-colors ${selectedCategory === 'all' ? 'text-[var(--color-secondary)]' : 'text-gray-500 group-hover:text-gray-300'}`}>
                             Todos
@@ -92,11 +92,13 @@ const MenuPage = () => {
                         >
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all relative overflow-hidden ${selectedCategory === cat.id
                                 ? 'bg-[var(--color-secondary)]/10 border-[var(--color-secondary)] text-[var(--color-secondary)] shadow-[0_0_15px_rgba(255,107,0,0.3)]'
-                                : 'bg-[var(--color-surface)] border-white/5 text-gray-400 grayscale group-hover:grayscale-0 group-hover:bg-white/5'}`}>
+                                : 'bg-white/5 border-transparent text-white/40 group-hover:text-white group-hover:bg-white/10'}`}>
                                 {cat.image_url ? (
-                                    <img src={cat.image_url} alt={cat.name} className="w-full h-full object-cover" />
+                                    <img src={cat.image_url} alt={cat.name} className={`w-full h-full object-cover transition-all ${selectedCategory === cat.id ? '' : 'grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`} />
                                 ) : (
-                                    getCategoryIcon(cat.name)
+                                    <span className={`text-2xl transition-all ${selectedCategory === cat.id ? '' : 'filter grayscale opacity-70 group-hover:grayscale-0 group-hover:opacity-100'}`}>
+                                        {getCategoryIcon(cat.name)}
+                                    </span>
                                 )}
                             </div>
                             <span className={`text-xs font-bold transition-colors truncate w-full text-center ${selectedCategory === cat.id ? 'text-[var(--color-secondary)]' : 'text-gray-500 group-hover:text-gray-300'}`}>
