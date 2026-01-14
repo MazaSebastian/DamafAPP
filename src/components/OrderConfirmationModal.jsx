@@ -1,8 +1,11 @@
 import { ShoppingBag, X } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
-const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, total }) => {
+const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
     if (!isOpen) return null
+
+    // Safe access to total
+    const total = orderData?.total || 0
 
     return (
         <AnimatePresence>
@@ -43,6 +46,9 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, total }) => {
 
                         <div className="py-2">
                             <span className="text-3xl font-bold text-white">${total.toFixed(2)}</span>
+                            {orderData?.type === 'delivery' && (
+                                <p className="text-xs text-[var(--color-text-muted)] mt-1">Incluye envío a domicilio</p>
+                            )}
                         </div>
 
                         <div className="w-full space-y-3 pt-2">

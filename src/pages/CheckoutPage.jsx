@@ -517,6 +517,10 @@ const CheckoutPage = () => {
                     customerPhone: user?.phone || '', // User phone if available
                     paymentMethod: 'Mercado Pago' // Default for now
                 }}
+                onConfirm={() => {
+                    setShowConfirmModal(false)
+                    processOrder()
+                }}
                 onClose={() => setShowConfirmModal(false)}
             />
 
