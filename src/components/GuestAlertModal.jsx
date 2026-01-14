@@ -46,7 +46,7 @@ const GuestAlertModal = ({ isOpen, onClose, onContinueAsGuest }) => {
 
                         <div className="w-full space-y-3 pt-2">
                             <button
-                                onClick={() => navigate('/login')}
+                                onClick={() => navigate('/register')}
                                 className="w-full bg-[var(--color-primary)] text-white font-bold py-3.5 rounded-xl shadow-lg shadow-purple-900/20 active:scale-95 transition-all"
                             >
                                 Sí, Registrarme
