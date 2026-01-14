@@ -101,8 +101,8 @@ const MenuPage = () => {
                                     </span>
                                 )}
                             </div>
-                            <span className={`text-[10px] uppercase tracking-wide font-bold text-center leading-tight transition-colors w-full px-1 ${selectedCategory === cat.id ? 'text-[var(--color-secondary)]' : 'text-gray-500 group-hover:text-gray-300'}`}>
-                                {cat.name}
+                            <span className={`text-[10px] uppercase tracking-wide font-bold text-center leading-tight transition-colors w-full px-0.5 truncate ${selectedCategory === cat.id ? 'text-[var(--color-secondary)]' : 'text-gray-500 group-hover:text-gray-300'}`}>
+                                {cat.name === 'Papas & Acompañamientos' ? 'Acompañamientos' : cat.name}
                             </span>
                         </button>
                     ))}
