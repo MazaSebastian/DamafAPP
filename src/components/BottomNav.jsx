@@ -24,13 +24,13 @@ const BottomNav = () => {
             <nav className="fixed bottom-0 w-full bg-[var(--color-surface)] border-t border-white/5 pb-2 pt-2 z-50 h-[80px]">
                 <div className="max-w-md mx-auto h-full grid grid-cols-5 relative">
                     {/* 1. Menú (Antes Pide Aquí) */}
-                    <button onClick={handleMenuClick} className="flex flex-col items-center justify-end pb-3">
+                    <Link to="/menu" className="flex flex-col items-center justify-end pb-3">
                         <NavItem
                             icon={<UtensilsCrossed className="w-5 h-5" />}
                             label="Menú"
                             active={currentPath === '/menu'}
                         />
-                    </button>
+                    </Link>
 
                     {/* 2. Pedidos */}
                     <Link to="/my-orders" className="flex flex-col items-center justify-end pb-3">
