@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { toast } from 'sonner'
 import { Save, Loader2, Settings as SettingsIcon } from 'lucide-react'
+import ScheduleConfig from './ScheduleConfig'
 
 const SettingsManager = () => {
     const [settings, setSettings] = useState([])
@@ -70,15 +71,7 @@ const SettingsManager = () => {
         'loyalty_benefits_gold': 'Beneficios Nivel Gold (separados por coma)'
     }
 
-    const DAYS_MAP = {
-        0: 'Domingo',
-        1: 'Lunes',
-        2: 'Martes',
-        3: 'Miércoles',
-        4: 'Jueves',
-        5: 'Viernes',
-        6: 'Sábado'
-    }
+
 
     // Helper to group settings
     const getSettingsByCategory = (category) => {
@@ -97,85 +90,19 @@ const SettingsManager = () => {
         { id: 'loyalty', label: 'Fidelización' }
     ]
 
-    const handleScheduleChange = (scheduleJSON, dayIndex, field, value) => {
-        try {
-            const schedule = JSON.parse(scheduleJSON)
-            if (!schedule[dayIndex]) schedule[dayIndex] = { active: false, start: '19:00', end: '23:00' }
 
-            schedule[dayIndex][field] = value
-
-            return JSON.stringify(schedule)
-        } catch (e) {
-            console.error("Error updating schedule", e)
-            return scheduleJSON
-        }
-    }
 
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-primary)]" /></div>
 
     const renderSettingInput = (setting) => {
         // Schedule Grid UI
         if (setting.key === 'store_schedule') {
-            let scheduleData = {}
-            try { scheduleData = JSON.parse(setting.value) } catch (e) { }
-
             return (
-                <div className="space-y-2 w-full mt-2">
-                    {[1, 2, 3, 4, 5, 6, 0].map(dayIndex => { // Mon to Sun order
-                        const dayData = scheduleData[dayIndex] || { active: false, start: '19:00', end: '23:00' }
-                        return (
-                            <div key={dayIndex} className="flex flex-wrap items-center gap-2 text-sm max-w-2xl bg-black/20 p-2 rounded-lg border border-white/5">
-                                <div className="w-24 font-bold text-white/80">{DAYS_MAP[dayIndex]}</div>
-                                <label className="flex items-center gap-2 cursor-pointer mr-4">
-                                    <input
-                                        type="checkbox"
-                                        checked={dayData.active}
-                                        onChange={(e) => {
-                                            const newJSON = handleScheduleChange(setting.value, dayIndex, 'active', e.target.checked)
-                                            handleChange(setting.key, newJSON)
-                                        }}
-                                        className="w-4 h-4 rounded accent-[var(--color-primary)]"
-                                    />
-                                    <span className={dayData.active ? 'text-green-400' : 'text-gray-500'}>
-                                        {dayData.active ? 'Abierto' : 'Cerrado'}
-                                    </span>
-                                </label>
-
-                                {dayData.active && (
-                                    <>
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-white/50 text-xs">De:</span>
-                                            <input
-                                                type="time"
-                                                value={dayData.start}
-                                                onChange={(e) => {
-                                                    const newJSON = handleScheduleChange(setting.value, dayIndex, 'start', e.target.value)
-                                                    handleChange(setting.key, newJSON)
-                                                }}
-                                                className="bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-xs w-24"
-                                            />
-                                        </div>
-                                        <div className="flex items-center gap-1">
-                                            <span className="text-white/50 text-xs">Hasta:</span>
-                                            <input
-                                                type="time"
-                                                value={dayData.end}
-                                                onChange={(e) => {
-                                                    const newJSON = handleScheduleChange(setting.value, dayIndex, 'end', e.target.value)
-                                                    handleChange(setting.key, newJSON)
-                                                }}
-                                                className="bg-black/40 border border-white/10 rounded px-2 py-1 text-white text-xs w-24"
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        )
-                    })}
-                    <div className="mt-2 text-xs text-[var(--color-text-muted)]">* Guarda los cambios para aplicar el nuevo horario.</div>
-                    <div className="mt-2 text-xs text-yellow-500 bg-yellow-500/10 p-2 rounded border border-yellow-500/20">
-                        Nota: Para cerrar por feriado o evento, simplemente destilda el día correspondiente.
-                    </div>
+                <div className="w-full mt-2">
+                    <ScheduleConfig
+                        value={setting.value}
+                        onChange={(newValue) => handleChange(setting.key, newValue)}
+                    />
                 </div>
             )
         }
