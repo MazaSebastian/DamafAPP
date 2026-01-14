@@ -334,7 +334,7 @@ const CheckoutPage = () => {
         }
 
         // Custom Toast Confirmation - REPLACED BY MODAL
-        setIsConfirmModalOpen(true)
+        setShowConfirmModal(true)
     }
 
     if (cart.length === 0) {
@@ -507,7 +507,7 @@ const CheckoutPage = () => {
 
             {/* Modals */}
             <OrderConfirmationModal
-                isOpen={isConfirmModalOpen}
+                isOpen={showConfirmModal}
                 orderData={{
                     total: finalTotal, // Use finalTotal here
                     type: orderType,
@@ -517,7 +517,7 @@ const CheckoutPage = () => {
                     customerPhone: user?.phone || '', // User phone if available
                     paymentMethod: 'Mercado Pago' // Default for now
                 }}
-                onClose={() => setIsConfirmModalOpen(false)}
+                onClose={() => setShowConfirmModal(false)}
             />
 
             <OrderModal
