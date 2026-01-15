@@ -71,28 +71,28 @@ const KDSPage = () => {
 
     return (
         <div className="h-screen bg-[var(--color-background)] text-white flex flex-col overflow-hidden font-[var(--font-sans)]">
-            {/* Simple Top Bar */}
-            <div className="bg-[var(--color-surface)]/80 backdrop-blur-xl p-4 flex justify-between items-center border-b border-white/10 z-10 shadow-lg">
+            {/* Top Bar */}
+            <div className="bg-[var(--color-surface)]/90 backdrop-blur-xl px-6 py-5 flex justify-between items-center border-b border-white/5 z-10 shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
                 <div className="flex items-center gap-4">
-                    <Link to="/admin" className="p-2 bg-white/5 rounded-xl hover:bg-white/10 transition-colors border border-white/5">
-                        <ArrowLeft className="w-6 h-6" />
+                    <Link to="/admin" className="p-2.5 bg-white/5 rounded-2xl hover:bg-white/10 transition-all duration-200 border border-white/5 hover:border-white/10 hover:scale-105">
+                        <ArrowLeft className="w-5 h-5" />
                     </Link>
-                    <h1 className="text-2xl font-black uppercase tracking-widest text-white drop-shadow-md">
+                    <h1 className="text-2xl font-black uppercase tracking-wider text-white">
                         KDS <span className="text-[var(--color-secondary)]">Cocina</span>
                     </h1>
                 </div>
-                <div className="flex gap-4">
-                    <div className="px-4 py-2 bg-yellow-500/20 rounded-xl border border-yellow-500/30 text-yellow-400 font-bold shadow-[0_0_15px_rgba(234,179,8,0.1)]">
+                <div className="flex gap-3">
+                    <div className="px-5 py-2.5 bg-yellow-500/10 rounded-2xl border border-yellow-500/20 text-yellow-400 font-bold text-sm shadow-[0_0_20px_rgba(234,179,8,0.05)] hover:bg-yellow-500/15 transition-all">
                         Pendientes: {orders.filter(o => o.status === 'pending').length}
                     </div>
-                    <div className="px-4 py-2 bg-[var(--color-secondary)]/20 rounded-xl border border-[var(--color-secondary)]/30 text-[var(--color-secondary)] font-bold shadow-[0_0_15px_rgba(214,67,34,0.1)]">
+                    <div className="px-5 py-2.5 bg-[var(--color-secondary)]/10 rounded-2xl border border-[var(--color-secondary)]/20 text-[var(--color-secondary)] font-bold text-sm shadow-[0_0_20px_rgba(214,67,34,0.05)] hover:bg-[var(--color-secondary)]/15 transition-all">
                         En Marcha: {orders.filter(o => o.status === 'cooking').length}
                     </div>
                 </div>
             </div>
 
             {/* Horizontal Scroll Area */}
-            <div className="flex-1 overflow-x-auto overflow-y-hidden p-6">
+            <div className="flex-1 overflow-x-auto overflow-y-hidden p-6 kds-scrollbar">
                 <div className="flex gap-6 h-full pb-4 items-start snap-x snap-mandatory">
                     {orders.length > 0 ? (
                         orders.map(order => (
@@ -103,10 +103,10 @@ const KDSPage = () => {
                             />
                         ))
                     ) : (
-                        <div className="w-full h-full flex items-center justify-center flex-col text-[var(--color-text-muted)] opacity-50">
-                            <span className="text-6xl mb-4">😌</span>
-                            <span className="text-2xl font-bold uppercase">Todo al día</span>
-                            <p>Esperando nuevas comandas...</p>
+                        <div className="w-full h-full flex items-center justify-center flex-col text-[var(--color-text-muted)]">
+                            <span className="text-7xl mb-4 opacity-40">😌</span>
+                            <span className="text-2xl font-bold uppercase opacity-60">Todo al día</span>
+                            <p className="text-sm opacity-40 mt-2">Esperando nuevas comandas...</p>
                         </div>
                     )}
                 </div>
