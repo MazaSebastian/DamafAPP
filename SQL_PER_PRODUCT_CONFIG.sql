@@ -15,6 +15,12 @@ CREATE TABLE IF NOT EXISTS product_modifiers (
 
 -- RLS Policies for product_modifiers
 ALTER TABLE product_modifiers ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Enable read access for all users" ON product_modifiers;
 CREATE POLICY "Enable read access for all users" ON product_modifiers FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Enable insert for admins only" ON product_modifiers;
 CREATE POLICY "Enable insert for admins only" ON product_modifiers FOR INSERT WITH CHECK (auth.uid() IN (SELECT id FROM profiles WHERE role IN ('admin', 'owner')));
+
+DROP POLICY IF EXISTS "Enable delete for admins only" ON product_modifiers;
 CREATE POLICY "Enable delete for admins only" ON product_modifiers FOR DELETE USING (auth.uid() IN (SELECT id FROM profiles WHERE role IN ('admin', 'owner')));
