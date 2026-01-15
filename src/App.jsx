@@ -32,7 +32,7 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/kds" element={
-          <ProtectedRoute role="admin">
+          <ProtectedRoute role={['admin', 'kitchen']}>
             <KDSPage />
           </ProtectedRoute>
         } />
