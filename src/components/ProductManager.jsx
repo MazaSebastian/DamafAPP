@@ -12,6 +12,9 @@ const ProductManager = () => {
 
     const [stats, setStats] = useState({})
 
+    const [editingProduct, setEditingProduct] = useState(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
+
     useEffect(() => {
         fetchCategories()
         updateStats()
