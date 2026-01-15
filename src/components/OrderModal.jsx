@@ -212,11 +212,11 @@ const OrderModal = ({ isOpen, onClose }) => {
                     />
 
                     <motion.div
-                        initial={{ y: "100%" }}
-                        animate={{ y: 0 }}
-                        exit={{ y: "100%" }}
-                        transition={{ type: "spring", damping: 25, stiffness: 500 }}
-                        className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-[#1a1a1a] rounded-t-3xl z-[70] max-h-[85vh] flex flex-col border-t border-white/10 shadow-2xl"
+                        initial={{ opacity: 0, scale: 0.95, x: "-50%", y: "-50%" }}
+                        animate={{ opacity: 1, scale: 1, x: "-50%", y: "-50%" }}
+                        exit={{ opacity: 0, scale: 0.95, x: "-50%", y: "-50%" }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
+                        className="fixed top-1/2 left-1/2 w-[95%] max-w-lg bg-[#1a1a1a] rounded-2xl z-[70] max-h-[85vh] flex flex-col border border-white/10 shadow-2xl overflow-hidden"
                     >
                         {/* Header */}
                         <div className="p-6 pb-4 border-b border-white/5 flex justify-between items-center relative">
