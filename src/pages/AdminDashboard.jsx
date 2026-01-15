@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers } from 'lucide-react'
 import NewsManager from '../components/NewsManager'
 import RewardsManager from '../components/RewardsManager'
 import ProductManager from '../components/ProductManager'
@@ -13,6 +13,7 @@ import InventoryManager from '../components/InventoryManager'
 import CustomersManager from '../components/CustomersManager'
 import DebugConnection from '../components/DebugConnection'
 import CashManager from '../components/CashManager'
+import ModifiersManager from '../components/ModifiersManager'
 
 
 const AdminDashboard = () => {
@@ -76,6 +77,7 @@ const AdminDashboard = () => {
                     <NavItem icon={<Gift />} label="Canjes" active={activeTab === 'Canjes'} onClick={() => { setActiveTab('Canjes'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Ticket />} label="Cupones" active={activeTab === 'Cupones'} onClick={() => { setActiveTab('Cupones'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<UtensilsCrossed />} label="Menú" active={activeTab === 'Menu'} onClick={() => { setActiveTab('Menu'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<Layers />} label="Extras" active={activeTab === 'Modifiers'} onClick={() => { setActiveTab('Modifiers'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Users />} label="Clientes" active={activeTab === 'Customers'} onClick={() => { setActiveTab('Customers'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Settings />} label="Configuración" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false) }} />
@@ -129,6 +131,8 @@ const AdminDashboard = () => {
                     <CouponsManager />
                 ) : activeTab === 'Menu' ? (
                     <ProductManager />
+                ) : activeTab === 'Modifiers' ? (
+                    <ModifiersManager />
                 ) : activeTab === 'Inventory' ? (
                     <InventoryManager />
                 ) : activeTab === 'Customers' ? (
