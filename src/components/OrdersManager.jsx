@@ -256,7 +256,7 @@ const OrdersManager = () => {
                                     {/* Sub-items details */}
                                     <div className="pl-4 border-l border-white/10 mt-1 text-xs text-[var(--color-text-muted)] space-y-0.5">
                                         {item.modifiers?.map((m, i) => (
-                                            <div key={i}>+ {m.name}</div>
+                                            <div key={i}>+ {m.name} {m.quantity > 1 ? <span className="text-white font-bold">x{m.quantity}</span> : ''}</div>
                                         ))}
                                         {item.side_info && <div>+ {item.side_info.name}</div>}
                                         {item.drink_info && <div>+ {item.drink_info.name}</div>}
@@ -268,9 +268,26 @@ const OrdersManager = () => {
                         {/* Actions */}
                         <div className="p-3 bg-[var(--color-background)]/30 grid grid-cols-3 gap-2">
                             {order.status === 'pending' && (
-                                <button onClick={() => updateStatus(order.id, 'cooking')} className="col-span-3 bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
-                                    <ChefHat className="w-4 h-4" /> Empezar a Cocinar
-                                </button>
+                                !order.is_paid ? (
+                                    <button
+                                        onClick={async () => {
+                                            const { error } = await supabase.from('orders').update({ is_paid: true }).eq('id', order.id)
+                                            if (!error) {
+                                                setOrders(orders.map(o => o.id === order.id ? { ...o, is_paid: true } : o))
+                                                toast.success('Pago confirmado')
+                                            } else {
+                                                toast.error('Error al confirmar pago')
+                                            }
+                                        }}
+                                        className="col-span-3 bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-500 transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <Banknote className="w-4 h-4" /> Confirmar Pago ({order.payment_method === 'mercadopago' ? 'MP' : order.payment_method === 'transfer' ? 'Transf.' : 'Efvo.'})
+                                    </button>
+                                ) : (
+                                    <button onClick={() => updateStatus(order.id, 'cooking')} className="col-span-3 bg-orange-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-orange-500 transition-colors flex items-center justify-center gap-2">
+                                        <ChefHat className="w-4 h-4" /> Empezar a Cocinar
+                                    </button>
+                                )
                             )}
                             {order.status === 'cooking' && (
                                 <button onClick={() => updateStatus(order.id, 'packaging')} className="col-span-3 bg-blue-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-blue-500 transition-colors flex items-center justify-center gap-2">
