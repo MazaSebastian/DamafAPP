@@ -249,6 +249,7 @@ const CheckoutPage = () => {
 
                 // Replace Variables
                 let message = waTemplate
+                    .replace(/\\n/g, '\n')
                     .replace('{{id}}', order.id.slice(0, 8))
                     .replace('{{fecha}}', orderDate)
                     .replace('{{cliente}}', customerName)
