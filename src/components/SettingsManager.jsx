@@ -176,10 +176,15 @@ const SettingsManager = () => {
                                         <button
                                             onClick={() => handleSave(setting.key, setting.value)}
                                             disabled={saving}
-                                            className="p-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
-                                            title="Guardar"
+                                            className="group flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-purple-600 text-white rounded-xl shadow-lg shadow-purple-900/20 hover:shadow-purple-900/40 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                                            title="Guardar cambios"
                                         >
-                                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                            {saving ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                            )}
+                                            <span className="text-sm font-bold">{saving ? 'Guardando...' : 'Guardar'}</span>
                                         </button>
                                     </div>
                                     <div className="w-full">
@@ -202,10 +207,15 @@ const SettingsManager = () => {
                                         <button
                                             onClick={() => handleSave(setting.key, setting.value)}
                                             disabled={saving}
-                                            className="p-2 bg-[var(--color-primary)] text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 mt-1"
-                                            title="Guardar"
+                                            className="group flex items-center gap-2 px-4 py-2 bg-[var(--color-primary)] hover:bg-purple-600 text-white rounded-xl shadow-lg shadow-purple-900/20 hover:shadow-purple-900/40 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed mt-0.5"
+                                            title="Guardar cambios"
                                         >
-                                            {saving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                            {saving ? (
+                                                <Loader2 className="w-4 h-4 animate-spin" />
+                                            ) : (
+                                                <Save className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                            )}
+                                            <span className="text-sm font-bold hidden md:inline">{saving ? 'Guardando...' : 'Guardar'}</span>
                                         </button>
                                     </div>
                                 </div>

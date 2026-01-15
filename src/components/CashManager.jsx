@@ -15,7 +15,8 @@ const CashManager = () => {
 
     // Stats
     const [stats, setStats] = useState({
-        sales: 0,
+        salesCash: 0,
+        salesTransfer: 0,
         expenses: 0,
         withdrawals: 0,
         deposits: 0,
