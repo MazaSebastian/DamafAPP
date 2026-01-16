@@ -54,8 +54,7 @@ const ProductManager = () => {
     const [allModifiers, setAllModifiers] = useState([])
     const [productModifiers, setProductModifiers] = useState([]) // IDs of modifiers linked to editingProduct
 
-    const [allModifiers, setAllModifiers] = useState([])
-    const [productModifiers, setProductModifiers] = useState([]) // IDs of modifiers linked to editingProduct
+
 
     // RECIPES STATE
     const [allIngredients, setAllIngredients] = useState([])
