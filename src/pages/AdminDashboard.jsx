@@ -14,6 +14,7 @@ import CustomersManager from '../components/CustomersManager'
 import DebugConnection from '../components/DebugConnection'
 import CashManager from '../components/CashManager'
 import ModifiersManager from '../components/ModifiersManager'
+import AnalyticsManager from '../components/AnalyticsManager'
 
 
 const AdminDashboard = () => {
@@ -71,6 +72,7 @@ const AdminDashboard = () => {
                 </div>
                 <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
                     <NavItem icon={<LayoutDashboard />} label="Vista General" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false) }} />
+                    <NavItem icon={<TrendingUp />} label="Métricas" active={activeTab === 'Analytics'} onClick={() => { setActiveTab('Analytics'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
                     <NavItem icon={<Newspaper />} label="Novedades" active={activeTab === 'Novedades'} onClick={() => { setActiveTab('Novedades'); setIsSidebarOpen(false) }} />
@@ -121,6 +123,8 @@ const AdminDashboard = () => {
 
                 {activeTab === 'Novedades' ? (
                     <NewsManager />
+                ) : activeTab === 'Analytics' ? (
+                    <AnalyticsManager />
                 ) : activeTab === 'Orders' ? (
                     <OrdersManager />
                 ) : activeTab === 'Cash' ? (

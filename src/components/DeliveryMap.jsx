@@ -50,9 +50,13 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation })
         map.panTo(location)
         map.setZoom(15)
 
-        // Pass address string back
+        // Pass address and coordinates back
         if (onAddressSelected) {
-            onAddressSelected(place.formatted_address)
+            onAddressSelected({
+                address: place.formatted_address,
+                lat: location.lat,
+                lng: location.lng
+            })
         }
 
         calculateRoute(location)
@@ -70,7 +74,11 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation })
             const geocoder = new window.google.maps.Geocoder()
             const response = await geocoder.geocode({ location })
             if (response.results[0] && onAddressSelected) {
-                onAddressSelected(response.results[0].formatted_address)
+                onAddressSelected({
+                    address: response.results[0].formatted_address,
+                    lat: location.lat,
+                    lng: location.lng
+                })
             }
         } catch (error) {
             console.error('Geocoding error:', error)

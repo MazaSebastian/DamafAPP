@@ -23,6 +23,7 @@ const CheckoutPage = () => {
 
     const [orderType, setOrderType] = useState('takeaway')
     const [address, setAddress] = useState('')
+    const [deliveryCoords, setDeliveryCoords] = useState(null) // { lat, lng }
     const [couponCode, setCouponCode] = useState('')
     const [appliedCoupon, setAppliedCoupon] = useState(null)
     const [discountAmount, setDiscountAmount] = useState(0)
@@ -137,8 +138,14 @@ const CheckoutPage = () => {
         setShippingCost(cost)
     }
 
-    const handleAddressSelected = (addr) => {
-        setAddress(addr)
+    const handleAddressSelected = (data) => {
+        // Handle both string (legacy/direct input) and object (from Map)
+        if (typeof data === 'string') {
+            setAddress(data)
+        } else if (data && typeof data === 'object') {
+            setAddress(data.address)
+            setDeliveryCoords({ lat: data.lat, lng: data.lng })
+        }
     }
 
     const finalTotal = total - discountAmount + (orderType === 'delivery' ? shippingCost : 0)
@@ -163,6 +170,8 @@ const CheckoutPage = () => {
                     order_type: orderType,
                     payment_method: paymentMethod, // NEW FIELD
                     delivery_address: orderType === 'delivery' ? address : null,
+                    delivery_lat: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lat : null,
+                    delivery_lng: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lng : null,
                     coupon_code: appliedCoupon?.code || null,
                     discount_amount: discountAmount,
                 }])
