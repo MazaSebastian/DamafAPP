@@ -15,6 +15,7 @@ import DebugConnection from '../components/DebugConnection'
 import CashManager from '../components/CashManager'
 import ModifiersManager from '../components/ModifiersManager'
 import AnalyticsManager from '../components/AnalyticsManager'
+import SlotManager from '../components/admin/SlotManager'
 import { supabase } from '../supabaseClient'
 import { toast } from 'sonner'
 
@@ -136,6 +137,7 @@ const AdminDashboard = () => {
                     <div className="space-y-1">
                         <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Operativo</p>
                         <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Clock />} label="Horarios de Entrega" active={activeTab === 'Slots'} onClick={() => { setActiveTab('Slots'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
                     </div>
@@ -222,6 +224,8 @@ const AdminDashboard = () => {
                     <CustomersManager />
                 ) : activeTab === 'Settings' ? (
                     <SettingsManager />
+                ) : activeTab === 'Slots' ? (
+                    <SlotManager />
                 ) : (
                     <AdminOverview />
                 )}

@@ -11,6 +11,7 @@ import DeliveryMap from '../components/DeliveryMap'
 import { useStoreStatus } from '../hooks/useStoreStatus'
 import OrderConfirmationModal from '../components/OrderConfirmationModal'
 import OrderModal from '../components/OrderModal'
+import DeliverySlotSelector from '../components/checkout/DeliverySlotSelector'
 
 const CheckoutPage = () => {
     const navigate = useNavigate()
@@ -33,6 +34,7 @@ const CheckoutPage = () => {
     // New State for Delivery
     const [shippingCost, setShippingCost] = useState(0)
     const [distanceKm, setDistanceKm] = useState(0)
+    const [selectedSlot, setSelectedSlot] = useState(null)
 
     // Dynamic Delivery Settings State
     const [deliverySettings, setDeliverySettings] = useState({
@@ -388,6 +390,11 @@ const CheckoutPage = () => {
             return
         }
 
+        if (!selectedSlot) {
+            toast.error('Por favor selecciona un HORARIO de entrega/retiro')
+            return
+        }
+
         // Check if Cash Register is OPEN (Blocker)
         // User Request: "No se pueden recibir pedidos sin haber abierto la caja"
         // We use an RPC call to bypass RLS, ensuring guests can check this too.
@@ -440,17 +447,27 @@ const CheckoutPage = () => {
                 {/* Delivery Toggle (Moved to Main) */}
                 <div className="bg-[var(--color-surface)] p-1 rounded-xl flex border border-white/5">
                     <button
-                        onClick={() => { setOrderType('takeaway'); setShippingCost(0); }}
+                        onClick={() => { setOrderType('takeaway'); setShippingCost(0); setSelectedSlot(null); }}
                         className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${orderType === 'takeaway' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
                     >
                         Retiro en Local
                     </button>
                     <button
-                        onClick={() => setOrderType('delivery')}
+                        onClick={() => { setOrderType('delivery'); setSelectedSlot(null); }}
                         className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${orderType === 'delivery' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
                     >
                         Delivery
                     </button>
+                </div>
+
+                {/* SLOT SELECTOR */}
+                <div className="animated-slide-up">
+                    <p className="text-sm text-[var(--color-text-muted)] mb-2 font-medium">Selecciona Horario:</p>
+                    <DeliverySlotSelector
+                        orderType={orderType}
+                        selectedSlot={selectedSlot}
+                        onSlotSelect={setSelectedSlot}
+                    />
                 </div>
 
                 {/* Map Integration (Moved to Main) */}
