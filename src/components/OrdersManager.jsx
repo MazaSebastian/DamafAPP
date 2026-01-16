@@ -231,7 +231,7 @@ const OrdersManager = () => {
                 .align('center')
                 .invert(true) // Black background
                 .bold(true)
-                .size(3, 3) // SUPER SIZE (Requires my custom escPosEncoder update)
+                .size(3, 3) // SUPER SIZE
                 .text(order.order_type === 'delivery' ? ' DELIVERY ' : ' RETIRO ')
                 .size(0, 0)
                 .bold(false)
@@ -255,7 +255,7 @@ const OrdersManager = () => {
             // 5. Items
             order.order_items?.forEach(item => {
                 // "1 x Product Name" (Bold, Medium-Large)
-                encoder.bold(true).size(1, 1)
+                encoder.bold(true).size(2, 2) // <-- INCREASED THIS TO 2, 2 (3X SIZE)
                     .text(`${item.quantity} x ${item.products?.name}`)
                     .newline()
                     .size(0, 0).bold(false) // Reset
