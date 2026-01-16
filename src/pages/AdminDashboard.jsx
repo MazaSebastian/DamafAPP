@@ -64,27 +64,55 @@ const AdminDashboard = () => {
                 fixed md:static inset-y-0 left-0 z-50 w-64 bg-[var(--color-surface)] border-r border-white/5 flex flex-col transition-transform duration-300 ease-in-out
                 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
             `}>
-                <div className="p-6 flex justify-between items-center">
-                    <h2 className="text-xl font-bold tracking-tight">ADMIN<span className="text-[var(--color-secondary)]">PANEL</span></h2>
-                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden text-white/50 hover:text-white">
+                <div className="p-6 flex justify-center items-center border-b border-white/5 bg-[var(--color-surface)]">
+                    <img src="/logo-damaf.png" alt="DamafAPP" className="h-12 w-auto object-contain hover:scale-105 transition-transform" />
+                    <button onClick={() => setIsSidebarOpen(false)} className="md:hidden absolute right-4 text-white/50 hover:text-white">
                         <X className="w-6 h-6" />
                     </button>
                 </div>
-                <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
-                    <NavItem icon={<LayoutDashboard />} label="Vista General" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<TrendingUp />} label="Métricas" active={activeTab === 'Analytics'} onClick={() => { setActiveTab('Analytics'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Newspaper />} label="Novedades" active={activeTab === 'Novedades'} onClick={() => { setActiveTab('Novedades'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Gift />} label="Canjes" active={activeTab === 'Canjes'} onClick={() => { setActiveTab('Canjes'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Ticket />} label="Cupones" active={activeTab === 'Cupones'} onClick={() => { setActiveTab('Cupones'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<UtensilsCrossed />} label="Menú" active={activeTab === 'Menu'} onClick={() => { setActiveTab('Menu'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Layers />} label="Extras" active={activeTab === 'Modifiers'} onClick={() => { setActiveTab('Modifiers'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Users />} label="Clientes" active={activeTab === 'Customers'} onClick={() => { setActiveTab('Customers'); setIsSidebarOpen(false) }} />
-                    <NavItem icon={<Settings />} label="Configuración" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false) }} />
+
+                <nav className="flex-1 px-4 py-4 space-y-6 overflow-y-auto custom-scrollbar">
+
+                    {/* GESTION */}
+                    <div className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Gestión</p>
+                        <NavItem icon={<LayoutDashboard />} label="Vista General" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<TrendingUp />} label="Métricas" active={activeTab === 'Analytics'} onClick={() => { setActiveTab('Analytics'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Users />} label="Clientes" active={activeTab === 'Customers'} onClick={() => { setActiveTab('Customers'); setIsSidebarOpen(false) }} />
+                    </div>
+
+                    {/* OPERATIVO */}
+                    <div className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Operativo</p>
+                        <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
+                    </div>
+
+                    {/* CATALOGO */}
+                    <div className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Catálogo</p>
+                        <NavItem icon={<UtensilsCrossed />} label="Menú" active={activeTab === 'Menu'} onClick={() => { setActiveTab('Menu'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Layers />} label="Extras" active={activeTab === 'Modifiers'} onClick={() => { setActiveTab('Modifiers'); setIsSidebarOpen(false) }} />
+                    </div>
+
+                    {/* MARKETING */}
+                    <div className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Marketing</p>
+                        <NavItem icon={<Gift />} label="Canjes" active={activeTab === 'Canjes'} onClick={() => { setActiveTab('Canjes'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Ticket />} label="Cupones" active={activeTab === 'Cupones'} onClick={() => { setActiveTab('Cupones'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Newspaper />} label="Novedades" active={activeTab === 'Novedades'} onClick={() => { setActiveTab('Novedades'); setIsSidebarOpen(false) }} />
+                    </div>
+
+                    {/* SISTEMA */}
+                    <div className="space-y-1">
+                        <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Sistema</p>
+                        <NavItem icon={<Settings />} label="Configuración" active={activeTab === 'Settings'} onClick={() => { setActiveTab('Settings'); setIsSidebarOpen(false) }} />
+                    </div>
+
                 </nav>
-                <div className="p-4 border-t border-white/5">
+
+                <div className="p-4 border-t border-white/5 bg-[var(--color-surface)]">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-[var(--color-primary)] flex items-center justify-center text-xs font-bold">
                             {user.email[0].toUpperCase()}
@@ -153,9 +181,9 @@ const AdminDashboard = () => {
 
 // Helper Components
 const NavItem = ({ icon, label, active, onClick }) => (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${active ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-purple-900/20' : 'text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'}`}>
-        {icon && <span className="w-5 h-5">{icon}</span>}
-        <span className="font-medium">{label}</span>
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${active ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-purple-900/20' : 'text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'}`}>
+        {icon && <span className="w-4 h-4">{icon}</span>}
+        <span className="font-medium text-sm">{label}</span>
     </button>
 )
 
