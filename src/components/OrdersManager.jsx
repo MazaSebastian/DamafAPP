@@ -7,25 +7,33 @@ const OrdersManager = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
 
-    // Sound notification function
+    // Sound notification function - Bell sound (3 rings)
     const playNewOrderSound = () => {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-        const oscillator = audioContext.createOscillator()
-        const gainNode = audioContext.createGain()
 
-        oscillator.connect(gainNode)
-        gainNode.connect(audioContext.destination)
+        const playBell = (startTime) => {
+            const oscillator = audioContext.createOscillator()
+            const gainNode = audioContext.createGain()
 
-        // Pleasant notification sound (3 ascending tones)
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime) // C5
-        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15) // E5
-        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3) // G5
+            oscillator.connect(gainNode)
+            gainNode.connect(audioContext.destination)
 
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+            // Bell-like sound (higher frequency with harmonics)
+            oscillator.frequency.setValueAtTime(800, startTime)
+            oscillator.frequency.exponentialRampToValueAtTime(600, startTime + 0.1)
 
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.5)
+            // Sharp attack and quick decay like a bell
+            gainNode.gain.setValueAtTime(0.6, startTime)
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3)
+
+            oscillator.start(startTime)
+            oscillator.stop(startTime + 0.3)
+        }
+
+        // Play bell 3 times
+        playBell(audioContext.currentTime)
+        playBell(audioContext.currentTime + 0.4)
+        playBell(audioContext.currentTime + 0.8)
     }
 
     useEffect(() => {

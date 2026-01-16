@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, ArrowLeft } from 'lucide-react'
+import { Loader2, ArrowLeft, X } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import KDSTicket from '../components/kds/KDSTicket'
@@ -9,26 +9,35 @@ import useSound from 'use-sound' // Optional: Install if we want sounds, generic
 const KDSPage = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
+    const [newOrderAlert, setNewOrderAlert] = useState(null) // For visual alert modal
 
-    // Sound notification function
+    // Sound notification function - Bell sound (3 rings)
     const playNewOrderSound = () => {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)()
-        const oscillator = audioContext.createOscillator()
-        const gainNode = audioContext.createGain()
 
-        oscillator.connect(gainNode)
-        gainNode.connect(audioContext.destination)
+        const playBell = (startTime) => {
+            const oscillator = audioContext.createOscillator()
+            const gainNode = audioContext.createGain()
 
-        // Pleasant notification sound (3 ascending tones)
-        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime) // C5
-        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15) // E5
-        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3) // G5
+            oscillator.connect(gainNode)
+            gainNode.connect(audioContext.destination)
 
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+            // Bell-like sound (higher frequency with harmonics)
+            oscillator.frequency.setValueAtTime(800, startTime)
+            oscillator.frequency.exponentialRampToValueAtTime(600, startTime + 0.1)
 
-        oscillator.start(audioContext.currentTime)
-        oscillator.stop(audioContext.currentTime + 0.5)
+            // Sharp attack and quick decay like a bell
+            gainNode.gain.setValueAtTime(0.6, startTime)
+            gainNode.gain.exponentialRampToValueAtTime(0.01, startTime + 0.3)
+
+            oscillator.start(startTime)
+            oscillator.stop(startTime + 0.3)
+        }
+
+        // Play bell 3 times
+        playBell(audioContext.currentTime)
+        playBell(audioContext.currentTime + 0.4)
+        playBell(audioContext.currentTime + 0.8)
     }
 
     useEffect(() => {
@@ -41,10 +50,31 @@ const KDSPage = () => {
                 schema: 'public',
                 table: 'orders',
                 filter: 'status=in.(cooking)'
-            }, (payload) => {
+            }, async (payload) => {
                 // Play sound when new order arrives to kitchen or status changes to cooking
                 if (payload.eventType === 'INSERT' || (payload.eventType === 'UPDATE' && payload.new.status === 'cooking')) {
                     playNewOrderSound()
+
+                    // Fetch full order details for the alert
+                    const { data: fullOrder } = await supabase
+                        .from('orders')
+                        .select(`
+                            *,
+                            order_items (
+                                *,
+                                products (name)
+                            ),
+                            profiles:user_id (full_name)
+                        `)
+                        .eq('id', payload.new.id)
+                        .single()
+
+                    if (fullOrder) {
+                        setNewOrderAlert(fullOrder)
+                        // Auto-close after 10 seconds
+                        setTimeout(() => setNewOrderAlert(null), 10000)
+                    }
+
                     toast.success('🔥 Nueva comanda en cocina!', {
                         description: `Pedido #${payload.new.id.slice(0, 4)}`
                     })
@@ -96,6 +126,95 @@ const KDSPage = () => {
 
     return (
         <div className="h-screen bg-[var(--color-background)] text-white flex flex-col overflow-hidden font-[var(--font-sans)]">
+            {/* New Order Alert Modal */}
+            {newOrderAlert && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-[var(--color-surface)] rounded-3xl border-4 border-[var(--color-secondary)] shadow-[0_0_60px_rgba(214,67,34,0.6)] max-w-2xl w-full mx-4 animate-in zoom-in duration-300">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-[var(--color-secondary)] to-orange-600 p-6 rounded-t-3xl">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h2 className="text-3xl font-black uppercase tracking-wider flex items-center gap-3">
+                                        🔥 NUEVO PEDIDO
+                                    </h2>
+                                    <p className="text-white/90 text-lg mt-1">Pedido #{newOrderAlert.id.slice(0, 8)}</p>
+                                </div>
+                                <button
+                                    onClick={() => setNewOrderAlert(null)}
+                                    className="p-3 bg-white/20 hover:bg-white/30 rounded-2xl transition-all hover:scale-110"
+                                >
+                                    <X className="w-6 h-6" />
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Content */}
+                        <div className="p-6 space-y-4 max-h-[60vh] overflow-y-auto kds-scrollbar">
+                            {/* Customer Info */}
+                            <div className="bg-[var(--color-background)] rounded-2xl p-4 border border-white/10">
+                                <p className="text-sm text-[var(--color-text-muted)] mb-1">Cliente</p>
+                                <p className="text-xl font-bold">{newOrderAlert.profiles?.full_name || 'Invitado'}</p>
+                            </div>
+
+                            {/* Order Items */}
+                            <div className="space-y-3">
+                                <h3 className="text-lg font-bold text-[var(--color-secondary)] uppercase tracking-wide">Items del Pedido</h3>
+                                {newOrderAlert.order_items?.map((item, idx) => (
+                                    <div key={idx} className="bg-[var(--color-background)] rounded-2xl p-4 border border-white/10">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <span className="text-2xl font-black">1x {item.products.name}</span>
+                                            <span className="text-xl font-bold text-green-400">${item.price_at_time}</span>
+                                        </div>
+
+                                        {/* Modifiers */}
+                                        {item.modifiers?.length > 0 && (
+                                            <div className="mt-3 pl-4 border-l-4 border-[var(--color-secondary)]/30 space-y-1">
+                                                <p className="text-xs text-[var(--color-text-muted)] uppercase font-bold mb-1">Modificadores:</p>
+                                                {item.modifiers.map((m, i) => (
+                                                    <div key={i} className="text-base text-white/90">
+                                                        • {m.name} {m.quantity > 1 && <span className="text-[var(--color-secondary)] font-bold">x{m.quantity}</span>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Side & Drink */}
+                                        {item.side_info && (
+                                            <div className="mt-2 text-sm text-yellow-400 font-medium">
+                                                🍟 {item.side_info.name}
+                                            </div>
+                                        )}
+                                        {item.drink_info && (
+                                            <div className="mt-2 text-sm text-blue-400 font-medium">
+                                                🥤 {item.drink_info.name}
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Total */}
+                            <div className="bg-gradient-to-r from-green-600/20 to-green-500/20 rounded-2xl p-5 border-2 border-green-500/30">
+                                <div className="flex justify-between items-center">
+                                    <span className="text-xl font-bold uppercase">Total</span>
+                                    <span className="text-4xl font-black text-green-400">${newOrderAlert.total}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="p-6 bg-[var(--color-background)]/50 rounded-b-3xl border-t border-white/10">
+                            <button
+                                onClick={() => setNewOrderAlert(null)}
+                                className="w-full py-4 bg-[var(--color-secondary)] hover:bg-orange-600 rounded-2xl font-black text-xl uppercase tracking-wider transition-all hover:scale-[1.02] shadow-lg"
+                            >
+                                ✓ ENTENDIDO - COMENZAR
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Top Bar */}
             <div className="bg-[var(--color-surface)]/90 backdrop-blur-xl px-6 py-5 flex justify-between items-center border-b border-white/5 z-10 shadow-[0_4px_20px_rgba(0,0,0,0.15)]">
                 <div className="flex items-center gap-4">
