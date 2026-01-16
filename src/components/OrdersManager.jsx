@@ -7,13 +7,47 @@ const OrdersManager = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
 
+    // Sound notification function
+    const playNewOrderSound = () => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        // Pleasant notification sound (3 ascending tones)
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime) // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15) // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3) // G5
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.5)
+    }
+
     useEffect(() => {
         fetchOrders()
 
         // Subscription for real-time updates
         const channel = supabase
             .channel('orders_channel')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, fetchOrders)
+            .on('postgres_changes', {
+                event: '*',
+                schema: 'public',
+                table: 'orders'
+            }, (payload) => {
+                // Play sound only on INSERT (new order)
+                if (payload.eventType === 'INSERT') {
+                    playNewOrderSound()
+                    toast.success('🔔 Nuevo pedido recibido!', {
+                        description: `Pedido #${payload.new.id.slice(0, 8)}`
+                    })
+                }
+                fetchOrders()
+            })
             .subscribe()
 
         return () => {

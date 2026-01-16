@@ -10,6 +10,27 @@ const KDSPage = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
 
+    // Sound notification function
+    const playNewOrderSound = () => {
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)()
+        const oscillator = audioContext.createOscillator()
+        const gainNode = audioContext.createGain()
+
+        oscillator.connect(gainNode)
+        gainNode.connect(audioContext.destination)
+
+        // Pleasant notification sound (3 ascending tones)
+        oscillator.frequency.setValueAtTime(523.25, audioContext.currentTime) // C5
+        oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime + 0.15) // E5
+        oscillator.frequency.setValueAtTime(783.99, audioContext.currentTime + 0.3) // G5
+
+        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5)
+
+        oscillator.start(audioContext.currentTime)
+        oscillator.stop(audioContext.currentTime + 0.5)
+    }
+
     useEffect(() => {
         fetchKDSOrders()
 
@@ -20,11 +41,15 @@ const KDSPage = () => {
                 schema: 'public',
                 table: 'orders',
                 filter: 'status=in.(cooking)'
-            }, () => {
-                // Ideally we check payload to play sound if INSERT
-                // For now, simple refetch
+            }, (payload) => {
+                // Play sound when new order arrives to kitchen or status changes to cooking
+                if (payload.eventType === 'INSERT' || (payload.eventType === 'UPDATE' && payload.new.status === 'cooking')) {
+                    playNewOrderSound()
+                    toast.success('🔥 Nueva comanda en cocina!', {
+                        description: `Pedido #${payload.new.id.slice(0, 4)}`
+                    })
+                }
                 fetchKDSOrders()
-                // playSound()
             })
             .subscribe()
 
