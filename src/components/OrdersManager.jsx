@@ -1,189 +1,113 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer } from 'lucide-react'
+import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer, Usb } from 'lucide-react'
 import { toast } from 'sonner'
 import TicketTemplate from './print/TicketTemplate'
+import { EscPosEncoder } from '../utils/escPosEncoder'
+import { usbPrinter } from '../services/UsbPrinterService'
+import { format } from 'date-fns'
 
 const OrdersManager = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
+    const [usbConnected, setUsbConnected] = useState(false)
 
-    useEffect(() => {
-        fetchOrders()
+    const connectPrinter = async () => {
+        try {
+            await usbPrinter.connect()
+            setUsbConnected(true)
+            toast.success('Impresora USB Conectada 🔌')
+        } catch (err) {
+            console.error(err)
+            toast.error('No se pudo conectar impresora USB')
+        }
+    }
 
-        // Subscription for real-time updates (Silent refresh)
-        const channel = supabase
-            .channel('orders_visual_refresh')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'orders'
-            }, () => {
-                // Just refresh data, global alert handles the sound/toast
-                fetchOrders()
+    const printViaUsb = async (order) => {
+        try {
+            const encoder = new EscPosEncoder()
+                .initialize()
+                .align('center')
+                .bold(true)
+                .size(2, 2)
+                .text('DamafAPP')
+                .newline()
+                .size(1, 1) // Normal
+                .text('La mejor hamburguesa del barrio')
+                .newline()
+                .text(format(new Date(order.created_at), 'dd/MM/yyyy HH:mm'))
+                .newline(2)
+
+                .size(2, 2)
+                .text(`ORDEN #${order.id.slice(0, 4)}`)
+                .newline(2)
+
+                .size(1, 1)
+                .align('left')
+                .text(`Cliente: ${order.profiles?.full_name || 'Invitado'}`)
+                .newline()
+
+            if (order.order_type === 'delivery') {
+                encoder.text(`DELIVERY - ${order.delivery_address || ''}`)
+            } else {
+                encoder.text('RETIRO EN LOCAL')
+            }
+            encoder.newline(2)
+
+            // Items
+            encoder.align('left')
+            order.order_items?.forEach(item => {
+                encoder.bold(true).text(`${item.quantity}x ${item.products?.name}`).newline()
+                encoder.bold(false)
+
+                if (item.modifiers?.length > 0) {
+                    item.modifiers.forEach(m => {
+                        encoder.text(`  + ${m.name}`).newline()
+                    })
+                }
+                if (item.side_info) encoder.text(`  + ${item.side_info.name}`).newline()
+                if (item.drink_info) encoder.text(`  + ${item.drink_info.name}`).newline()
+
+                encoder.text(`  $${item.price_at_time}`).newline()
+                encoder.newline() // Spacing
             })
-            .subscribe()
 
-        return () => {
-            supabase.removeChannel(channel)
-        }
-    }, [])
+            encoder.line()
 
-    const fetchOrders = async () => {
-        const { data: ordersData, error } = await supabase
-            .from('orders')
-            .select(`
-                *,
-                order_items (
-                    *,
-                    products (name) 
-                )
-            `)
-            .order('created_at', { ascending: false })
+            // Totals
+            encoder.align('right').size(2, 2).bold(true)
+                .text(`TOTAL: $${order.total}`)
+                .newline(2)
 
-        if (ordersData) setOrders(ordersData)
-        setLoading(false)
-    }
+            // Footer
+            encoder.size(1, 1).align('center').bold(false)
+                .text('www.damafapp.com')
+                .newline(3)
+                .cut()
 
-    const updateStatus = async (orderId, newStatus) => {
-        // Fetch current order details needed for cash logging before update
-        // (Or we could assume we have them in state, but let's be safe if we want the payment_method which might be missing in state if not fetched)
-        // Actually, we need to update fetchOrder to include payment_method first. 
-        // But let's assume valid order object in 'orders' state.
-
-        const order = orders.find(o => o.id === orderId)
-
-        const { error } = await supabase
-            .from('orders')
-            .update({ status: newStatus })
-            .eq('id', orderId)
-
-        if (!error) {
-            setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
-            toast.success(`Pedido actualizado a: ${newStatus}`)
-
-            // Log Cash Sale if Completed
-            if (newStatus === 'completed' || newStatus === 'paid') {
-                // Dynamic import or passed as prop would be cleaner, but we'll import at top
-                const { logCashSale } = await import('../utils/cashUtils')
-                const result = await logCashSale(orderId, order.total, order.payment_method, supabase)
-                if (result.message && newStatus === 'completed' && order.payment_method === 'cash') {
-                    // Show toast specific to cash result
-                    if (result.success) toast.success(result.message)
-                    else toast.warning(result.message)
-                }
-            }
-
-        } else {
-            console.error('Error updating status:', error)
-            toast.error('Error al actualizar estado')
+            await usbPrinter.print(encoder.encode())
+            toast.success('Impreso via USB 🖨️')
+        } catch (err) {
+            console.error('USB Print failed', err)
+            toast.error('Error USB. Intentando modo clásico...')
+            // Fallback
+            handleWindowPrint(order)
         }
     }
 
-    const deleteOrder = (orderId) => {
-        toast.warning('¿Eliminar pedido permanentemente?', {
-            description: 'Esta acción no se puede deshacer.',
-            action: {
-                label: 'Eliminar',
-                onClick: async () => {
-                    const { error } = await supabase
-                        .from('orders')
-                        .delete()
-                        .eq('id', orderId)
-
-                    if (!error) {
-                        setOrders(prev => prev.filter(o => o.id !== orderId))
-                        toast.success('Pedido eliminado')
-                    } else {
-                        console.error('Error deleting order:', error)
-                        toast.error('Error al eliminar pedido')
-                    }
-                }
-            },
-            cancel: {
-                label: 'Cancelar'
-            }
-        })
-    }
-
-    const clearHistory = () => {
-        toast.warning('¿Limpiar historial completo?', {
-            description: 'Se borrarán todos los pedidos finalizados y cancelados.',
-            action: {
-                label: 'Confirmar Limpieza',
-                onClick: async () => {
-                    setLoading(true)
-                    const { error } = await supabase
-                        .from('orders')
-                        .delete()
-                        .in('status', ['completed', 'cancelled', 'rejected'])
-
-                    if (!error) {
-                        await fetchOrders()
-                        toast.success('Historial limpio')
-                    } else {
-                        console.error('Error clearing history:', error)
-                        toast.error('Error al limpiar historial')
-                    }
-                    setLoading(false)
-                }
-            },
-            cancel: {
-                label: 'Cancelar'
-            }
-        })
-    }
-
-    const clearAllOrders = () => {
-        toast.error('¿BORRAR ABSOLUTAMENTE TODO?', {
-            description: '¡Cuidado! Esto eliminará TODOS los pedidos, incluidos los que están EN CURSO (Pendientes, Cocinando...).',
-            action: {
-                label: 'SÍ, BORRAR TODO',
-                onClick: async () => {
-                    setLoading(true)
-                    // Delete all by matching any total greater than -1 (effectively all)
-                    const { error } = await supabase
-                        .from('orders')
-                        .delete()
-                        .gt('total', -1)
-
-                    if (!error) {
-                        await fetchOrders()
-                        toast.success('Se eliminaron TODOS los pedidos')
-                    } else {
-                        console.error('Error deleting all:', error)
-                        toast.error('Error al vaciar la base de datos')
-                    }
-                    setLoading(false)
-                }
-            },
-            cancel: {
-                label: 'Cancelar'
-            }
-        })
-    }
-
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'pending': return 'bg-yellow-500/20 text-yellow-500'
-            case 'cooking': return 'bg-orange-500/20 text-orange-500'
-            case 'packaging': return 'bg-red-500/20 text-red-500 font-black animate-bounce' // Updated for emphasis
-            case 'sent': return 'bg-purple-500/20 text-purple-500'
-            case 'completed': return 'bg-gray-500/20 text-gray-400'
-            case 'cancelled':
-            case 'rejected': return 'bg-red-500/20 text-red-500'
-            default: return 'bg-gray-500/20 text-gray-400'
-        }
-    }
-
-    const [printingOrder, setPrintingOrder] = useState(null)
-
-    const handlePrint = (order) => {
+    const handleWindowPrint = (order) => {
         setPrintingOrder(order)
-        // Give React a moment to render the ticket with new data
         setTimeout(() => {
             window.print()
         }, 100)
+    }
+
+    const handlePrint = (order) => {
+        if (usbConnected) {
+            printViaUsb(order)
+        } else {
+            handleWindowPrint(order)
+        }
     }
 
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-secondary)]" /></div>
@@ -201,6 +125,13 @@ const OrdersManager = () => {
                     Gestión de Pedidos
                 </h2>
                 <div className="flex gap-2">
+                    <button
+                        onClick={connectPrinter}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-lg ${usbConnected ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-500'}`}
+                    >
+                        <Usb className="w-4 h-4" />
+                        {usbConnected ? 'Impresora Conectada' : 'Conectar Impresora'}
+                    </button>
                     <button
                         onClick={clearAllOrders}
                         className="flex items-center gap-2 px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
