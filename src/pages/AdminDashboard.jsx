@@ -218,8 +218,10 @@ const AdminDashboard = () => {
                     <ProductManager />
                 ) : activeTab === 'Modifiers' ? (
                     <ModifiersManager />
-                ) : activeTab === 'Inventory' ? (
+                ) : activeTab === 'Availability' ? (
                     <InventoryManager />
+                ) : activeTab === 'Inventory' ? (
+                    <IngredientManager />
                 ) : activeTab === 'Customers' ? (
                     <CustomersManager />
                 ) : activeTab === 'Settings' ? (
