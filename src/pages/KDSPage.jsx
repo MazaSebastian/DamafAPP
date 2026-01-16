@@ -11,6 +11,11 @@ const KDSPage = () => {
     const [loading, setLoading] = useState(true)
     const [newOrderAlert, setNewOrderAlert] = useState(null) // For visual alert modal
 
+    // Debug: Log orders state changes
+    useEffect(() => {
+        console.log('KDS: Orders state updated:', orders.length, 'orders', orders)
+    }, [orders])
+
     // Sound notification function - Bell sound (3 rings)
     const playNewOrderSound = () => {
         const audioContext = new (window.AudioContext || window.webkitAudioContext)()
@@ -41,6 +46,7 @@ const KDSPage = () => {
     }
 
     useEffect(() => {
+        console.log('KDS: Component mounted, initializing...')
         fetchKDSOrders()
 
         const channel = supabase
@@ -95,21 +101,36 @@ const KDSPage = () => {
     }, [])
 
     const fetchKDSOrders = async () => {
-        const { data } = await supabase
-            .from('orders')
-            .select(`
-                *,
-                order_items (
-                    *,
-                    products (name) 
-                ),
-                profiles:user_id (full_name)
-            `)
-            .in('status', ['cooking'])
-            .order('created_at', { ascending: true }) // Oldest first (FIFO)
+        try {
+            console.log('KDS: Fetching orders with status=cooking...')
 
-        if (data) setOrders(data)
-        setLoading(false)
+            // TEMPORARY: Simplified query without JOINs to test
+            const { data, error } = await supabase
+                .from('orders')
+                .select('*')
+                .eq('status', 'cooking')
+                .order('created_at', { ascending: true })
+
+            if (error) {
+                console.error('KDS: Error fetching orders:', error)
+                toast.error('Error al cargar pedidos: ' + error.message)
+            } else {
+                console.log('KDS: Fetched orders (simplified):', data?.length || 0, 'orders', data)
+                if (data && data.length > 0) {
+                    toast.success(`✅ Encontrados ${data.length} pedidos!`)
+                    // For now, just set the orders even without the related data
+                    setOrders(data)
+                    console.log('KDS: Orders state should update now')
+                } else {
+                    console.log('KDS: No orders found with status=cooking')
+                }
+            }
+        } catch (err) {
+            console.error('KDS: Exception in fetchKDSOrders:', err)
+            toast.error('Error crítico al cargar pedidos')
+        } finally {
+            setLoading(false)
+        }
     }
 
     const handleAdvanceStatus = async (orderId, nextStatus) => {
