@@ -6,6 +6,8 @@ import { es } from 'date-fns/locale'
 const KDSTicket = ({ order, onAdvanceStatus }) => {
     const [elapsedMinutes, setElapsedMinutes] = useState(0)
     const [checkedItems, setCheckedItems] = useState({})
+    const [isCompleting, setIsCompleting] = useState(false)
+
 
     useEffect(() => {
         // Initial calc
@@ -29,10 +31,19 @@ const KDSTicket = ({ order, onAdvanceStatus }) => {
 
     const allItemsChecked = order.order_items?.every(item => checkedItems[item.id])
 
+    const handleComplete = () => {
+        setIsCompleting(true)
+        // Wait 3 seconds for animation, then advance status
+        setTimeout(() => {
+            onAdvanceStatus(order.id, 'packaging')
+        }, 3000)
+    }
+
     // Timer Colors
     let timerColor = 'text-green-400'
     let borderColor = 'border-green-500/30'
     let bgPulse = ''
+
 
     if (elapsedMinutes >= 10) {
         timerColor = 'text-yellow-400'
@@ -45,7 +56,12 @@ const KDSTicket = ({ order, onAdvanceStatus }) => {
     }
 
     return (
-        <div className={`bg-[var(--color-surface)] rounded-2xl border-l-4 ${borderColor} ${elapsedMinutes >= 20 ? 'shadow-[0_0_25px_rgba(239,68,68,0.25)]' : 'shadow-[0_4px_20px_rgba(0,0,0,0.15)]'} flex flex-col h-full min-w-[320px] max-w-[360px] flex-shrink-0 snap-start transition-all duration-300 hover:scale-[1.02]`}>
+        <div className={`bg-[var(--color-surface)] rounded-2xl border-l-4 flex flex-col h-full min-w-[400px] max-w-[420px] flex-shrink-0 snap-start transition-all duration-300 hover:scale-[1.02] ${isCompleting
+                ? 'animate-fade-to-green border-green-500'
+                : order.status === 'cooking'
+                    ? 'animate-pulse-red animate-glow-red border-red-500'
+                    : borderColor + ' shadow-[0_4px_20px_rgba(0,0,0,0.15)]'
+            }`}>
             {/* Header */}
             <div className="p-5 border-b border-white/5 flex justify-between items-start">
                 <div>
@@ -108,14 +124,14 @@ const KDSTicket = ({ order, onAdvanceStatus }) => {
                     </button>
                 ) : (
                     <button
-                        onClick={() => onAdvanceStatus(order.id, 'packaging')}
+                        onClick={handleComplete}
                         className={`w-full py-4 rounded-2xl font-black text-base uppercase tracking-wider transition-all duration-200 flex items-center justify-center gap-2 ${allItemsChecked
                             ? 'bg-green-600 hover:bg-green-500 text-white shadow-[0_4px_15px_rgba(34,197,94,0.3)] hover:shadow-[0_6px_20px_rgba(34,197,94,0.4)] hover:scale-[1.02]'
                             : 'bg-white/10 text-white/50 hover:bg-white/15 cursor-not-allowed'
                             } active:scale-[0.98]`}
-                        disabled={!allItemsChecked}
+                        disabled={!allItemsChecked || isCompleting}
                     >
-                        {allItemsChecked ? '✓ DESPACHAR' : 'MARCAR LISTO'}
+                        {isCompleting ? '✓ COMPLETADO' : allItemsChecked ? '✓ DESPACHAR' : 'MARCAR LISTO'}
                     </button>
                 )}
             </div>

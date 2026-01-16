@@ -32,8 +32,8 @@ export const AuthProvider = ({ children }) => {
                     setUser(session?.user ?? null)
 
                     if (session?.user) {
-                        // Fetch profile in background
-                        fetchProfile(session.user.id)
+                        // Fetch profile BEFORE setting loading to false
+                        await fetchProfile(session.user.id)
                     }
                 }
             } catch (error) {
@@ -80,7 +80,7 @@ export const AuthProvider = ({ children }) => {
 
             if (error) {
                 console.error('Error fetching profile:', error)
-                toast.error('Error al cargar perfil: ' + (error.message || 'Error desconocido'))
+                // Don't show toast on initial load, only on refresh
                 // Even if there's an error, we should clear the profile/role
                 setProfile(null)
                 setRole(null)
@@ -88,6 +88,7 @@ export const AuthProvider = ({ children }) => {
             }
 
             if (data) {
+                console.log('Profile loaded:', data.email, 'Role:', data.role)
                 setProfile(data)
                 setRole(data.role)
             }
@@ -96,7 +97,6 @@ export const AuthProvider = ({ children }) => {
             setProfile(null)
             setRole(null)
         }
-        // Note: We don't set loading(false) here, the caller handles it
     }
 
     const signUp = async (email, password, options) => {
