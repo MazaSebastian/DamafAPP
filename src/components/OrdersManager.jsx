@@ -16,6 +16,14 @@ const OrdersManager = () => {
     useEffect(() => {
         fetchOrders()
 
+        // 1. Try Auto-Connect USB Printer
+        usbPrinter.tryAutoConnect().then(connected => {
+            if (connected) {
+                setUsbConnected(true)
+                toast.success('Impresora reconectada automáticamente 🔌')
+            }
+        })
+
         // Subscription for real-time updates (Silent refresh)
         const channel = supabase
             .channel('orders_visual_refresh')
@@ -217,10 +225,21 @@ const OrdersManager = () => {
                 .bold(false).text('Cliente: ')
                 .bold(true).size(1, 1).text(`${order.profiles?.full_name || 'Invitado'}`) // Big Name
                 .size(0, 0).bold(false) // Reset
-                .newline()
+                .newline(2)
 
-                .bold(true).text(order.order_type === 'delivery' ? 'Delivery' : 'Retiro en Local').bold(false)
-                .newline()
+                // --- HUGE DELIVERY / RETIRO BLOCK ---
+                .align('center')
+                .invert(true) // Black background
+                .bold(true)
+                .size(3, 3) // SUPER SIZE (Requires my custom escPosEncoder update)
+                .text(order.order_type === 'delivery' ? ' DELIVERY ' : ' RETIRO ')
+                .size(0, 0)
+                .bold(false)
+                .invert(false) // Reset
+                .align('left')
+                // ------------------------------------
+
+                .newline(2)
 
             if (order.delivery_address) {
                 encoder.text(order.delivery_address).newline()
