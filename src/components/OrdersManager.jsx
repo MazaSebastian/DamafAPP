@@ -188,62 +188,84 @@ const OrdersManager = () => {
         try {
             const encoder = new EscPosEncoder()
                 .initialize()
+
+                // 1. Tiny Timestamp Top-Left (Matches TicketTemplate)
+                .align('left')
+                .size(0, 0)
+                .text(format(new Date(), 'yy/M/d, H:mm'))
+                .newline(2)
+
+                // 2. Huge ORDEN Header
                 .align('center')
                 .bold(true)
-                .size(2, 2)
-                .text('DamafAPP')
+                .size(1, 1).text('ORDEN')
                 .newline()
-                .size(1, 1) // Normal
-                .text('La mejor hamburguesa del barrio')
-                .newline()
-                .text(format(new Date(order.created_at), 'dd/MM/yyyy HH:mm'))
+                .size(2, 2).text(`#${order.id.slice(0, 8)}`)
                 .newline(2)
 
-                .size(2, 2)
-                .text(`ORDEN #${order.id.slice(0, 4)}`)
-                .newline(2)
-
-                .size(1, 1)
+                // 3. Date/Time Rows
                 .align('left')
-                .text(`Cliente: ${order.profiles?.full_name || 'Invitado'}`)
+                .size(0, 0).bold(true)
+                .text('Fecha: ').bold(false).text(format(new Date(order.created_at), 'yyyy-MM-dd')).newline()
+                .bold(true).text('Hora:  ').bold(false).text(format(new Date(order.created_at), 'HH:mm')).newline()
                 .newline()
 
-            if (order.order_type === 'delivery') {
-                encoder.text(`DELIVERY - ${order.delivery_address || ''}`)
-            } else {
-                encoder.text('RETIRO EN LOCAL')
+                .line() // Separator ----------------
+                .newline()
+
+                // 4. Customer Info
+                .bold(false).text('Cliente: ')
+                .bold(true).size(1, 1).text(`${order.profiles?.full_name || 'Invitado'}`) // Big Name
+                .size(0, 0).bold(false) // Reset
+                .newline()
+
+                .bold(true).text(order.order_type === 'delivery' ? 'Delivery' : 'Retiro en Local').bold(false)
+                .newline()
+
+            if (order.delivery_address) {
+                encoder.text(order.delivery_address).newline()
             }
-            encoder.newline(2)
+            if (order.profiles?.phone) {
+                encoder.text(`Tel: ${order.profiles.phone}`).newline()
+            }
 
-            // Items
-            encoder.align('left')
+            encoder.newline()
+                .line() // Separator ----------------
+                .newline()
+
+            // 5. Items
             order.order_items?.forEach(item => {
-                encoder.bold(true).text(`${item.quantity}x ${item.products?.name}`).newline()
-                encoder.bold(false)
+                // "1 x Product Name" (Bold, Medium-Large)
+                encoder.bold(true).size(1, 1)
+                    .text(`${item.quantity} x ${item.products?.name}`)
+                    .newline()
+                    .size(0, 0).bold(false) // Reset
 
+                // Modifiers
                 if (item.modifiers?.length > 0) {
                     item.modifiers.forEach(m => {
-                        encoder.text(`  + ${m.name}`).newline()
+                        encoder.text(`   ${m.name}`).newline()
                     })
                 }
-                if (item.side_info) encoder.text(`  + ${item.side_info.name}`).newline()
-                if (item.drink_info) encoder.text(`  + ${item.drink_info.name}`).newline()
+                if (item.side_info) encoder.text(`   + ${item.side_info.name}`).newline()
+                if (item.drink_info) encoder.text(`   + ${item.drink_info.name}`).newline()
 
-                encoder.text(`  $${item.price_at_time}`).newline()
-                encoder.newline() // Spacing
+                encoder.newline()
             })
 
-            encoder.line()
+            encoder.line() // Separator ----------------
+                .newline()
 
-            // Totals
-            encoder.align('right').size(2, 2).bold(true)
-                .text(`TOTAL: $${order.total}`)
+                // 6. Payment Info
+                .bold(true).text('Forma pago: ').bold(false).text(order.payment_method === 'mercadopago' ? 'Mercado Pago' : order.payment_method).newline()
+                .bold(true).text('Forma entrega: ').bold(false).text(order.order_type).newline()
                 .newline(2)
 
-            // Footer
-            encoder.size(1, 1).align('center').bold(false)
-                .text('www.damafapp.com')
-                .newline(3)
+                // 7. TOTAL (Massive)
+                .bold(true)
+                .size(1, 1).text('TOTAL').newline()
+                .size(3, 3).text(`$${order.total}`) // Largest size
+                .newline(4)
                 .cut()
 
             await usbPrinter.print(encoder.encode())
