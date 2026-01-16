@@ -1,82 +1,135 @@
 import { format } from 'date-fns'
+import { es } from 'date-fns/locale'
 
-const TicketTemplate = ({ order, ref }) => {
+const TicketTemplate = ({ order }) => {
     if (!order) return null
 
+    // Calculate delivery cost if not explicitly stored (assuming simple diff for now or 0 if pickup)
+    // Ideally we should store delivery_cost in orders table. 
+    // For now: if order_type is delivery, we might assume shipping is included in total so we can't easily separate without logic.
+    // However, knowing the system, we added shipping cost to total.
+    // Let's display the total as is.
+
+    // Sample format uses YYYY-MM-DD
+    const orderDate = new Date(order.created_at)
+
     return (
-        <div id="ticket-print-area" className="hidden print:block bg-white text-black p-2 font-mono text-xs w-[80mm] leading-tight">
-            {/* Header */}
-            <div className="text-center mb-4">
-                <h1 className="text-xl font-black uppercase mb-1">DamafAPP</h1>
-                <p className="text-[10px]">La mejor hamburguesa del barrio</p>
-                <p className="text-[10px] mt-1">{format(new Date(order.created_at), 'dd/MM/yyyy HH:mm')}</p>
-                <p className="font-bold text-lg mt-2 border-b-2 border-black pb-2">Orden #{order.id.slice(0, 4)}</p>
+        <div id="ticket-print-area" className="hidden print:block bg-white text-black font-sans text-xs w-[80mm] leading-tight mx-auto">
+            {/* Header timestamp - small top left in sample */}
+            <div className="text-[10px] mb-2 font-mono">
+                {format(orderDate, 'yy/M/d, H:mm')}
             </div>
+
+            {/* Big Order Number */}
+            <div className="text-center mb-6">
+                <h1 className="text-xl font-bold uppercase">ORDEN</h1>
+                <h2 className="text-4xl font-bold">#{order.id.slice(0, 8)}</h2>
+            </div>
+
+            {/* Timestamps Section */}
+            <div className="mb-4 font-bold text-sm grid grid-cols-[auto_1fr] gap-x-2">
+                <span>Fecha:</span>
+                <span>{format(orderDate, 'yyyy-MM-dd')}</span>
+
+                <span>Hora:</span>
+                <span>{format(orderDate, 'HH:mm')}</span>
+
+                {/* Simulated 'Hora Ent.' - usually delivery time estimate */}
+                {/* <span className="mt-2 text-lg">Hora Ent.:</span>
+                <span className="mt-2 text-3xl font-black">22:45</span> */}
+            </div>
+
+            <hr className="border-t-2 border-black mb-4" />
 
             {/* Customer Info */}
-            <div className="mb-4 text-xs font-bold border-b border-black pb-2">
-                <p>Cliente: {order.profiles?.full_name || 'Invitado'}</p>
+            <div className="mb-6 text-sm font-bold leading-snug">
+                <div className="mb-2">
+                    <span className="font-normal">Cliente: </span>
+                    <span className="text-lg">{order.profiles?.full_name || order.order_items?.[0]?.order_id ? 'Cliente #' + order.id.slice(0, 4) : 'Invitado'}</span>
+                </div>
+
                 {order.order_type === 'delivery' ? (
-                    <>
-                        <p>DELIVERY</p>
-                        <p className="truncate">Dir: {order.delivery_address}</p>
-                    </>
+                    <div className="mb-2 whitespace-pre-wrap">
+                        {order.delivery_address}
+                    </div>
                 ) : (
-                    <p>RETIRO EN LOCAL</p>
+                    <div className="mb-2 italic">Retiro en Local</div>
                 )}
-                {order.payment_method && <p>Pago: {order.payment_method.toUpperCase()}</p>}
+
+                {order.profiles?.phone && (
+                    <div>Tel: {order.profiles.phone}</div>
+                )}
+                {/* Fallback for guest phone if stored in metadata or similar, usually logic dependent */}
             </div>
 
+            <hr className="border-t border-black mb-4" />
+
             {/* Items */}
-            <div className="space-y-2 mb-4 border-b border-black pb-4">
+            <div className="space-y-4 mb-6">
                 {order.order_items?.map((item, idx) => (
                     <div key={idx} className="flex flex-col">
-                        <div className="flex justify-between font-bold text-sm">
-                            <span>{item.quantity}x {item.products?.name}</span>
-                            <span>${item.price_at_time}</span>
+                        <div className="flex font-bold text-base mb-1">
+                            <span className="mr-2">{item.quantity} x</span>
+                            <span>{item.products?.name}</span>
                         </div>
-                        {/* Modifiers */}
-                        {(item.modifiers?.length > 0 || item.side_info || item.drink_info) && (
-                            <div className="pl-2 mt-1 text-[10px] font-medium text-gray-800">
-                                {item.modifiers?.map((m, i) => (
-                                    <div key={i}>+ {m.name} {m.quantity > 1 ? `(x${m.quantity})` : ''}</div>
-                                ))}
-                                {item.side_info && <div>+ {item.side_info.name}</div>}
-                                {item.drink_info && <div>+ {item.drink_info.name}</div>}
-                            </div>
-                        )}
+
+                        {/* Modifiers & Extras */}
+                        <div className="pl-6 text-sm font-medium text-gray-800 space-y-0.5">
+                            {item.modifiers?.map((m, i) => (
+                                <div key={i}>{m.name}</div>
+                            ))}
+                            {item.side_info && <div>+ {item.side_info.name}</div>}
+                            {item.drink_info && <div>+ {item.drink_info.name}</div>}
+                        </div>
                     </div>
                 ))}
             </div>
 
-            {/* Totals */}
-            <div className="text-right text-lg font-black mb-6">
-                <div className="flex justify-between text-xs font-normal">
-                    <span>Subtotal</span>
-                    <span>${order.total}</span>
+            <hr className="border-t border-black mb-4" />
+
+            {/* Footer Details */}
+            <div className="mb-6 font-bold text-sm space-y-1">
+                <div className="flex gap-2">
+                    <span>Forma pago:</span>
+                    <span className="capitalize">{order.payment_method === 'mercadopago' ? 'Mercado Pago' : order.payment_method}</span>
                 </div>
-                {order.discount_amount > 0 && (
-                    <div className="flex justify-between text-xs font-normal">
-                        <span>Descuento</span>
-                        <span>-${order.discount_amount}</span>
-                    </div>
-                )}
-                {/* Note: if total stored includes shipping, we might need to separate it if we had stored shipping cost separately. 
-                     For now assuming order.total is final to pay check. 
-                 */}
-                <div className="flex justify-between mt-2 border-t border-black pt-2 text-2xl">
-                    <span>TOTAL</span>
-                    <span>${order.total}</span>
+                <div className="flex gap-2">
+                    <span>Forma entrega:</span>
+                    <span className="capitalize">{order.order_type}</span>
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="text-center text-[10px] whitespace-pre-line mb-8">
-                ¡Gracias por tu compra!
-                {'\n'}
-                www.damafapp.com
-                {'\n'}
-                <p className="mt-2 font-bold">*** COMPROBANTE NO FISCAL ***</p>
+            {/* Financials */}
+            <div className="space-y-1 font-bold text-base mb-6">
+                {/* Ideally we separate delivery cost here if we stored it */}
+                {/* <div className="flex justify-between">
+                    <span>Subtotal:</span>
+                    <span>${order.subtotal}</span>
+                </div> 
+                <div className="flex justify-between">
+                    <span>Delivery:</span>
+                    <span>${order.shipping}</span>
+                </div> */}
+
+                <div className="flex justify-between items-end mt-4">
+                    <span className="uppercase text-xl tracking-widest">TOTAL</span>
+                </div>
+                <div className="text-4xl font-black">
+                    ${order.total}
+                </div>
+            </div>
+
+            {/* Cash Change info - mocked if we don't have it yet */}
+            {order.payment_method === 'cash' && (
+                <div className="space-y-1 font-bold text-sm mb-6">
+                    {/* Logic for "Paga con" would normally come from checkout, for now hidden unless we add that field */}
+                    {/* <div>Paga con: $-----</div>
+                   <div>Vuelto: $-----</div> */}
+                </div>
+            )}
+
+            <div className="text-center font-mono text-xs mt-8">
+                --
             </div>
         </div>
     )
