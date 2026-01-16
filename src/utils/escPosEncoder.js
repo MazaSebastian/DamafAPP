@@ -46,18 +46,27 @@ export class EscPosEncoder {
     }
 
     size(width, height) {
-        // 0 = normal, 1 = double
-        // ESC ! n (Legacy) or GS ! n
-        // Using GS ! n: 
-        // Bits 0-3: height, Bits 4-7: width
-        // 0x00 = Normal, 0x11 = Double W+H (Big), 0x01 = Double Height, 0x10 = Double Width
-        // The user wants BIG headers.
+        // ESC/POS GS ! n
+        // Obsolete "ESC !" logic moved to standard GS ! n
+        // Bits 0-3: height multiplier (0-7)
+        // Bits 4-7: width multiplier (0-7)
+        // e.g., size(1, 1) -> 0x00 (Normal)
+        //       size(2, 2) -> 0x11 (2x Width, 2x Height)
+        //       size(3, 3) -> 0x22 (3x Width, 3x Height)
+        //       size(4, 4) -> 0x33
 
-        let n = 0;
-        if (width === 2) n |= 0x10;
-        if (height === 2) n |= 0x01;
+        // Ensure within bounds (1-8, mapped to 0-7)
+        const w = Math.max(1, Math.min(8, width)) - 1;
+        const h = Math.max(1, Math.min(8, height)) - 1;
 
+        const n = (w << 4) | h;
         this.buffer.push(GS, 0x21, n);
+        return this;
+    }
+
+    invert(enabled) {
+        // GS B n  (0 or 1)
+        this.buffer.push(GS, 0x42, enabled ? 1 : 0);
         return this;
     }
 

@@ -11,7 +11,6 @@ export class UsbPrinterService {
             // Request device - User must interact
             this.device = await navigator.usb.requestDevice({
                 filters: [{ classCode: 7 }] // 7 = Printer Class
-                // We can also filter by vendorId if we knew it (e.g. XPrinter often 0x0416 or similar)
             });
 
             console.log('Device selected:', this.device);
@@ -20,6 +19,28 @@ export class UsbPrinterService {
         } catch (error) {
             console.error('Connection failed:', error);
             throw error;
+        }
+    }
+
+    async tryAutoConnect() {
+        try {
+            const devices = await navigator.usb.getDevices();
+            // Filter mostly for printers (classCode 7) 
+            // Note: getDevices returns all permitted devices, we check if one is suitable
+            const printer = devices.find(d => {
+                return d.configuration?.interfaces.some(i => i.alternates[0].interfaceClass === 7) || true // Assume permitted device is the one
+            });
+
+            if (printer) {
+                console.log('Auto-connecting to known device:', printer);
+                this.device = printer;
+                await this.open();
+                return true;
+            }
+            return false;
+        } catch (err) {
+            console.warn('Auto-connect failed:', err);
+            return false;
         }
     }
 
