@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard } from 'lucide-react'
+import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer } from 'lucide-react'
 import { toast } from 'sonner'
+import TicketTemplate from './print/TicketTemplate'
 
 const OrdersManager = () => {
     const [orders, setOrders] = useState([])
@@ -210,10 +211,25 @@ const OrdersManager = () => {
         }
     }
 
+    const [printingOrder, setPrintingOrder] = useState(null)
+
+    const handlePrint = (order) => {
+        setPrintingOrder(order)
+        // Give React a moment to render the ticket with new data
+        setTimeout(() => {
+            window.print()
+        }, 100)
+    }
+
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-secondary)]" /></div>
 
     return (
         <div className="space-y-6">
+            {/* Hidden Ticket Template for Printing */}
+            <div className="hidden">
+                <TicketTemplate order={printingOrder} />
+            </div>
+
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                     <ChefHat className="text-[var(--color-secondary)]" />
@@ -277,15 +293,24 @@ const OrdersManager = () => {
                                     {order.payment_method === 'mercadopago' && <><CreditCard className="w-3 h-3" /> MercadoPago</>}
                                 </div>
                             </div>
-                            <div className="text-right">
+                            <div className="text-right flex flex-col items-end gap-2">
                                 <span className="font-bold text-lg block">${order.total}</span>
-                                <button
-                                    onClick={() => deleteOrder(order.id)}
-                                    className="text-[var(--color-text-muted)] hover:text-red-400 mt-1"
-                                    title="Eliminar pedido"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex gap-1">
+                                    <button
+                                        onClick={() => handlePrint(order)}
+                                        className="text-[var(--color-text-muted)] hover:text-white p-1 rounded hover:bg-white/10"
+                                        title="Imprimir Ticket"
+                                    >
+                                        <Printer className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => deleteOrder(order.id)}
+                                        className="text-[var(--color-text-muted)] hover:text-red-400 p-1 rounded hover:bg-white/10"
+                                        title="Eliminar pedido"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
 
@@ -335,11 +360,6 @@ const OrdersManager = () => {
                                                 if (!error) {
                                                     setOrders(orders.map(o => o.id === order.id ? { ...o, is_paid: true } : o))
                                                     toast.success('Pago confirmado')
-                                                    // Auto-accept after payment confirmation? Or let admin click accept separately?
-                                                    // Better to keep separate: Confirm Payment -> Then the "Accept/Start Cooking" button appears or is enabled.
-                                                    // Actually, let's keep the user flow simpler:
-                                                    // "Confirmar y Aceptar" if un-paid transfer?
-                                                    // Let's stick to the gate: First Confirm Payment (if needed), THEN Accept to Kitchen.
                                                 } else {
                                                     toast.error('Error al confirmar pago')
                                                 }

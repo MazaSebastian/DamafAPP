@@ -106,3 +106,45 @@
 .animate-fade-to-green {
   animation: fade-to-green 3s ease-out forwards;
 }
+
+/* PRINTING STYLES (Thermal Printer) */
+@media print {
+
+  /* Hide standard elements */
+  body * {
+    visibility: hidden;
+    height: 0;
+    overflow: hidden;
+  }
+
+  /* Reset body background */
+  body {
+    background-color: white !important;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Show only the ticket area */
+  #ticket-print-area,
+  #ticket-print-area * {
+    visibility: visible;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Position the ticket at top-left */
+  #ticket-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    /* Standard Thermal Width */
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Hide print buttons inside the view if any */
+  .no-print {
+    display: none !important;
+  }
+}
