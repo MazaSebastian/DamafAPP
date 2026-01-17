@@ -24,6 +24,8 @@ import DeliveryDashboard from './components/DeliveryDashboard'
 import RiderInterface from './components/RiderInterface'
 import { CartProvider } from './context/CartContext'
 import KDSPage from './pages/KDSPage'
+import CustomerDisplayPage from './pages/CustomerDisplayPage'
+import POSPage from './pages/POSPage'
 
 const AnimatedRoutes = () => {
   const location = useLocation()
@@ -37,9 +39,8 @@ const AnimatedRoutes = () => {
           </ProtectedRoute>
         } />
 
-        <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
-        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
-        <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
+        <Route path="/display/client" element={<CustomerDisplayPage />} />
+
         <Route path="/delivery" element={
           <ProtectedRoute role="admin">
             <DeliveryDashboard />
@@ -48,7 +49,20 @@ const AnimatedRoutes = () => {
         <Route path="/rider" element={
           <RiderInterface />
         } />
+
+        {/* Specific Admin Routes first */}
+        <Route path="/admin/pos" element={
+          <ProtectedRoute role={['admin', 'owner']}>
+            <POSPage />
+          </ProtectedRoute>
+        } />
+
+        {/* General Admin Dashboard last (catch-all for /admin) */}
         <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
+
+        <Route path="/" element={<PageTransition><HomePage /></PageTransition>} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><RegisterPage /></PageTransition>} />
         <Route path="/club-info" element={<PageTransition><ClubInfoPage /></PageTransition>} />
         <Route path="/rewards" element={<PageTransition><RewardsStorePage /></PageTransition>} />
         <Route path="/menu" element={<PageTransition><MenuPage /></PageTransition>} />

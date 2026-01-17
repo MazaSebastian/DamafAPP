@@ -1,0 +1,95 @@
+package com.damafapp.pos
+
+import android.content.Context
+import android.hardware.display.DisplayManager
+import android.os.Bundle
+import android.view.Display
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.appcompat.app.AppCompatActivity
+
+class MainActivity : AppCompatActivity() {
+
+    private var customerPresentation: CustomerPresentation? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // Debugging
+        WebView.setWebContentsDebuggingEnabled(true)
+
+        // 1. Setup Main Screen (Admin POS)
+        val mainWebView = findViewById<WebView>(R.id.main_webview)
+        mainWebView.settings.javaScriptEnabled = true
+        mainWebView.settings.domStorageEnabled = true
+        
+        mainWebView.webViewClient = object : WebViewClient() {
+            override fun onReceivedError(view: WebView?, errorCode: Int, description: String?, failingUrl: String?) {
+                android.widget.Toast.makeText(this@MainActivity, "Error: $description", android.widget.Toast.LENGTH_LONG).show()
+                android.util.Log.e("WebViewError", "Error: $description")
+            }
+            
+            override fun onReceivedError(view: WebView?, request: android.webkit.WebResourceRequest?, error: android.webkit.WebResourceError?) {
+                android.widget.Toast.makeText(this@MainActivity, "Error: ${error?.description}", android.widget.Toast.LENGTH_LONG).show()
+                 android.util.Log.e("WebViewError", "Error: ${error?.description}")
+            }
+        }
+        
+        mainWebView.webChromeClient = object : android.webkit.WebChromeClient() {
+            override fun onConsoleMessage(consoleMessage: android.webkit.ConsoleMessage?): Boolean {
+                android.util.Log.d("WebViewConsole", "${consoleMessage?.message()} -- From line ${consoleMessage?.lineNumber()} of ${consoleMessage?.sourceId()}")
+                return true
+            }
+        }
+        
+        // CHANGE THIS URL TO YOUR DEPLOYED URL
+        // Example: https://damafapp-six.vercel.app/admin/pos
+        mainWebView.loadUrl("https://damafapp-six.vercel.app/admin/pos")
+
+        // 2. Setup Secondary Screen (Customer Presentation)
+        val displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager
+        val displays = displayManager.displays
+
+        // Check for multiple displays
+        if (displays.size > 1) {
+            // Index 1 is usually the first external display
+            showPresentation(displays[1])
+        }
+
+        // 3. Listener for Plug/Unplug events
+        displayManager.registerDisplayListener(object : DisplayManager.DisplayListener {
+            override fun onDisplayAdded(displayId: Int) {
+                val newDisplay = displayManager.getDisplay(displayId)
+                if (newDisplay != null) showPresentation(newDisplay)
+            }
+
+            override fun onDisplayRemoved(displayId: Int) {
+                if (customerPresentation != null && customerPresentation?.display?.displayId == displayId) {
+                    customerPresentation?.dismiss()
+                    customerPresentation = null
+                }
+            }
+
+            override fun onDisplayChanged(displayId: Int) {}
+        }, null)
+    }
+
+    private fun showPresentation(display: Display) {
+        if (customerPresentation != null && customerPresentation?.display?.displayId != display.displayId) {
+            customerPresentation?.dismiss()
+        }
+        
+        customerPresentation = CustomerPresentation(this, display)
+        try {
+            customerPresentation?.show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onDestroy() {
+        customerPresentation?.dismiss()
+        super.onDestroy()
+    }
+}

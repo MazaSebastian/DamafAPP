@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { toast } from 'sonner'
 
-const OrderModal = ({ isOpen, onClose }) => {
+const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null }) => {
     const [step, setStep] = useState(1) // 1: Burger, 1.5: Modifiers, 2: Sides, 3: Drinks
     const [products, setProducts] = useState([])
     const [modifiers, setModifiers] = useState([])
@@ -26,10 +26,13 @@ const OrderModal = ({ isOpen, onClose }) => {
     useEffect(() => {
         if (isOpen) {
             resetModal()
-            fetchBurgers()
-            // fetchModifiers() removed, we fetch on burger select
+            if (initialProduct) {
+                handleSelectBurger(initialProduct)
+            } else {
+                fetchBurgers()
+            }
         }
-    }, [isOpen])
+    }, [isOpen, initialProduct])
 
     const resetModal = () => {
         setStep(1)
@@ -124,7 +127,7 @@ const OrderModal = ({ isOpen, onClose }) => {
         }).filter(m => m.quantity > 0)
 
         // Construct notes including removable ingredients
-        let notesParts = ['Desde modal rápido']
+        let notesParts = [onAddToCart ? 'Pedido por POS' : 'Desde modal rápido']
         if (removedIngredients.length > 0) {
             notesParts.push(`SIN: ${removedIngredients.join(', ')}`)
         }
@@ -137,10 +140,15 @@ const OrderModal = ({ isOpen, onClose }) => {
             removed_ingredients: removedIngredients // Also store structured
         }
 
-        addToCart(comboItem)
-        toast.success('¡Combo completo agregado!')
-        onClose()
-        navigate('/checkout')
+        if (onAddToCart) {
+            onAddToCart(comboItem)
+            onClose()
+        } else {
+            addToCart(comboItem)
+            toast.success('¡Combo completo agregado!')
+            onClose()
+            navigate('/checkout')
+        }
     }
 
     const handleBack = () => {

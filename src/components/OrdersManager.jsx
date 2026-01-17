@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer, Usb } from 'lucide-react'
+import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer, Usb, Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import TicketTemplate from './print/TicketTemplate'
 import { EscPosEncoder } from '../utils/escPosEncoder'
 import { usbPrinter } from '../services/UsbPrinterService'
 import { format } from 'date-fns'
 
+import POSModal from './POSModal'
+
 const OrdersManager = () => {
     const [orders, setOrders] = useState([])
     const [loading, setLoading] = useState(true)
     const [usbConnected, setUsbConnected] = useState(false)
     const [printingOrder, setPrintingOrder] = useState(null)
+    const [isPOSOpen, setIsPOSOpen] = useState(false)
 
     useEffect(() => {
         fetchOrders()
@@ -328,6 +331,13 @@ const OrdersManager = () => {
                 </h2>
                 <div className="flex gap-2">
                     <button
+                        onClick={() => setIsPOSOpen(true)}
+                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-primary)] text-white rounded-lg text-sm font-bold hover:brightness-110 transition-colors shadow-lg shadow-purple-900/20"
+                    >
+                        <Plus className="w-4 h-4" />
+                        Tomar Pedido
+                    </button>
+                    <button
                         onClick={connectPrinter}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-colors shadow-lg ${usbConnected ? 'bg-green-500 text-white shadow-green-500/20' : 'bg-blue-600 text-white shadow-blue-500/20 hover:bg-blue-500'}`}
                     >
@@ -350,6 +360,14 @@ const OrdersManager = () => {
                     </button>
                 </div>
             </div>
+
+            <POSModal
+                isOpen={isPOSOpen}
+                onClose={() => setIsPOSOpen(false)}
+                onSuccess={() => {
+                    fetchOrders()
+                }}
+            /> >
 
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {orders.map(order => (
@@ -528,7 +546,7 @@ const OrdersManager = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     )
 }
 

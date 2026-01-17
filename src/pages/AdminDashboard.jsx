@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers, TrendingUp, Clock } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers, TrendingUp, Clock, Monitor } from 'lucide-react'
 import NewsManager from '../components/NewsManager'
 import RewardsManager from '../components/RewardsManager'
 import ProductManager from '../components/ProductManager'
@@ -138,6 +138,7 @@ const AdminDashboard = () => {
                     <div className="space-y-1">
                         <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Operativo</p>
                         <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Monitor />} label="POS Live" onClick={() => navigate('/admin/pos')} />
                         <NavItem icon={<Clock />} label="Horarios de Entrega" active={activeTab === 'Slots'} onClick={() => { setActiveTab('Slots'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
