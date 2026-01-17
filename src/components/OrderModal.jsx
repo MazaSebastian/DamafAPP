@@ -57,6 +57,7 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
     }
 
     const fetchProductModifiers = async (productId) => {
+        setLoading(true)
         const { data, error } = await supabase
             .from('product_modifiers')
             .select(`
@@ -76,6 +77,7 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
             console.error(error)
             setModifiers([])
         }
+        setLoading(false)
     }
 
     const fetchSides = async () => {
