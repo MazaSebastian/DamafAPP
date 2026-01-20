@@ -21,9 +21,8 @@ class MainActivity : AppCompatActivity() {
 
         // 1. Setup Main Screen (Admin POS)
         val mainWebView = findViewById<WebView>(R.id.main_webview)
-        // CHANGE THIS URL TO YOUR DEPLOYED URL
-        // Example: https://damafapp-six.vercel.app/admin/pos
-        setupWebView(mainWebView, "http://10.0.2.2:5173/admin/pos")
+        // Production URL
+        setupWebView(mainWebView, "https://damafapp-six.vercel.app/admin/pos")
 
         // 2. Setup Secondary Screen (Customer Presentation)
         val displayManager = getSystemService(Context.DISPLAY_SERVICE) as DisplayManager

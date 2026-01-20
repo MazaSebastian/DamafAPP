@@ -239,6 +239,21 @@ const OrdersManager = () => {
                 label: 'SÍ, BORRAR TODO',
                 onClick: async () => {
                     setLoading(true)
+
+                    // 1. Delete all order items first (to avoid FK constraints if CASCADE is not set)
+                    const { error: itemsError } = await supabase
+                        .from('order_items')
+                        .delete()
+                        .gt('id', -1) // Delete all items
+
+                    if (itemsError) {
+                        console.error('Error deleting items:', itemsError)
+                        toast.error('Error al eliminar items de pedidos')
+                        setLoading(false)
+                        return
+                    }
+
+                    // 2. Now delete orders
                     const { error } = await supabase
                         .from('orders')
                         .delete()
