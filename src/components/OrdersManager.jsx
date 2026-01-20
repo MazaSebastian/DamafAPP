@@ -87,7 +87,7 @@ const OrdersManager = () => {
 
         if (error) {
             console.error('Error fetching orders:', error)
-            toast.error('Error al cargar pedidos')
+            toast.error(`Error: ${error.message || 'Error al cargar pedidos'}`)
         }
 
         if (ordersData) setOrders(ordersData)
