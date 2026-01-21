@@ -437,17 +437,38 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
                         {/* Delivery Address Input */}
                         {orderType === 'delivery' && (
-                            <div className="animate-in fade-in slide-in-from-top-2 duration-200">
-                                <input
-                                    type="text"
-                                    value={selectedCustomer ? (selectedCustomer.address || deliveryAddress) : deliveryAddress}
-                                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                                    placeholder={selectedCustomer ? "Usar dirección del cliente..." : "Dirección de envío..."}
-                                    className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-primary)]"
-                                />
+                            <div className="animate-in fade-in slide-in-from-top-2 duration-200 space-y-2">
+                                <div className="flex gap-2">
+                                    <input
+                                        type="text"
+                                        value={deliveryAddress}
+                                        onChange={(e) => setDeliveryAddress(e.target.value)}
+                                        placeholder="Dirección de envío..."
+                                        className="flex-1 bg-[var(--color-background)] border border-white/10 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-primary)]"
+                                    />
+                                    <button
+                                        onClick={() => setDeliveryAddress('')}
+                                        className="bg-white/5 hover:bg-white/10 text-[var(--color-text-muted)] hover:text-white px-3 py-2 rounded-lg text-xs font-bold border border-white/10 transition-colors whitespace-nowrap"
+                                    >
+                                        Otro domicilio
+                                    </button>
+                                </div>
                                 {selectedCustomer && selectedCustomer.address && (
-                                    <div className="text-xs text-[var(--color-text-muted)] mt-1 ml-1 flex items-center gap-1">
-                                        <Check size={10} className="text-green-500" /> Dir. Registrada: {selectedCustomer.address}
+                                    <div className="flex justify-between items-center px-1">
+                                        <div className="text-xs text-[var(--color-text-muted)] flex items-center gap-1">
+                                            <Check size={12} className="text-green-500" />
+                                            <span className="truncate max-w-[150px]" title={selectedCustomer.address}>
+                                                Registrada: {selectedCustomer.address}
+                                            </span>
+                                        </div>
+                                        {deliveryAddress !== selectedCustomer.address && (
+                                            <button
+                                                onClick={() => setDeliveryAddress(selectedCustomer.address)}
+                                                className="text-xs text-[var(--color-primary)] hover:underline font-medium"
+                                            >
+                                                Restaurar
+                                            </button>
+                                        )}
                                     </div>
                                 )}
                             </div>
