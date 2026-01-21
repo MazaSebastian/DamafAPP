@@ -5,9 +5,10 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import { Loader2, TrendingUp, Calendar, DollarSign, Users, ShoppingBag, Clock } from 'lucide-react'
 import { calculateKPIs, getDailyRevenueData, getHourlyHeatmapData, getTopProductsData } from '../utils/analyticsUtils'
 import GeoHeatmap from './GeoHeatmap'
+import TodayStatsModal from './modals/TodayStatsModal'
 
 const AnalyticsManager = () => {
-    const [dateRange, setDateRange] = useState('7') // '7', '30', 'month', 'custom'
+    const [dateRange, setDateRange] = useState('7') // Default to 7 days for better initial chart viz
     const [customStart, setCustomStart] = useState('')
     const [customEnd, setCustomEnd] = useState('')
 
@@ -17,7 +18,7 @@ const AnalyticsManager = () => {
         revenueChart: [],
         hourlyChart: [],
         topProducts: [],
-        orders: [] // NEW: Store raw orders for Heatmap
+        orders: []
     })
 
     // New State for Today's specific metrics
@@ -27,6 +28,7 @@ const AnalyticsManager = () => {
         avgTicket: 0,
         loading: true
     })
+    const [isTodayModalOpen, setIsTodayModalOpen] = useState(false)
 
     useEffect(() => {
         fetchTodayMetrics()
@@ -48,7 +50,7 @@ const AnalyticsManager = () => {
             const { data: todayOrders, error } = await supabase
                 .from('orders')
                 .select('total, status')
-                .in('status', ['paid', 'completed', 'preparing', 'ready', 'sent']) // Confirmed orders
+                .in('status', ['paid', 'completed', 'preparing', 'ready', 'sent'])
                 .gte('created_at', todayStart.toISOString())
                 .lte('created_at', todayEnd.toISOString())
 
@@ -72,22 +74,21 @@ const AnalyticsManager = () => {
     const fetchAnalyticsData = async () => {
         setLoading(true)
         try {
-            // Determine date range
             const now = new Date()
-            let startDate = subDays(now, 7)
+            let startDate = subDays(now, 7) // Default
             let endDate = endOfDay(now)
 
+            // Logic for new filters
+            if (dateRange === 'today') startDate = startOfDay(now)
+            if (dateRange === '7') startDate = subDays(now, 7)
+            if (dateRange === '15') startDate = subDays(now, 15)
             if (dateRange === '30') startDate = subDays(now, 30)
-            if (dateRange === 'month') startDate = startOfDay(new Date(now.getFullYear(), now.getMonth(), 1))
 
             if (dateRange === 'custom') {
                 if (!customStart || !customEnd) {
                     setLoading(false)
                     return
                 }
-                const start = new Date(customStart)
-                // Add timezone offset correction or treat as local YYYY-MM-DD
-                // Simple fix: append T00:00:00
                 startDate = startOfDay(new Date(customStart + 'T00:00:00'))
                 endDate = endOfDay(new Date(customEnd + 'T00:00:00'))
             }
@@ -102,16 +103,14 @@ const AnalyticsManager = () => {
                         products (name)
                     )
                 `)
-                .in('status', ['paid', 'completed', 'preparing', 'ready', 'sent', 'pending']) // Include all valid active/historical statuses
+                .in('status', ['paid', 'completed', 'preparing', 'ready', 'sent', 'pending'])
                 .gte('created_at', startDate.toISOString())
                 .lte('created_at', endDate.toISOString())
                 .order('created_at', { ascending: true })
 
             if (error) throw error
 
-            // Process Data
             const kpis = calculateKPIs(orders)
-            // Calculate days diff for chart granularity
             const diffDays = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) || 1
             const revenueChart = getDailyRevenueData(orders, diffDays)
             const hourlyChart = getHourlyHeatmapData(orders)
@@ -127,8 +126,6 @@ const AnalyticsManager = () => {
     }
 
     if (loading && dateRange !== 'custom') return <div className="h-96 flex items-center justify-center"><Loader2 className="w-10 h-10 animate-spin text-[var(--color-secondary)]" /></div>
-
-    const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
     return (
         <div className="space-y-8 animate-in fade-in duration-500">
@@ -163,7 +160,7 @@ const AnalyticsManager = () => {
                     )}
 
                     <div className="bg-[var(--color-surface)] p-1 rounded-xl flex border border-white/5 w-full sm:w-auto overflow-x-auto">
-                        {['7', '30', 'month', 'custom'].map(range => (
+                        {['today', '7', '15', '30', 'custom'].map(range => (
                             <button
                                 key={range}
                                 onClick={() => setDateRange(range)}
@@ -172,9 +169,10 @@ const AnalyticsManager = () => {
                                     : 'text-[var(--color-text-muted)] hover:text-white hover:bg-white/5'
                                     }`}
                             >
+                                {range === 'today' && 'Hoy'}
                                 {range === '7' && 'Últimos 7 días'}
+                                {range === '15' && 'Últimos 15 días'}
                                 {range === '30' && 'Últimos 30 días'}
-                                {range === 'month' && 'Este Mes'}
                                 {range === 'custom' && 'Personalizado'}
                             </button>
                         ))}
@@ -183,13 +181,20 @@ const AnalyticsManager = () => {
             </div>
 
             {/* TODAY'S METRICS SECTION */}
-            <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/20 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
-                <div className="absolute top-0 right-0 p-10 opacity-10">
+            {/* TODAY'S METRICS SECTION */}
+            <div
+                onClick={() => setIsTodayModalOpen(true)}
+                className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/20 rounded-3xl p-6 relative overflow-hidden shadow-2xl cursor-pointer hover:border-blue-500/40 transition-all group"
+            >
+                <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:scale-110 transition-transform duration-700">
                     <Clock className="w-32 h-32 text-white" />
                 </div>
                 <h3 className="text-lg font-bold text-blue-200 mb-4 flex items-center gap-2">
                     <Clock className="w-5 h-5" />
                     Resumen del Día (Hoy)
+                    <span className="text-xs font-normal text-white/50 bg-white/10 px-2 py-0.5 rounded-full ml-2 group-hover:bg-white/20 transition-colors">
+                        Click para ver detalles
+                    </span>
                 </h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
@@ -214,13 +219,18 @@ const AnalyticsManager = () => {
                 </div>
             </div>
 
+            <TodayStatsModal
+                isOpen={isTodayModalOpen}
+                onClose={() => setIsTodayModalOpen(false)}
+            />
+
             {/* KPIs Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <KPICard
                     title="Ingresos (Periodo)"
                     value={`$${data.kpis.totalRevenue.toLocaleString()}`}
                     icon={<DollarSign className="text-green-400" />}
-                    trend="vs periodo anterior" // Todo: implement comparison
+                    trend="vs periodo anterior"
                 />
                 <KPICard
                     title="Ticket Prom (Periodo)"
@@ -231,12 +241,6 @@ const AnalyticsManager = () => {
                     title="Pedidos (Periodo)"
                     value={data.kpis.totalOrders}
                     icon={<TrendingUp className="text-orange-400" />}
-                />
-                <KPICard
-                    title="Conversion"
-                    value="--" // Placeholder
-                    icon={<Users className="text-purple-400" />}
-                    disabled
                 />
             </div>
 
