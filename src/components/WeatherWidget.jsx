@@ -49,65 +49,91 @@ const WeatherWidget = () => {
         fetchWeather()
     }, [])
 
+    const getWeatherDescription = (code) => {
+        // WMO Code interpretation
+        if (code === 0) return 'Despejado'
+        if (code === 1) return 'Mayormente Despejado'
+        if (code === 2) return 'Parcialmente Nublado'
+        if (code === 3) return 'Nublado'
+        if (code === 45 || code === 48) return 'Niebla'
+        if (code >= 51 && code <= 55) return 'Llovizna'
+        if (code >= 56 && code <= 57) return 'Llovizna Helada'
+        if (code === 61) return 'Lluvia Leve'
+        if (code === 63) return 'Lluvia Moderada'
+        if (code === 65) return 'Lluvia Fuerte'
+        if (code >= 66 && code <= 67) return 'Lluvia Helada'
+        if (code >= 71 && code <= 77) return 'Nieve'
+        if (code >= 80 && code <= 82) return 'Chubascos'
+        if (code >= 85 && code <= 86) return 'Chubascos de Nieve'
+        if (code === 95) return 'Tormenta'
+        if (code >= 96 && code <= 99) return 'Tormenta Eléctrica'
+        return 'Desconocido'
+    }
+
     const getWeatherIcon = (code) => {
         // WMO Weather interpretation codes (https://open-meteo.com/en/docs)
-        if (code <= 1) return <Sun className="w-6 h-6 text-yellow-400" />
-        if (code <= 3) return <Cloud className="w-6 h-6 text-gray-400" />
-        if (code <= 48) return <Cloud className="w-6 h-6 text-gray-400" />
-        if (code <= 67) return <CloudRain className="w-6 h-6 text-blue-400" />
-        if (code <= 77) return <CloudSnow className="w-6 h-6 text-white" />
-        if (code <= 82) return <CloudRain className="w-6 h-6 text-blue-500" />
-        if (code <= 86) return <CloudSnow className="w-6 h-6 text-white" />
-        if (code <= 99) return <CloudLightning className="w-6 h-6 text-purple-400" />
-        return <Sun className="w-6 h-6 text-yellow-400" />
+        if (code <= 1) return <Sun className="w-8 h-8 text-yellow-400" />
+        if (code <= 3) return <Cloud className="w-8 h-8 text-gray-400" />
+        if (code <= 48) return <Cloud className="w-8 h-8 text-gray-400" />
+        if (code <= 67) return <CloudRain className="w-8 h-8 text-blue-400" />
+        if (code <= 77) return <CloudSnow className="w-8 h-8 text-white" />
+        if (code <= 82) return <CloudRain className="w-8 h-8 text-blue-500" />
+        if (code <= 86) return <CloudSnow className="w-8 h-8 text-white" />
+        if (code <= 99) return <CloudLightning className="w-8 h-8 text-purple-400" />
+        return <Sun className="w-8 h-8 text-yellow-400" />
     }
 
     if (loading) return (
-        <div className="h-32 bg-white/5 animate-pulse rounded-2xl w-full"></div>
+        <div className="h-48 bg-white/5 animate-pulse rounded-2xl w-full"></div>
     )
 
     return (
-        <div className="bg-[var(--color-surface)] border border-white/5 rounded-2xl p-6 shadow-xl overflow-hidden">
-            <div className="flex items-center justify-between mb-4">
+        <div className="bg-[var(--color-surface)] border border-white/5 rounded-2xl p-6 shadow-xl overflow-hidden mt-6">
+            <div className="flex items-center justify-between mb-6">
                 <div>
                     <h3 className="text-white font-bold text-lg flex items-center gap-2">
                         <Cloud className="text-blue-400" />
-                        Clima de Hoy
+                        Pronóstico del Día
                     </h3>
-                    <p className="text-xs text-[var(--color-text-muted)]">Planificación de envíos</p>
-                </div>
-                <div className="text-xs font-bold bg-blue-500/10 text-blue-400 px-2 py-1 rounded border border-blue-500/20">
-                    Vicente López
+                    <p className="text-xs text-[var(--color-text-muted)]">Vicente López</p>
                 </div>
             </div>
 
-            <div className="flex overflow-x-auto gap-4 pb-2 scrollbar-hide">
+            <div className="flex overflow-x-auto gap-4 pb-4 scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent">
                 {hourlyWeather.map((h, i) => (
-                    <div key={i} className="flex flex-col items-center min-w-[70px] bg-black/20 p-3 rounded-xl border border-white/5 hover:bg-white/5 transition-colors">
-                        <span className="text-xs text-[var(--color-text-muted)] font-bold mb-2">
-                            {format(h.time, 'HH:00')}
-                        </span>
+                    <div key={i} className="flex flex-col items-center min-w-[120px] bg-black/20 p-4 rounded-xl border border-white/5 hover:bg-white/5 transition-colors relative group">
 
-                        <div className="mb-2">
-                            {getWeatherIcon(h.code)}
-                        </div>
-
-                        <span className="text-lg font-bold text-white mb-1">
-                            {h.temp}°
-                        </span>
-
+                        {/* Probability Badge */}
                         {h.rainChance > 0 && (
-                            <div className="flex items-center gap-0.5 text-[10px] text-blue-300 font-bold bg-blue-500/20 px-1.5 py-0.5 rounded-full">
+                            <div className="absolute top-2 right-2 flex items-center gap-0.5 text-[10px] text-blue-200 font-bold bg-blue-500/30 px-1.5 py-0.5 rounded-full border border-blue-500/20">
                                 <Droplets className="w-3 h-3" />
                                 {h.rainChance}%
                             </div>
                         )}
+
+                        <span className="text-sm text-[var(--color-text-muted)] font-bold mb-3">
+                            {format(h.time, 'HH:00')}
+                        </span>
+
+                        <div className="mb-3 transform group-hover:scale-110 transition-transform duration-300">
+                            {getWeatherIcon(h.code)}
+                        </div>
+
+                        <div className="text-center mb-1">
+                            <span className="text-2xl font-black text-white">
+                                {h.temp}°
+                            </span>
+                        </div>
+
+                        <span className="text-[10px] uppercase font-bold text-center text-white/50 bg-white/5 px-2 py-1 rounded w-full truncate">
+                            {getWeatherDescription(h.code)}
+                        </span>
                     </div>
                 ))}
 
                 {hourlyWeather.length === 0 && (
                     <div className="text-center w-full py-4 text-white/50 text-sm">
-                        No hay datos disponibles para el resto del día.
+                        No hay más datos por hoy.
                     </div>
                 )}
             </div>
