@@ -119,7 +119,7 @@ const CustomersManager = () => {
                                 </div>
                                 <div>
                                     <div className="font-medium text-white flex items-center gap-2">
-                                        {customer.first_name || 'Sin nombre'} {customer.last_name}
+                                        {customer.first_name ? `${customer.first_name} ${customer.last_name || ''}` : (customer.full_name || 'Sin nombre')}
                                         {/* ID Badge */}
                                         <div
                                             onClick={() => copyToClipboard(customer.id)}

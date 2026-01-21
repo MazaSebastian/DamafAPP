@@ -6,6 +6,7 @@ import { Loader2, TrendingUp, Calendar, DollarSign, Users, ShoppingBag, Clock } 
 import { calculateKPIs, getDailyRevenueData, getHourlyHeatmapData, getTopProductsData } from '../utils/analyticsUtils'
 import GeoHeatmap from './GeoHeatmap'
 import TodayStatsModal from './modals/TodayStatsModal'
+import PeriodOrdersModal from './modals/PeriodOrdersModal'
 
 const AnalyticsManager = () => {
     const [dateRange, setDateRange] = useState('7') // Default to 7 days for better initial chart viz
@@ -222,6 +223,16 @@ const AnalyticsManager = () => {
             <TodayStatsModal
                 isOpen={isTodayModalOpen}
                 onClose={() => setIsTodayModalOpen(false)}
+            />
+
+            <PeriodOrdersModal
+                isOpen={isOrdersModalOpen}
+                onClose={() => setIsOrdersModalOpen(false)}
+                orders={data.orders}
+                dateRangeLabel={dateRange === 'custom' ? `Personalizado (${customStart} - ${customEnd})` :
+                    dateRange === 'today' ? 'Hoy' :
+                        dateRange === '7' ? 'Últimos 7 días' :
+                            dateRange === '15' ? 'Últimos 15 días' : 'Últimos 30 días'}
             />
 
             {/* KPIs Grid */}
