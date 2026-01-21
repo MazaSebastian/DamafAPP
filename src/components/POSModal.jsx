@@ -464,9 +464,9 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                                         {deliveryAddress !== selectedCustomer.address && (
                                             <button
                                                 onClick={() => setDeliveryAddress(selectedCustomer.address)}
-                                                className="text-xs text-[var(--color-primary)] hover:underline font-medium"
+                                                className="text-xs text-white hover:text-white/80 hover:underline font-medium"
                                             >
-                                                Restaurar
+                                                Usar domicilio original
                                             </button>
                                         )}
                                     </div>
