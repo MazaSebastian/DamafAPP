@@ -126,8 +126,8 @@ const CustomersManager = () => {
                                             className="flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono bg-white/5 hover:bg-white/10 cursor-pointer text-gray-500 hover:text-gray-300 transition-colors"
                                             title="Copiar ID"
                                         >
-                                            {customer.id.slice(0, 8)}...
-                                            {copiedId === customer.id ? <Check size={10} className="text-green-500" /> : <Copy size={10} />}
+                                            {customer.customer_id ? `#${customer.customer_id}` : '---'}
+                                            {copiedId === (customer.customer_id || customer.id) ? <Check size={10} className="text-green-500" /> : <Copy size={10} />}
                                         </div>
                                     </div>
                                     <div className="text-sm text-gray-400 flex items-center gap-1">
