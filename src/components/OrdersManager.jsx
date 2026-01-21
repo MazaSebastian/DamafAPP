@@ -701,6 +701,14 @@ const OrdersManager = () => {
                                     )}
                                 </div>
 
+                                {/* Notes */}
+                                {order.notes && (
+                                    <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg flex gap-2">
+                                        <div className="mt-0.5"><StickyNote className="w-3 h-3 text-yellow-500" /></div>
+                                        <p className="text-xs text-yellow-200/90 italic leading-snug">"{order.notes}"</p>
+                                    </div>
+                                )}
+
                                 {/* Customer Details */}
                                 {order.profiles ? (
                                     <div className="mt-2 p-2 bg-white/5 rounded-lg border border-white/5 text-xs text-gray-300">

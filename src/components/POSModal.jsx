@@ -21,6 +21,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
     const [selectedSlot, setSelectedSlot] = useState(null)
     const [orderType, setOrderType] = useState('takeaway') // 'takeaway' | 'delivery'
     const [deliveryAddress, setDeliveryAddress] = useState('')
+    const [notes, setNotes] = useState('') // Notes state
 
     // Initial Load
     useEffect(() => {
@@ -42,6 +43,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
             setSelectedSlot(null)
             setOrderType('takeaway')
             setDeliveryAddress('')
+            setNotes('')
         }
     }, [isOpen])
 
@@ -481,6 +483,17 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                                 selectedSlot={selectedSlot}
                                 onSlotSelect={setSelectedSlot}
                                 compact={true}
+                            />
+                        </div>
+
+                        {/* Notes Input */}
+                        <div className="w-full pt-2 border-t border-white/5">
+                            <textarea
+                                value={notes}
+                                onChange={(e) => setNotes(e.target.value)}
+                                placeholder="Notas u observaciones (ej: Sin sal, timbre no anda...)"
+                                className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-[var(--color-primary)] resize-none"
+                                rows={2}
                             />
                         </div>
                     </div>

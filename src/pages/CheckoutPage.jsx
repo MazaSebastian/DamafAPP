@@ -37,6 +37,7 @@ const CheckoutPage = () => {
     const [shippingCost, setShippingCost] = useState(0)
     const [distanceKm, setDistanceKm] = useState(0)
     const [selectedSlot, setSelectedSlot] = useState(null)
+    const [notes, setNotes] = useState('') // Order Notes
 
     // Dynamic Delivery Settings State
     const [deliverySettings, setDeliverySettings] = useState({
@@ -182,9 +183,11 @@ const CheckoutPage = () => {
                     payment_method: paymentMethod,
                     delivery_address: orderType === 'delivery' ? address : null,
                     delivery_lat: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lat : null,
+                    delivery_lat: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lat : null,
                     delivery_lng: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lng : null,
                     coupon_code: appliedCoupon?.code || null,
                     discount_amount: discountAmount,
+                    notes: notes // Customer notes
                 }])
                 .select()
                 .single()
@@ -488,6 +491,18 @@ const CheckoutPage = () => {
                         orderType={orderType}
                         selectedSlot={selectedSlot}
                         onSlotSelect={setSelectedSlot}
+                    />
+                </div>
+
+                {/* NOTES INPUT */}
+                <div className="animated-slide-up space-y-2">
+                    <p className="text-sm text-[var(--color-text-muted)] mb-1 font-medium">Notas del Pedido (Opcional):</p>
+                    <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Ej: Sin mayonesa, timbre no funciona, etc."
+                        className="w-full bg-[var(--color-surface)] border border-white/5 rounded-xl p-3 text-white placeholder-gray-500 focus:outline-none focus:border-[var(--color-secondary)] transition-all resize-none text-sm"
+                        rows={3}
                     />
                 </div>
 

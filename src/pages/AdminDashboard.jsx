@@ -26,6 +26,54 @@ const AdminDashboard = () => {
     const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState('Overview')
     const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [pendingOrdersCount, setPendingOrdersCount] = useState(0)
+    const [lowStockCount, setLowStockCount] = useState(0)
+
+    // Badge Logic
+    useEffect(() => {
+        if (!user) return
+
+        const fetchCounts = async () => {
+            // Orders: Pending
+            const { count: ordersCount } = await supabase
+                .from('orders')
+                .select('*', { count: 'exact', head: true })
+                .eq('status', 'pending')
+
+            if (ordersCount !== null) setPendingOrdersCount(ordersCount)
+
+            // Inventory: Low Stock
+            // We unfortunately can't do "WHERE stock <= min_stock" easily in Supabase JS basic filter without RPC
+            // So we fetch all and filter. Ingredients list is usually small.
+            const { data: ingredients } = await supabase
+                .from('ingredients')
+                .select('stock, min_stock')
+
+            if (ingredients) {
+                const low = ingredients.filter(i => i.stock <= i.min_stock).length
+                setLowStockCount(low)
+            }
+        }
+
+        fetchCounts()
+
+        // Realtime
+        const channel = supabase
+            .channel('admin_badges')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+                // Refresh orders count
+                fetchCounts()
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ingredients' }, () => {
+                // Refresh inventory count
+                fetchCounts()
+            })
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [user])
 
     // Global Sound Notification
     const playNewOrderSound = () => {
@@ -138,12 +186,12 @@ const AdminDashboard = () => {
                     {/* OPERATIVO */}
                     <div className="space-y-1">
                         <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Operativo</p>
-                        <NavItem icon={<ShoppingCart />} label="Pedidos" active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<ShoppingCart />} label="Pedidos" badge={pendingOrdersCount} active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Monitor />} label="POS Live" onClick={() => navigate('/admin/pos')} />
                         <NavItem icon={<Users />} label="Repartidores" active={activeTab === 'Drivers'} onClick={() => { setActiveTab('Drivers'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Clock />} label="Horarios de Entrega" active={activeTab === 'Slots'} onClick={() => { setActiveTab('Slots'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
-                        <NavItem icon={<Package />} label="Inventario" active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Package />} label="Inventario" badge={lowStockCount} active={activeTab === 'Inventory'} onClick={() => { setActiveTab('Inventory'); setIsSidebarOpen(false) }} />
                     </div>
 
                     {/* CATALOGO */}
@@ -243,10 +291,15 @@ const AdminDashboard = () => {
 }
 
 // Helper Components
-const NavItem = ({ icon, label, active, onClick }) => (
-    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${active ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-purple-900/20' : 'text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'}`}>
+const NavItem = ({ icon, label, active, onClick, badge }) => (
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all relative ${active ? 'bg-[var(--color-primary)] text-white shadow-lg shadow-purple-900/20' : 'text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'}`}>
         {icon && <span className="w-4 h-4">{icon}</span>}
-        <span className="font-medium text-sm">{label}</span>
+        <span className="font-medium text-sm flex-1 text-left">{label}</span>
+        {badge > 0 && (
+            <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full min-w-[18px] grid place-items-center animate-pulse">
+                {badge}
+            </span>
+        )}
     </button>
 )
 
