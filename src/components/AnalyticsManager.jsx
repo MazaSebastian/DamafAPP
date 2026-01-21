@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { subDays, startOfDay, endOfDay, format } from 'date-fns'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, AreaChart, Area, PieChart, Pie, Cell } from 'recharts'
-import { Loader2, TrendingUp, Calendar, DollarSign, Users, ShoppingBag } from 'lucide-react'
+import { Loader2, TrendingUp, Calendar, DollarSign, Users, ShoppingBag, Clock } from 'lucide-react'
 import { calculateKPIs, getDailyRevenueData, getHourlyHeatmapData, getTopProductsData } from '../utils/analyticsUtils'
 import GeoHeatmap from './GeoHeatmap'
 
@@ -20,6 +20,18 @@ const AnalyticsManager = () => {
         orders: [] // NEW: Store raw orders for Heatmap
     })
 
+    // New State for Today's specific metrics
+    const [todayMetrics, setTodayMetrics] = useState({
+        revenue: 0,
+        orders: 0,
+        avgTicket: 0,
+        loading: true
+    })
+
+    useEffect(() => {
+        fetchTodayMetrics()
+    }, [])
+
     useEffect(() => {
         if (dateRange !== 'custom') {
             fetchAnalyticsData()
@@ -27,6 +39,35 @@ const AnalyticsManager = () => {
             fetchAnalyticsData()
         }
     }, [dateRange, customStart, customEnd])
+
+    const fetchTodayMetrics = async () => {
+        try {
+            const todayStart = startOfDay(new Date())
+            const todayEnd = endOfDay(new Date())
+
+            const { data: todayOrders, error } = await supabase
+                .from('orders')
+                .select('total, status')
+                .in('status', ['paid', 'completed', 'preparing', 'ready', 'sent']) // Confirmed orders
+                .gte('created_at', todayStart.toISOString())
+                .lte('created_at', todayEnd.toISOString())
+
+            if (!error && todayOrders) {
+                const revenue = todayOrders.reduce((acc, order) => acc + (order.total || 0), 0)
+                const count = todayOrders.length
+                const avg = count > 0 ? revenue / count : 0
+
+                setTodayMetrics({
+                    revenue,
+                    orders: count,
+                    avgTicket: avg,
+                    loading: false
+                })
+            }
+        } catch (error) {
+            console.error("Error fetching today metrics:", error)
+        }
+    }
 
     const fetchAnalyticsData = async () => {
         setLoading(true)
@@ -141,21 +182,53 @@ const AnalyticsManager = () => {
                 </div>
             </div>
 
+            {/* TODAY'S METRICS SECTION */}
+            <div className="bg-gradient-to-r from-blue-900/40 to-purple-900/40 border border-blue-500/20 rounded-3xl p-6 relative overflow-hidden shadow-2xl">
+                <div className="absolute top-0 right-0 p-10 opacity-10">
+                    <Clock className="w-32 h-32 text-white" />
+                </div>
+                <h3 className="text-lg font-bold text-blue-200 mb-4 flex items-center gap-2">
+                    <Clock className="w-5 h-5" />
+                    Resumen del Día (Hoy)
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
+                    <div>
+                        <p className="text-sm text-blue-300 font-bold uppercase tracking-wider mb-1">Ventas Hoy</p>
+                        <p className="text-4xl font-black text-white tracking-tight">
+                            ${todayMetrics.revenue.toLocaleString()}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-purple-300 font-bold uppercase tracking-wider mb-1">Pedidos Hoy</p>
+                        <p className="text-4xl font-black text-white tracking-tight">
+                            {todayMetrics.orders}
+                        </p>
+                    </div>
+                    <div>
+                        <p className="text-sm text-green-300 font-bold uppercase tracking-wider mb-1">Ticket Promedio Hoy</p>
+                        <p className="text-4xl font-black text-white tracking-tight">
+                            ${Math.round(todayMetrics.avgTicket).toLocaleString()}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
             {/* KPIs Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KPICard
-                    title="Ingresos Totales"
+                    title="Ingresos (Periodo)"
                     value={`$${data.kpis.totalRevenue.toLocaleString()}`}
                     icon={<DollarSign className="text-green-400" />}
                     trend="vs periodo anterior" // Todo: implement comparison
                 />
                 <KPICard
-                    title="Ticket Promedio"
+                    title="Ticket Prom (Periodo)"
                     value={`$${Math.round(data.kpis.averageTicket).toLocaleString()}`}
                     icon={<ShoppingBag className="text-blue-400" />}
                 />
                 <KPICard
-                    title="Total Pedidos"
+                    title="Pedidos (Periodo)"
                     value={data.kpis.totalOrders}
                     icon={<TrendingUp className="text-orange-400" />}
                 />
