@@ -237,11 +237,16 @@ const AnalyticsManager = () => {
                     value={`$${Math.round(data.kpis.averageTicket).toLocaleString()}`}
                     icon={<ShoppingBag className="text-blue-400" />}
                 />
-                <KPICard
-                    title="Pedidos (Periodo)"
-                    value={data.kpis.totalOrders}
-                    icon={<TrendingUp className="text-orange-400" />}
-                />
+
+                {/* Orders Card with Interaction */}
+                <div onClick={() => setIsOrdersModalOpen(true)} className="cursor-pointer group">
+                    <KPICard
+                        title="Pedidos (Periodo)"
+                        value={data.kpis.totalOrders}
+                        icon={<TrendingUp className="text-orange-400 group-hover:text-orange-300 transition-colors" />}
+                        interactive={true}
+                    />
+                </div>
             </div>
 
             {/* Charts Section */}
