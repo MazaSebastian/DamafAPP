@@ -240,24 +240,12 @@ const OrdersManager = () => {
                 onClick: async () => {
                     setLoading(true)
 
-                    // 1. Delete all order items first (to avoid FK constraints if CASCADE is not set)
-                    const { error: itemsError } = await supabase
-                        .from('order_items')
-                        .delete()
-                        .gt('id', -1) // Delete all items
-
-                    if (itemsError) {
-                        console.error('Error deleting items:', itemsError)
-                        toast.error('Error al eliminar items de pedidos')
-                        setLoading(false)
-                        return
-                    }
-
-                    // 2. Now delete orders
+                    // Delete orders (Cascade will handle order_items - Ensure SQL_FIX_ORDER_ITEMS_CASCADE.sql is run)
                     const { error } = await supabase
                         .from('orders')
                         .delete()
-                        .gt('total', -1)
+                        .neq('id', '00000000-0000-0000-0000-000000000000') // Delete all valid UUIDs
+                    // Alternative: .gt('total', -1) work if total is numeric, but ID check is cleaner for "ALL"
 
                     if (!error) {
                         await fetchOrders()
