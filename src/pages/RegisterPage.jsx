@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { supabase } from '../supabaseClient'
 import { ArrowRight, Loader2, Mail, Lock, Phone, User } from 'lucide-react'
 import { countryCodes } from '../utils/countryCodes'
+import AddressAutocomplete from '../components/AddressAutocomplete'
 
 const RegisterPage = () => {
     const navigate = useNavigate()
@@ -15,7 +16,7 @@ const RegisterPage = () => {
     const [fullName, setFullName] = useState('')
     const [phoneData, setPhoneData] = useState({ countryCode: '+54', number: '' })
     const [dob, setDob] = useState({ day: '', month: '', year: '' })
-    const [zipCode, setZipCode] = useState('')
+    const [addressData, setAddressData] = useState({ address: '', floor: '', department: '', postal_code: '' })
 
     const [error, setError] = useState(null)
 
@@ -28,6 +29,7 @@ const RegisterPage = () => {
             // Validate fields
             if (!fullName.trim()) throw new Error('El nombre es requerido')
             if (!phoneData.number) throw new Error('El teléfono es requerido')
+            if (!addressData.address) throw new Error('La dirección es requerida')
             if (!dob.day || !dob.month || !dob.year) throw new Error('La fecha de nacimiento es requerida')
 
             const fullPhone = `${phoneData.countryCode} ${phoneData.number}`.trim()
@@ -44,7 +46,10 @@ const RegisterPage = () => {
                         full_name: fullName,
                         phone: fullPhone,
                         birth_date: birthDate,
-                        zip_code: zipCode
+                        address: addressData.address,
+                        floor: addressData.floor,
+                        department: addressData.department,
+                        postal_code: addressData.postal_code
                     }
                 }
             })

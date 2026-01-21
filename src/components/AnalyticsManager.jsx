@@ -30,6 +30,7 @@ const AnalyticsManager = () => {
         loading: true
     })
     const [isTodayModalOpen, setIsTodayModalOpen] = useState(false)
+    const [isOrdersModalOpen, setIsOrdersModalOpen] = useState(false)
 
     useEffect(() => {
         fetchTodayMetrics()
