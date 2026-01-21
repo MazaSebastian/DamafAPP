@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { supabase } from '../supabaseClient'
-import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, X, Loader2, Printer } from 'lucide-react'
+import { Search, ShoppingCart, Trash2, Plus, Minus, CreditCard, Banknote, X, Loader2, Printer, Check } from 'lucide-react'
 import { toast } from 'sonner'
 import OrderModal from './OrderModal'
 import DeliverySlotSelector from './checkout/DeliverySlotSelector'
