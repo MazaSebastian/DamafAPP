@@ -197,6 +197,10 @@ const CustomersManager = () => {
                 isOpen={isDetailsModalOpen}
                 onClose={() => setIsDetailsModalOpen(false)}
                 customer={selectedCustomer}
+                onCustomerUpdated={() => {
+                    fetchCustomers()
+                    setIsDetailsModalOpen(false) // Optional: Close on success
+                }}
             />
         </div>
     )
