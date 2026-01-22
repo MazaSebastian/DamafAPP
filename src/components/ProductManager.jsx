@@ -101,6 +101,7 @@ const ProductManager = () => {
             name: formData.get('name'),
             description: formData.get('description'),
             price: parseFloat(formData.get('price')),
+            price_double: formData.get('price_double') ? parseFloat(formData.get('price_double')) : null,
             image_url: formData.get('image_url'),
             media_type: formData.get('media_type') || 'image',
             removable_ingredients: removableArr,
@@ -377,7 +378,7 @@ const ProductManager = () => {
                             className="space-y-4"
                         >
                             <div className="grid grid-cols-2 gap-4">
-                                <div>
+                                <div className="col-span-2">
                                     <label className="block text-xs font-bold text-[var(--color-text-muted)] mb-1">NOMBRE</label>
                                     <input
                                         name="name"
@@ -388,7 +389,7 @@ const ProductManager = () => {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] mb-1">PRECIO ($)</label>
+                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] mb-1">PRECIO SIMPLE ($)</label>
                                     <input
                                         name="price"
                                         type="number"
@@ -397,6 +398,17 @@ const ProductManager = () => {
                                         placeholder="0.00"
                                         className="w-full bg-[var(--color-background)] p-3 rounded-xl outline-none border border-white/5 focus:border-[var(--color-secondary)]"
                                         required
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] mb-1">PRECIO DOBLE ($) <span className="font-normal opacity-50 text-[10px]">(Opc.)</span></label>
+                                    <input
+                                        name="price_double"
+                                        type="number"
+                                        step="0.01"
+                                        defaultValue={editingProduct?.price_double || ''}
+                                        placeholder="Solo si tiene tamaño Doble"
+                                        className="w-full bg-[var(--color-background)] p-3 rounded-xl outline-none border border-white/5 focus:border-[var(--color-secondary)]"
                                     />
                                 </div>
                             </div>

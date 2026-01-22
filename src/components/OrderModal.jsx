@@ -14,6 +14,7 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
     const [drinks, setDrinks] = useState([])
 
     const [selectedBurger, setSelectedBurger] = useState(null)
+    const [size, setSize] = useState('Simple') // 'Simple' | 'Double'
     const [selectedModifiers, setSelectedModifiers] = useState({}) // { modifierId: quantity }
     const [removedIngredients, setRemovedIngredients] = useState([]) // List of strings
     const [selectedSide, setSelectedSide] = useState(null)
@@ -63,6 +64,7 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
     const resetModal = () => {
         setStep(1)
         setSelectedBurger(null)
+        setSize('Simple')
         setSelectedModifiers({})
         setRemovedIngredients([])
         setSelectedSide(null)
@@ -152,16 +154,22 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
         }).filter(m => m.quantity > 0)
 
         let notesParts = [onAddToCart ? 'Pedido por POS' : 'Desde modal rápido']
+        if (size === 'Double') notesParts.push('TAMAÑO: DOBLE')
         if (removedIngredients.length > 0) {
             notesParts.push(`SIN: ${removedIngredients.join(', ')}`)
         }
 
         const comboItem = {
-            main: { ...selectedBurger, notes: notesParts.join('. ') },
+            main: {
+                ...selectedBurger,
+                price: (size === 'Double' && selectedBurger.price_double) ? selectedBurger.price_double : selectedBurger.price,
+                notes: notesParts.join('. ')
+            },
             modifiers: modifiersList,
             side: selectedSide ? { ...selectedSide } : null,
             drink: drink ? { ...drink } : null,
-            removed_ingredients: removedIngredients
+            removed_ingredients: removedIngredients,
+            variant: size
         }
 
         if (onAddToCart) {
@@ -184,6 +192,7 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
         }).filter(m => m.quantity > 0)
 
         let notesParts = []
+        if (size === 'Double') notesParts.push('TAMAÑO: DOBLE')
         if (removedIngredients.length > 0) {
             notesParts.push(`SIN: ${removedIngredients.join(', ')}`)
         }
@@ -195,7 +204,8 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
         }
 
         // Calculate total price for this customized item
-        let totalPrice = selectedBurger.price
+        let basePrice = (size === 'Double' && selectedBurger.price_double) ? selectedBurger.price_double : selectedBurger.price
+        let totalPrice = basePrice
         modifiersList.forEach(mod => {
             totalPrice += (mod.price * mod.quantity)
         })
@@ -207,7 +217,8 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
             modifiers: modifiersList,
             notes: notesParts.join('. '),
             price: totalPrice, // Use the full calculated price
-            original_price: selectedBurger.price // Keep original for reference if needed
+            original_price: basePrice,
+            variant: size
         }
 
         if (onAddToCart) {
@@ -249,7 +260,7 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
     }
 
     const getCurrentTotal = () => {
-        let total = selectedBurger?.price || 0
+        let total = (size === 'Double' && selectedBurger?.price_double) ? selectedBurger.price_double : (selectedBurger?.price || 0)
         Object.entries(selectedModifiers).forEach(([modId, qty]) => {
             const mod = modifiers.find(m => m.id === modId)
             if (mod) total += mod.price * qty
@@ -336,6 +347,24 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
                                                     <p className="text-[var(--color-secondary)] font-bold text-lg">${getCurrentTotal().toLocaleString()}</p>
                                                 </div>
                                             </div>
+
+                                            {/* Size Selector */}
+                                            {selectedBurger?.price_double > 0 && (
+                                                <div className="bg-[var(--color-surface)] p-1 rounded-xl flex border border-white/5">
+                                                    <button
+                                                        onClick={() => setSize('Simple')}
+                                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all ${size === 'Simple' ? 'bg-[var(--color-primary)] text-white shadow-lg' : 'text-[var(--color-text-muted)] hover:bg-white/5'}`}
+                                                    >
+                                                        Simple (${selectedBurger.price})
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setSize('Double')}
+                                                        className={`flex-1 py-3 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-1 ${size === 'Double' ? 'bg-[var(--color-secondary)] text-white shadow-lg' : 'text-[var(--color-text-muted)] hover:bg-white/5'}`}
+                                                    >
+                                                        <span>💪</span> Doble (${selectedBurger.price_double})
+                                                    </button>
+                                                </div>
+                                            )}
 
                                             {/* Removable Ingredients Section */}
                                             {selectedBurger?.removable_ingredients?.length > 0 && (
