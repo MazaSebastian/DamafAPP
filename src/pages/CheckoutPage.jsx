@@ -709,6 +709,7 @@ const CheckoutPage = () => {
                     toast.error('Tu pedido ha sido rechazado por el local.')
                     setPendingOrderId(null)
                 }}
+            />
             <div className="fixed top-20 right-4 z-50">
             </div>
 
