@@ -234,26 +234,6 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                 // Immediate Success
                 await finalizeOrder(orderData.id, 'paid', subtotal)
 
-                // Print Ticket if Android Interface is available
-                if (window.AndroidPrint) {
-                    const printPayload = {
-                        id: orderData.id,
-                        created_at: orderData.created_at, // Use real creation time
-                        updated_at: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
-                        total: subtotal,
-                        client_name: selectedCustomer ? selectedCustomer.full_name : 'Invitado', // Pass name for printer
-                        order_type: 'takeaway',
-                        payment_method: 'cash',
-                        cart_items: cart
-                    }
-                    try {
-                        window.AndroidPrint.printTicket(JSON.stringify(printPayload))
-                        toast.success('Imprimiendo ticket...')
-                    } catch (e) {
-                        console.error('Error sending to printer:', e)
-                    }
-                }
-
                 toast.success(`Pedido #${orderData.id.slice(0, 6)} completado (Efectivo) 💵`)
                 closeModalAfterDelay()
             } else if (method === 'mercadopago') {

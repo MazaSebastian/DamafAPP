@@ -36,9 +36,13 @@ const TicketTemplate = ({ order }) => {
                 <span>Hora:</span>
                 <span>{format(orderDate, 'HH:mm')}</span>
 
-                {/* Simulated 'Hora Ent.' - usually delivery time estimate */}
-                {/* <span className="mt-2 text-lg">Hora Ent.:</span>
-                <span className="mt-2 text-3xl font-black">22:45</span> */}
+                {/* Delivery Schedule / Time */}
+                {order.scheduled_time && (
+                    <div className="col-span-2 mt-2 border-2 border-black p-1 text-center">
+                        <div className="text-[10px] uppercase font-black">HORARIO DE ENTREGA/DELIVERY SELECCIONADO:</div>
+                        <div className="text-2xl font-black">{order.scheduled_time}</div>
+                    </div>
+                )}
             </div>
 
             <hr className="border-t-2 border-black mb-4" />

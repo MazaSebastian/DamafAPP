@@ -333,7 +333,7 @@ const OrdersManager = () => {
 
             // Shift Row if exists
             if (order.scheduled_time) {
-                encoder.bold(true).invert(true).text(` TURNO: ${order.scheduled_time} `).invert(false).bold(false).newline().newline()
+                encoder.bold(true).invert(true).text(`HORARIO DE ENTREGA/DELIVERY SELECCIONADO: ${order.scheduled_time}`).invert(false).bold(false).newline().newline()
             }
 
             encoder.line() // Separator ----------------
@@ -433,7 +433,8 @@ const OrdersManager = () => {
                 client_name: order.profiles?.full_name || 'Invitado',
                 client_address: order.profiles?.address || order.delivery_address || '',
                 client_phone: order.profiles?.phone || '',
-                client_shift: order.scheduled_time || '', // Ensure this column is selected in fetchOrders
+                client_shift: order.scheduled_time || '',
+                delivery_time: order.scheduled_time || '', // Redundant key for compatibility
 
                 order_type: order.order_type,
                 payment_method: order.payment_method,
