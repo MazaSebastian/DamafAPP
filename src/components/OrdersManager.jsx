@@ -179,6 +179,11 @@ const OrdersManager = () => {
             setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
             toast.success(`Pedido actualizado a: ${newStatus}`)
 
+            // Auto-Print on Acceptance (Cooking)
+            if (newStatus === 'cooking') {
+                handlePrint({ ...order, status: newStatus })
+            }
+
             // Log Cash Sale if Completed
             if (newStatus === 'completed' || newStatus === 'paid') {
                 const { logCashSale } = await import('../utils/cashUtils')
