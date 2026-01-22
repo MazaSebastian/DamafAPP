@@ -197,36 +197,54 @@ const CustomerDetailsModal = ({ isOpen, onClose, customer, onCustomerUpdated }) 
                                         <MapPin className="w-5 h-5 text-[var(--color-text-muted)] mt-2 shrink-0" />
                                         <div className="w-full space-y-2">
                                             {isEditing ? (
-                                                <>
+                                                <div className="space-y-2">
                                                     <AddressAutocomplete
-                                                        defaultValue={formData.address}
+                                                        placeholder="🔍 Buscar dirección en mapa..."
                                                         onSelect={(addr) => setFormData({ ...formData, address: addr })}
+                                                        className="w-full bg-blue-500/10 border border-blue-500/20 rounded px-2 py-2 text-white placeholder-blue-300/50 text-sm focus:outline-none focus:border-blue-500"
                                                     />
 
-                                                    <div className="flex gap-2">
+                                                    <div className="space-y-1">
+                                                        <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold ml-1">Calle y Altura</label>
                                                         <input
                                                             type="text"
-                                                            value={formData.floor}
-                                                            onChange={e => setFormData({ ...formData, floor: e.target.value })}
-                                                            placeholder="Piso"
-                                                            className="bg-white/5 border border-white/10 rounded px-2 py-1 text-white w-20"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            value={formData.department}
-                                                            onChange={e => setFormData({ ...formData, department: e.target.value })}
-                                                            placeholder="Depto"
-                                                            className="bg-white/5 border border-white/10 rounded px-2 py-1 text-white w-20"
-                                                        />
-                                                        <input
-                                                            type="text"
-                                                            value={formData.postal_code}
-                                                            onChange={e => setFormData({ ...formData, postal_code: e.target.value })}
-                                                            placeholder="CP"
-                                                            className="bg-white/5 border border-white/10 rounded px-2 py-1 text-white w-24"
+                                                            value={formData.address}
+                                                            onChange={e => setFormData({ ...formData, address: e.target.value })}
+                                                            placeholder="Ej: Av. Libertador 1234"
+                                                            className="bg-white/5 border border-white/10 rounded px-2 py-2 text-white w-full text-sm focus:border-[var(--color-primary)] outline-none"
                                                         />
                                                     </div>
-                                                </>
+
+                                                    <div className="grid grid-cols-3 gap-2">
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold ml-1">Piso</label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.floor}
+                                                                onChange={e => setFormData({ ...formData, floor: e.target.value })}
+                                                                className="bg-white/5 border border-white/10 rounded px-2 py-2 text-white w-full text-sm text-center focus:border-[var(--color-primary)] outline-none"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold ml-1">Depto</label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.department}
+                                                                onChange={e => setFormData({ ...formData, department: e.target.value })}
+                                                                className="bg-white/5 border border-white/10 rounded px-2 py-2 text-white w-full text-sm text-center focus:border-[var(--color-primary)] outline-none"
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-1">
+                                                            <label className="text-[10px] text-[var(--color-text-muted)] uppercase font-bold ml-1">CP</label>
+                                                            <input
+                                                                type="text"
+                                                                value={formData.postal_code}
+                                                                onChange={e => setFormData({ ...formData, postal_code: e.target.value })}
+                                                                className="bg-white/5 border border-white/10 rounded px-2 py-2 text-white w-full text-sm text-center focus:border-[var(--color-primary)] outline-none"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             ) : (
                                                 <>
                                                     <p className="font-medium text-white">{customer.address || 'Sin dirección principal'}</p>
