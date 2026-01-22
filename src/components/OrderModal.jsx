@@ -210,14 +210,14 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
         }
 
         // Calculate total price for this customized item
-        let basePrice = selectedBurger.price
+        let basePrice = parseFloat(selectedBurger.price)
         const sizeVariant = selectedBurger.sizes?.find(s => s.name === size)
-        if (sizeVariant) basePrice = sizeVariant.price
-        else if (size === 'Double' && selectedBurger.price_double) basePrice = selectedBurger.price_double
+        if (sizeVariant) basePrice = parseFloat(sizeVariant.price)
+        else if (size === 'Double' && selectedBurger.price_double) basePrice = parseFloat(selectedBurger.price_double)
 
         let totalPrice = basePrice
         modifiersList.forEach(mod => {
-            totalPrice += (mod.price * mod.quantity)
+            totalPrice += (parseFloat(mod.price) * mod.quantity)
         })
 
         const customItem = {
@@ -270,23 +270,23 @@ const OrderModal = ({ isOpen, onClose, initialProduct = null, onAddToCart = null
     }
 
     const getCurrentTotal = () => {
-        let basePrice = selectedBurger?.price || 0
+        let basePrice = parseFloat(selectedBurger?.price || 0)
 
         if (size !== 'Simple') {
             const variant = selectedBurger?.sizes?.find(s => s.name === size)
             if (variant) {
-                basePrice = variant.price
+                basePrice = parseFloat(variant.price)
             } else if (size === 'Double' && selectedBurger?.price_double) {
-                basePrice = selectedBurger.price_double
+                basePrice = parseFloat(selectedBurger.price_double)
             }
         }
 
         let total = basePrice
         Object.entries(selectedModifiers).forEach(([modId, qty]) => {
             const mod = modifiers.find(m => m.id === modId)
-            if (mod) total += mod.price * qty
+            if (mod) total += parseFloat(mod.price) * qty
         })
-        if (selectedSide) total += selectedSide.price
+        if (selectedSide) total += parseFloat(selectedSide.price)
         return total
     }
 
