@@ -160,7 +160,7 @@ const CheckoutPage = () => {
         }
     }
 
-    const finalTotal = total - discountAmount + (orderType === 'delivery' ? shippingCost : 0)
+    const finalTotal = Number(total) - Number(discountAmount) + (orderType === 'delivery' ? Number(shippingCost) : 0)
 
     // Initialize Mercado Pago
     const MP_PUBLIC_KEY = import.meta.env.VITE_MP_PUBLIC_KEY

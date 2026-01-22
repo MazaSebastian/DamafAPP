@@ -22,6 +22,8 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
     const [orderType, setOrderType] = useState('takeaway') // 'takeaway' | 'delivery'
     const [deliveryAddress, setDeliveryAddress] = useState('')
     const [notes, setNotes] = useState('') // Notes state
+    const [shippingCost, setShippingCost] = useState(0)
+    const [deliverySettings, setDeliverySettings] = useState({ delivery_fixed_price: 0 })
 
     // Initial Load
     useEffect(() => {
@@ -32,7 +34,9 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
             // Reset customer & slot
             setSelectedCustomer(null)
             setCustomerIdInput('')
+            setCustomerIdInput('')
             setSelectedSlot(null)
+            fetchSettings()
         } else {
             // Reset session on close to idle
             updateCustomerDisplay([], 'idle')
@@ -43,7 +47,10 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
             setSelectedSlot(null)
             setOrderType('takeaway')
             setDeliveryAddress('')
+            setOrderType('takeaway')
+            setDeliveryAddress('')
             setNotes('')
+            setShippingCost(0)
         }
     }, [isOpen])
 
@@ -55,6 +62,27 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
             updateCustomerDisplay(cart, status)
         }
     }, [cart])
+
+    useEffect(() => {
+        if (orderType === 'delivery') {
+            if (deliverySettings.delivery_fixed_price > 0) {
+                setShippingCost(deliverySettings.delivery_fixed_price)
+            }
+        } else {
+            setShippingCost(0)
+        }
+    }, [orderType, deliverySettings])
+
+    const fetchSettings = async () => {
+        const { data } = await supabase.from('app_settings').select('*')
+        if (data) {
+            const settings = {}
+            data.forEach(item => settings[item.key] = item.value)
+            setDeliverySettings({
+                delivery_fixed_price: parseFloat(settings.delivery_fixed_price || 0)
+            })
+        }
+    }
 
     const fetchProducts = async () => {
         setLoading(true)
@@ -194,8 +222,9 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
             const orderPayload = {
                 user_id: orderUserId,
                 client_name: selectedCustomer ? selectedCustomer.full_name : 'Invitado', // Explicitly store name
+                client_name: selectedCustomer ? selectedCustomer.full_name : 'Invitado', // Explicitly store name
                 status: 'cooking', // POS orders bypass approval (cooking directly)
-                total: subtotal,
+                total: subtotal + (orderType === 'delivery' ? Number(shippingCost) : 0),
                 payment_method: method,
                 order_type: orderType,
                 payment_status: method === 'cash' ? 'paid' : 'pending', // MP is pending initially
@@ -333,6 +362,9 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
         (selectedCategory === 'all' || p.category === selectedCategory)
     )
 
+    // Derived Categories
+    const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))]
+
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <div className="bg-[var(--color-surface)] w-full max-w-6xl h-[90vh] rounded-3xl border border-white/10 shadow-2xl flex overflow-hidden relative animate-in fade-in zoom-in duration-300">
@@ -397,6 +429,22 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                                 </div>
                             )}
                         </div>
+                    </div>
+
+                    {/* Category Tabs */}
+                    <div className="px-6 py-3 border-b border-white/5 flex gap-2 overflow-x-auto custom-scrollbar whitespace-nowrap">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedCategory(cat)}
+                                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border ${selectedCategory === cat
+                                        ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
+                                        : 'bg-[var(--color-surface)] border-white/10 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'
+                                    }`}
+                            >
+                                {cat === 'all' ? 'Todos' : cat}
+                            </button>
+                        ))}
                     </div>
 
                     {/* Grid */}
@@ -497,6 +545,22 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                             />
                         </div>
 
+                        {/* Shipping Cost Input (Manual Override) */}
+                        {orderType === 'delivery' && (
+                            <div className="w-full animate-in fade-in zoom-in-50 duration-200">
+                                <label className="text-xs text-[var(--color-text-muted)] mb-1 block">Costo de Envío</label>
+                                <div className="relative">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">$</span>
+                                    <input
+                                        type="number"
+                                        value={shippingCost}
+                                        onChange={(e) => setShippingCost(Number(e.target.value))}
+                                        className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg pl-7 pr-3 py-2 text-sm focus:outline-none focus:border-[var(--color-primary)] font-bold"
+                                    />
+                                </div>
+                            </div>
+                        )}
+
                         {/* Notes Input */}
                         <div className="w-full pt-2 border-t border-white/5">
                             <textarea
@@ -552,7 +616,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                     <div className="p-6 bg-[var(--color-background)] border-t border-white/5 space-y-4">
                         <div className="flex justify-between text-2xl font-bold">
                             <span>Total</span>
-                            <span>${cart.reduce((sum, i) => sum + (i.price * i.quantity), 0)}</span>
+                            <span>${cart.reduce((sum, i) => sum + (i.price * i.quantity), 0) + (orderType === 'delivery' ? Number(shippingCost) : 0)}</span>
                         </div>
 
                         {processLoading ? (
