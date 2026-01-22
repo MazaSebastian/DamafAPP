@@ -102,7 +102,6 @@ const ProductManager = () => {
             name: formData.get('name'),
             description: formData.get('description'),
             price: parseFloat(formData.get('price')),
-            price_double: null, // Deprecated in favor of sizes
             sizes: productSizes,
             image_url: formData.get('image_url'),
             media_type: formData.get('media_type') || 'image',
