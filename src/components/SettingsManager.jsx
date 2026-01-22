@@ -71,10 +71,12 @@ const SettingsManager = () => {
         'loyalty_level_gold': 'Nivel Gold (Estrellas necesarias)',
         'loyalty_benefits_welcome': 'Beneficios Nivel Welcome (separados por coma)',
         'loyalty_benefits_green': 'Beneficios Nivel Green (separados por coma)',
-        'loyalty_benefits_gold': 'Beneficios Nivel Gold (separados por coma)'
+        'loyalty_benefits_gold': 'Beneficios Nivel Gold (separados por coma)',
+        'bank_cbu': 'CBU/CVU (Transferencias)',
+        'bank_alias': 'Alias (Transferencias)',
+        'bank_holder': 'Titular de Cuenta',
+        'bank_name': 'Nombre del Banco'
     }
-
-
 
     // Helper to group settings
     const getSettingsByCategory = (category) => {
@@ -83,6 +85,7 @@ const SettingsManager = () => {
             if (category === 'tienda') return s.key.startsWith('store_') && s.key !== 'store_mode' && s.key !== 'store_status' && s.key !== 'store_phone' && s.key !== 'store_whatsapp_template'
             if (category === 'whatsapp') return s.key === 'store_phone' || s.key === 'store_whatsapp_template'
             if (category === 'delivery') return s.key.startsWith('delivery_')
+            if (category === 'pagos') return s.key.startsWith('bank_')
             if (category === 'loyalty') return s.key.startsWith('loyalty_') || s.key.startsWith('stars_')
             return false
         })
@@ -92,6 +95,7 @@ const SettingsManager = () => {
         { id: 'tienda', label: 'Tienda' },
         { id: 'whatsapp', label: 'WhatsApp' },
         { id: 'delivery', label: 'Delivery' },
+        { id: 'pagos', label: 'Pagos' },
         { id: 'loyalty', label: 'Fidelización' }
     ]
 

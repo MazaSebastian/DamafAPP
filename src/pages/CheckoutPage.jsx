@@ -1,11 +1,10 @@
-
 import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
-import { ArrowLeft, Trash2, MapPin, Car, Info, AlertTriangle, Play, Pause, RotateCcw, Plus, ShoppingBag } from 'lucide-react'
+import { ArrowLeft, Trash2, MapPin, Car, Info, AlertTriangle, Play, Pause, RotateCcw, Plus, ShoppingBag, ArrowRight, Loader2, CreditCard, Banknote, Bike, ChevronRight, Store, X, Copy } from 'lucide-react'
 import { initMercadoPago } from '@mercadopago/sdk-react'
 import DeliveryMap from '../components/DeliveryMap'
 import { useStoreStatus } from '../hooks/useStoreStatus'
@@ -135,7 +134,7 @@ const CheckoutPage = () => {
         // Check for Fixed Price
         if (deliverySettings.delivery_fixed_price > 0) {
             cost = deliverySettings.delivery_fixed_price
-            toast.info(`Costo de envío fijo: $${cost}`)
+            toast.info(`Costo de envío fijo: $${cost} `)
         }
         // Check for Free Shipping Radius
         else if (deliverySettings.delivery_free_range_km > 0 && distance <= deliverySettings.delivery_free_range_km) {
@@ -170,6 +169,7 @@ const CheckoutPage = () => {
 
     // Approval Flow State
     const [showApprovalModal, setShowApprovalModal] = useState(false)
+    const [showBankModal, setShowBankModal] = useState(false)
     const [pendingOrderId, setPendingOrderId] = useState(null)
 
     const processOrder = async () => {
@@ -244,8 +244,13 @@ const CheckoutPage = () => {
                 setPendingOrderId(order.id)
                 setShowApprovalModal(true)
                 // Payment generation is deferred until onApproved callback
+            } else if (paymentMethod === 'transfer') {
+                // TRANSFER FLOW -> Show Bank Details Modal
+                setPendingOrderId(order.id)
+                clearCart()
+                setShowBankModal(true)
             } else {
-                // CASH OR TRANSFER FLOW -> MANUAL COORDINATION
+                // CASH FLOW -> MANUAL COORDINATION
                 // User requirement: "Administracion se comunicara para coordinar el pago"
                 clearCart()
                 toast.success('Pedido enviado. Administración te contactará para coordinar el pago 🕒', { duration: 5000 })
@@ -290,11 +295,11 @@ const CheckoutPage = () => {
     const redirectToWhatsApp = (order) => {
         const waNumber = deliverySettings.store_phone || '5491100000000' // Fallback
         const waTemplate = deliverySettings.store_whatsapp_template ||
-            "Hola! Quiero confirmar mi pedido *#{{id}}* 🍔\n\n📅 *Fecha:* {{fecha}}\n👤 *Cliente:* {{cliente}}\n📍 *Entrega:* {{entrega}}\n💵 *Pago:* {{pago}}\n\n📝 *Pedido:*\n{{items}}\n\n💰 *Total a Pagar:* ${{total}}"
+            "Hola! Quiero confirmar mi pedido *#{{id}}* 🍔\n\n📅 *Fecha:* {{fecha}}\n👤 *Cliente:* {{cliente}}\n📍 *Entrega:* {{entrega}}\n💵 *Pago:* {{pago}}\n\n📝 *Pedido:*\n{{items}}\n\n💰 *Total a Pagar:* ${{ total }}"
 
         const orderDate = new Date().toLocaleDateString()
         const customerName = user?.user_metadata?.name || 'Invitado'
-        const deliveryInfo = orderType === 'delivery' ? `Delivery (${address})` : 'Retiro en Local'
+        const deliveryInfo = orderType === 'delivery' ? `Delivery(${address})` : 'Retiro en Local'
         const paymentInfo = paymentMethod === 'transfer' ? 'Transferencia Bancaria' : 'Efectivo'
 
         let itemsList = ''
@@ -315,7 +320,7 @@ const CheckoutPage = () => {
             .replace('{{total}}', finalTotal)
 
         if (paymentMethod === 'transfer' && !message.includes('datos bancarios')) {
-            message += `\n\nℹ️ *Solicito datos bancarios para transferir.*`
+            message += `\n\nℹ️ * Solicito datos bancarios para transferir.* `
         }
 
         const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`
@@ -704,9 +709,93 @@ const CheckoutPage = () => {
                     toast.error('Tu pedido ha sido rechazado por el local.')
                     setPendingOrderId(null)
                 }}
-            />
+            <div className="fixed top-20 right-4 z-50">
+            </div>
 
-            {/* DEV TOOL: Simulation Button */}
+            {/* Bank Transfer Modal */}
+            {showBankModal && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="bg-[var(--color-surface)] rounded-2xl w-full max-w-md p-6 border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="text-center mb-6">
+                            <div className="w-16 h-16 bg-purple-500/20 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/30">
+                                <Banknote className="w-8 h-8 text-purple-400" />
+                            </div>
+                            <h3 className="text-xl font-bold text-white mb-2">Datos para Transferencia</h3>
+                            <p className="text-gray-400 text-sm">
+                                Realiza la transferencia por <strong>${finalTotal}</strong> a la siguiente cuenta y envía el comprobante.
+                            </p>
+                        </div>
+
+                        <div className="bg-black/30 rounded-xl p-4 space-y-3 border border-white/5 mb-6">
+                            {(deliverySettings.bank_alias || deliverySettings.bank_cbu) ? (
+                                <>
+                                    {deliverySettings.bank_name && (
+                                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                                            <span className="text-gray-400">Banco/Billetera:</span>
+                                            <span className="font-bold text-white max-w-[60%] text-right">{deliverySettings.bank_name}</span>
+                                        </div>
+                                    )}
+                                    {deliverySettings.bank_alias && (
+                                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                                            <span className="text-gray-400">Alias:</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-purple-300 select-all">{deliverySettings.bank_alias}</span>
+                                                <button onClick={() => { navigator.clipboard.writeText(deliverySettings.bank_alias); toast.success('Alias copiado') }} className="p-1 hover:bg-white/10 rounded">
+                                                    <Copy className="w-3 h-3 text-white/50" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {deliverySettings.bank_cbu && (
+                                        <div className="flex justify-between items-center text-sm border-b border-white/5 pb-2">
+                                            <span className="text-gray-400">CBU/CVU:</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-bold text-white select-all text-xs">{deliverySettings.bank_cbu}</span>
+                                                <button onClick={() => { navigator.clipboard.writeText(deliverySettings.bank_cbu); toast.success('CBU copiado') }} className="p-1 hover:bg-white/10 rounded">
+                                                    <Copy className="w-3 h-3 text-white/50" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {deliverySettings.bank_holder && (
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="text-gray-400">Titular:</span>
+                                            <span className="font-bold text-white max-w-[60%] text-right">{deliverySettings.bank_holder}</span>
+                                        </div>
+                                    )}
+                                </>
+                            ) : (
+                                <div className="text-center text-yellow-500 py-4 text-sm bg-yellow-500/10 rounded">
+                                    ⚠️ No hay datos bancarios configurados. Por favor contacta al local.
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => {
+                                    const waNumber = deliverySettings.store_phone || '5491100000000'
+                                    const message = `Hola! Ya realicé la transferencia por el pedido #${pendingOrderId?.slice(0, 4)}. Adjunto el comprobante. 📄`
+                                    window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(message)}`, '_blank')
+                                }}
+                                className="w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
+                            >
+                                <span className="text-lg">📲</span> Enviar Comprobante (WhatsApp)
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setShowBankModal(false)
+                                    navigate('/profile')
+                                }}
+                                className="w-full bg-white/10 text-white py-3 rounded-xl font-bold hover:bg-white/20 transition-colors"
+                            >
+                                Listo, ya lo envié
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             <div className="fixed top-20 right-4 z-50">
                 <button
                     onClick={simulatePayment}
