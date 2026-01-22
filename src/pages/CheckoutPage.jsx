@@ -247,7 +247,7 @@ const CheckoutPage = () => {
             } else if (paymentMethod === 'transfer') {
                 // TRANSFER FLOW -> Show Bank Details Modal
                 setPendingOrderId(order.id)
-                clearCart()
+                // Do NOT clear cart here, otherwise the page unmounts due to empty cart check
                 setShowBankModal(true)
             } else {
                 // CASH FLOW -> MANUAL COORDINATION
@@ -787,6 +787,7 @@ const CheckoutPage = () => {
                             <button
                                 onClick={() => {
                                     setShowBankModal(false)
+                                    clearCart() // Now clear cart when finishing
                                     navigate('/profile')
                                 }}
                                 className="w-full bg-white/10 text-white py-3 rounded-xl font-bold hover:bg-white/20 transition-colors"
