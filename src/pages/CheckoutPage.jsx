@@ -22,6 +22,7 @@ const CheckoutPage = () => {
     const [loading, setLoading] = useState(false)
     const [showConfirmModal, setShowConfirmModal] = useState(false)
     const [paymentMethod, setPaymentMethod] = useState('mercadopago') // 'mercadopago' | 'cash'
+    const [showCouponInput, setShowCouponInput] = useState(false)
 
     const [orderType, setOrderType] = useState('takeaway')
     const [address, setAddress] = useState('')
@@ -483,7 +484,7 @@ const CheckoutPage = () => {
                 <h1 className="ml-2 font-bold text-lg">Tu Pedido</h1>
             </header>
 
-            <main className="p-4 max-w-lg mx-auto space-y-6">
+            <main className="p-4 max-w-lg mx-auto space-y-6 pb-96">
 
                 {/* Delivery Toggle (Moved to Main) */}
                 <div className="bg-[var(--color-surface)] p-1 rounded-xl flex border border-white/5">
@@ -602,67 +603,77 @@ const CheckoutPage = () => {
             </main>
 
             {/* Delivery Footer - Only Coupon, Total & Pay */}
-            <div className="fixed bottom-0 w-full bg-[var(--color-surface)]/95 backdrop-blur-xl border-t border-white/5 p-6 z-50 rounded-t-3xl shadow-2xl">
-                <div className="max-w-lg mx-auto space-y-4">
+            <div className="fixed bottom-0 w-full bg-[var(--color-surface)]/95 backdrop-blur-xl border-t border-white/5 p-4 z-50 rounded-t-3xl shadow-2xl">
+                <div className="max-w-lg mx-auto space-y-3">
 
-                    {/* Coupon Input */}
-                    <div className="flex gap-2">
-                        <input
-                            type="text"
-                            value={couponCode}
-                            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                            placeholder="Código de descuento"
-                            className="flex-1 bg-[var(--color-background)] border border-white/10 rounded-xl p-3 text-white focus:outline-none focus:border-[var(--color-secondary)] uppercase"
-                            disabled={!!appliedCoupon}
-                        />
-                        {appliedCoupon ? (
-                            <button onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode('') }} className="bg-red-500/10 text-red-500 px-4 rounded-xl font-bold">
-                                <Trash2 className="w-5 h-5" />
-                            </button>
-                        ) : (
-                            <button onClick={applyCoupon} className="bg-[var(--color-primary)] text-white px-6 rounded-xl font-bold">
-                                Aplicar
-                            </button>
-                        )}
-                    </div>
+                    {/* Coupon Input - Collapsible */}
+                    {!appliedCoupon && !showCouponInput ? (
+                        <button
+                            onClick={() => setShowCouponInput(true)}
+                            className="text-xs font-bold text-[var(--color-secondary)] hover:underline flex items-center gap-1"
+                        >
+                            <span className="text-lg">🎟️</span> ¿Tienes un cupón de descuento?
+                        </button>
+                    ) : (
+                        <div className="flex gap-2 animated-slide-up">
+                            <input
+                                type="text"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                placeholder="CÓDIGO DE DESCUENTO"
+                                className="flex-1 bg-[var(--color-background)] border border-white/10 rounded-lg p-2 text-sm text-white focus:outline-none focus:border-[var(--color-secondary)] uppercase"
+                                disabled={!!appliedCoupon}
+                            />
+                            {appliedCoupon ? (
+                                <button onClick={() => { setAppliedCoupon(null); setDiscountAmount(0); setCouponCode(''); setShowCouponInput(false) }} className="bg-red-500/10 text-red-500 px-3 rounded-lg font-bold">
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            ) : (
+                                <button onClick={applyCoupon} className="bg-[var(--color-primary)] text-white px-4 rounded-lg font-bold text-sm">
+                                    Aplicar
+                                </button>
+                            )}
+                        </div>
+                    )}
+
                     {appliedCoupon && (
-                        <div className="text-green-400 text-sm font-bold flex justify-between">
+                        <div className="text-green-400 text-xs font-bold flex justify-between">
                             <span>Cupón aplicado ({appliedCoupon.code})</span>
                             <span>-${discountAmount.toFixed(2)}</span>
                         </div>
                     )}
 
                     <div className="flex justify-between items-end pt-2 border-t border-white/5">
-                        <span className="text-[var(--color-text-muted)] font-medium">Total a Pagar</span>
-                        <div className="text-right">
-                            {appliedCoupon && <span className="block text-sm text-[var(--color-text-muted)] line-through">${total.toFixed(2)}</span>}
-                            <span className="text-3xl font-bold text-white">${finalTotal.toFixed(2)}</span>
+                        <span className="text-[var(--color-text-muted)] font-medium text-sm">Total a Pagar</span>
+                        <div className="text-right leading-none">
+                            {appliedCoupon && <span className="block text-xs text-[var(--color-text-muted)] line-through mb-1">${total.toFixed(2)}</span>}
+                            <span className="text-2xl font-bold text-white">${finalTotal.toFixed(2)}</span>
                         </div>
                     </div>
 
-                    {/* Payment Method Selector */}
-                    <div className="bg-[var(--color-background)] p-1 rounded-xl flex border border-white/10 mb-2">
+                    {/* Payment Method Selector - Compact */}
+                    <div className="bg-[var(--color-background)] p-1 rounded-xl flex border border-white/10 mb-1">
                         <button
                             onClick={() => setPaymentMethod('mercadopago')}
-                            className={`flex-1 py-3 rounded-lg font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${paymentMethod === 'mercadopago' ? 'bg-[#009ee3] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
+                            className={`flex-1 py-2 rounded-lg font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-0.5 ${paymentMethod === 'mercadopago' ? 'bg-[#009ee3] text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
                         >
                             <span>💳 Mercado Pago</span>
                         </button>
                         <button
                             onClick={() => setPaymentMethod('transfer')}
-                            className={`flex-1 py-3 rounded-lg font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${paymentMethod === 'transfer' ? 'bg-purple-600 text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
+                            className={`flex-1 py-2 rounded-lg font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-0.5 ${paymentMethod === 'transfer' ? 'bg-purple-600 text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
                         >
                             <span>🏦 Transferencia</span>
                         </button>
                         <button
                             onClick={() => setPaymentMethod('cash')}
-                            className={`flex-1 py-3 rounded-lg font-bold text-xs transition-all flex flex-col items-center justify-center gap-1 ${paymentMethod === 'cash' ? 'bg-green-600 text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
+                            className={`flex-1 py-2 rounded-lg font-bold text-[10px] transition-all flex flex-col items-center justify-center gap-0.5 ${paymentMethod === 'cash' ? 'bg-green-600 text-white shadow-lg' : 'text-[var(--color-text-muted)]'}`}
                         >
                             <span>💵 Efectivo</span>
                         </button>
                     </div>
 
-                    <button onClick={handleCheckout} className={`w-full text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all
+                    <button onClick={handleCheckout} className={`w-full text-white py-3 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-all
                         ${!orderType ? 'bg-gray-600 cursor-not-allowed opacity-50' :
                             paymentMethod === 'mercadopago' ? 'bg-[#009ee3] hover:bg-[#009ee3]/90 shadow-blue-900/20' :
                                 paymentMethod === 'transfer' ? 'bg-purple-600 hover:bg-purple-500 shadow-purple-900/20' :
