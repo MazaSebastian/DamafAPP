@@ -81,8 +81,8 @@ const OrdersManager = () => {
                 ),
                 profiles (*)
             `)
-            .gte('created_at', `${filters.startDate}T00:00:00`)
-            .lte('created_at', `${filters.endDate}T23:59:59`)
+            .gte('created_at', new Date(`${filters.startDate}T00:00:00`).toISOString())
+            .lte('created_at', new Date(`${filters.endDate}T23:59:59.999`).toISOString())
             .order('created_at', { ascending: false })
 
         const { data: ordersData, error } = await query
