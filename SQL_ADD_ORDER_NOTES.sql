@@ -1,4 +1,6 @@
--- Add notes column to orders table
-ALTER TABLE orders ADD COLUMN IF NOT EXISTS notes TEXT;
+-- Add notes column to orders table if it doesn't exist
+ALTER TABLE public.orders 
+ADD COLUMN IF NOT EXISTS notes TEXT;
 
-COMMENT ON COLUMN orders.notes IS 'General order notes or observations';
+-- Reload Schema Cache
+NOTIFY pgrst, 'reload schema';

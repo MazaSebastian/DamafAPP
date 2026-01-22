@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer, Usb, Plus, Bike } from 'lucide-react'
+import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer, Usb, Plus, Bike, StickyNote } from 'lucide-react'
 import { toast } from 'sonner'
 import TicketTemplate from './print/TicketTemplate'
 import { EscPosEncoder } from '../utils/escPosEncoder'
