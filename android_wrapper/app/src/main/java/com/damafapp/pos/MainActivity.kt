@@ -86,12 +86,44 @@ class MainActivity : AppCompatActivity() {
         WebView.setWebContentsDebuggingEnabled(true)
 
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView?, request: android.webkit.WebResourceRequest?): Boolean {
+                val url = request?.url?.toString() ?: return false
+                
+                // Allow normal HTTP/HTTPS (internal navigation or known web links)
+                if (url.startsWith("http://") || url.startsWith("https://")) {
+                     // Check common deep link redirects that end up as intents
+                     if (url.contains("wa.me") || url.contains("api.whatsapp.com")) {
+                         // Let it load, the redirect might trigger the scheme below or handle it via logic.
+                         // But usually wa.me redirects to "whatsapp://" or "intent://".
+                         // So we return false to let WebView follow the redirect chain until the scheme changes.
+                         return false
+                     }
+                     return false
+                }
+
+                // Handle external schemes (whatsapp, tel, mailto, intent, etc.)
+                try {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+                    startActivity(intent)
+                    return true // We handled it
+                } catch (e: Exception) {
+                    android.util.Log.e("WebView", "Could not handle intent: $url", e)
+                    // If no app found, we might want to try fallback (e.g. Play Store for WhatsApp)
+                    // For now, prevent crash by catching exception
+                    return true // We intercepted it to prevent WebView error page
+                }
+            }
+
             override fun onReceivedError(
                 view: WebView?,
                 request: android.webkit.WebResourceRequest?,
                 error: android.webkit.WebResourceError?
             ) {
                 super.onReceivedError(view, request, error)
+                // Ignore "ERR_UNKNOWN_URL_SCHEME" if we missed it or if it happened during redirect
+                if (error?.description?.toString()?.contains("net::ERR_UNKNOWN_URL_SCHEME") == true) {
+                    return
+                }
                 android.widget.Toast.makeText(this@MainActivity, "Error: ${error?.description}", android.widget.Toast.LENGTH_LONG).show()
             }
         }
