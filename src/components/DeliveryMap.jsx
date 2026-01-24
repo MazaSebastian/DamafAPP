@@ -229,21 +229,21 @@ const SearchBox = ({ onPlaceSelected }) => {
         try {
             const results = await getGeocode({ address })
             const { lat, lng } = await getLatLng(results[0])
-            // We reconstruct a "place" like object to match expected interface or pass explicit data
-            // To match DeliveryMap expectations which expects a google place object style or we verify what onPlaceSelected expects.
-            // Wait, I updated onPlaceSelected in the previous tool call to expect `place.geometry.location`.
-            // But `getGeocode` returns GeocoderResult which has `geometry.location` (LatLngFunc).
-            // Actually `getGeocode` returns arrays.
-
-            // To simulate Google Maps Place result structure for compatibility or just pass result[0]
-            const place = results[0]
-            // place.geometry.location is a function in Google Maps API, but geocode library might return objects?
-            // checking use-places-autocomplete docs: getGeocode returns standard GeocoderResult which has geometry.location as function or object depending on library load?
-            // Actually use-places-autocomplete wraps the google maps geocoder.
+            // We manualy map the result to a friendly format
+            const place = {
+                formatted_address: address, // Or results[0].formatted_address
+                geometry: {
+                    location: {
+                        lat: () => lat,
+                        lng: () => lng
+                    }
+                }
+            }
 
             onPlaceSelected(place)
         } catch (error) {
-            console.error('Error: ', error)
+            console.error('Error fetching geocode:', error)
+            toast.error('Error al obtener detalles de la dirección')
         }
     }
 
@@ -260,13 +260,14 @@ const SearchBox = ({ onPlaceSelected }) => {
                 />
             </div>
             {status === "OK" && (
-                <ul className="absolute z-50 w-full mt-1 bg-[#2a2a2a] border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                <ul className="absolute z-[60] w-full mt-1 bg-[#1a1a1a] border border-white/10 rounded-xl shadow-2xl max-h-60 overflow-y-auto backdrop-blur-md">
                     {data.map(({ place_id, description }) => (
                         <li
                             key={place_id}
                             onClick={() => handleSelect(description)}
-                            className="px-4 py-2 hover:bg-white/5 cursor-pointer text-sm text-gray-300 transition-colors border-b border-white/5 last:border-0"
+                            className="px-4 py-3 hover:bg-white/10 cursor-pointer text-sm text-gray-200 transition-colors border-b border-white/5 last:border-0 flex items-center gap-2"
                         >
+                            <span className="opacity-50">📍</span>
                             {description}
                         </li>
                     ))}
