@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Bell, Send, Users, User, Loader2, CheckCircle, AlertTriangle } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,8 +8,37 @@ const NotificationsManager = () => {
     const [body, setBody] = useState('')
     const [targetType, setTargetType] = useState('all_users') // 'all_users', 'specific_user', 'driver'
     const [targetId, setTargetId] = useState('')
+    const [targetUser, setTargetUser] = useState(null) // { full_name, email }
+    const [isCheckingUser, setIsCheckingUser] = useState(false)
     const [loading, setLoading] = useState(false)
     const [progress, setProgress] = useState(null) // { sent: 0, total: 0 }
+
+    // Live User Lookup
+    useEffect(() => {
+        const fetchUser = async () => {
+            if (targetType !== 'specific_user' || !targetId || targetId.length < 30) {
+                setTargetUser(null)
+                return
+            }
+
+            setIsCheckingUser(true)
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('full_name, email, fcm_token')
+                .eq('id', targetId)
+                .single()
+
+            if (data && !error) {
+                setTargetUser(data)
+            } else {
+                setTargetUser(null)
+            }
+            setIsCheckingUser(false)
+        }
+
+        const timeout = setTimeout(fetchUser, 500) // Debounce
+        return () => clearTimeout(timeout)
+    }, [targetId, targetType])
 
     const handleSend = async (e) => {
         e.preventDefault()
@@ -144,13 +173,38 @@ const NotificationsManager = () => {
                             </div>
 
                             {targetType === 'specific_user' && (
-                                <input
-                                    type="text"
-                                    value={targetId}
-                                    onChange={e => setTargetId(e.target.value)}
-                                    placeholder="Pegar UUID del usuario..."
-                                    className="w-full bg-black/20 p-3 rounded-xl text-white text-sm border border-white/10 focus:outline-none focus:border-[var(--color-primary)]"
-                                />
+                                <div className="space-y-2">
+                                    <input
+                                        type="text"
+                                        value={targetId}
+                                        onChange={e => setTargetId(e.target.value.trim())}
+                                        placeholder="Pegar UUID del usuario..."
+                                        className="w-full bg-black/20 p-3 rounded-xl text-white text-sm border border-white/10 focus:outline-none focus:border-[var(--color-primary)] font-mono"
+                                    />
+
+                                    {/* User Lookup Status */}
+                                    {isCheckingUser ? (
+                                        <div className="flex items-center gap-2 text-xs text-white/50 animate-pulse">
+                                            <Loader2 className="w-3 h-3 animate-spin" /> Buscando usuario...
+                                        </div>
+                                    ) : targetUser ? (
+                                        <div className="bg-green-500/10 border border-green-500/20 p-3 rounded-xl flex items-center justify-between animate-in slide-in-from-top-1">
+                                            <div>
+                                                <p className="text-white font-bold text-sm">{targetUser.full_name || 'Sin Nombre'}</p>
+                                                <p className="text-xs text-green-300">{targetUser.email}</p>
+                                            </div>
+                                            {targetUser.fcm_token ? (
+                                                <span className="text-[10px] bg-green-500 text-white px-2 py-0.5 rounded-full font-bold">Activo ✅</span>
+                                            ) : (
+                                                <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">Sin Push ❌</span>
+                                            )}
+                                        </div>
+                                    ) : targetId.length > 10 ? (
+                                        <div className="bg-red-500/10 border border-red-500/20 p-2 rounded-lg text-xs text-red-300 flex items-center gap-2">
+                                            <AlertTriangle className="w-3 h-3" /> Usuario no encontrado
+                                        </div>
+                                    ) : null}
+                                </div>
                             )}
                         </div>
 
