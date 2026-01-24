@@ -837,9 +837,16 @@ const OrdersManager = () => {
                                         </span>
                                     )}
                                     {order.payment_method === 'mercadopago' && (
-                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 w-fit">
-                                            <CreditCard className="w-3.5 h-3.5" /> Mercado Pago
-                                        </span>
+                                        <div className="flex flex-col gap-1 items-start">
+                                            <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 w-fit">
+                                                <CreditCard className="w-3.5 h-3.5" /> Mercado Pago
+                                            </span>
+                                            {!order.is_paid && (
+                                                <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-red-500/20 text-red-400 text-[10px] font-black border border-red-500/30 w-fit animate-pulse shadow-[0_0_10px_rgba(239,68,68,0.4)]">
+                                                    ⚠️ PAGO PENDIENTE
+                                                </span>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             </div>
