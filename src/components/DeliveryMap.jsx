@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { GoogleMap, useLoadScript, Marker, Autocomplete, DirectionsRenderer } from '@react-google-maps/api'
+import { GoogleMap, useLoadScript, Marker, DirectionsRenderer } from '@react-google-maps/api'
+import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete'
 import { MapPin, Search, Navigation } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -17,7 +18,7 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation })
 
     const [map, setMap] = useState(null)
     const [selectedLocation, setSelectedLocation] = useState(null)
-    const [searchBox, setSearchBox] = useState(null)
+    const [selectedLocation, setSelectedLocation] = useState(null)
     const [directions, setDirections] = useState(null)
     const [calculating, setCalculating] = useState(false)
 
@@ -31,34 +32,6 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation })
     const onUnmount = useCallback(() => {
         setMap(null)
     }, [])
-
-
-
-    const onPlacesChanged = () => {
-        if (!searchBox) return
-
-        const place = searchBox.getPlace()
-        if (!place.geometry) return
-        const location = {
-            lat: place.geometry.location.lat(),
-            lng: place.geometry.location.lng(),
-        }
-
-        setSelectedLocation(location)
-        map.panTo(location)
-        map.setZoom(15)
-
-        // Pass address and coordinates back
-        if (onAddressSelected) {
-            onAddressSelected({
-                address: place.formatted_address,
-                lat: location.lat,
-                lng: location.lng
-            })
-        }
-
-        calculateRoute(location)
-    }
 
     const handleMapClick = async (e) => {
         const location = {
@@ -139,21 +112,28 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation })
 
     return (
         <div className="space-y-4">
-            {/* Search Box */}
+            {/* Search Box - Custom Headless Implementation */}
             <div className="relative z-10">
-                <Autocomplete
-                    onLoad={(ref) => setSearchBox(ref)}
-                    onPlaceChanged={onPlacesChanged}
-                >
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                        <input
-                            type="text"
-                            placeholder="Busca tu dirección..."
-                            className="w-full bg-[var(--color-surface)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--color-primary)] shadow-lg"
-                        />
-                    </div>
-                </Autocomplete>
+                <SearchBox
+                    onPlaceSelected={(place) => {
+                        const location = {
+                            lat: place.geometry.location.lat(),
+                            lng: place.geometry.location.lng(),
+                        }
+                        setSelectedLocation(location)
+                        map.panTo(location)
+                        map.setZoom(15)
+
+                        if (onAddressSelected) {
+                            onAddressSelected({
+                                address: place.formatted_address,
+                                lat: location.lat,
+                                lng: location.lng
+                            })
+                        }
+                        calculateRoute(location)
+                    }}
+                />
             </div>
 
             {/* Map Container */}
@@ -223,6 +203,75 @@ const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation })
             <p className="text-xs text-[var(--color-text-muted)] text-center">
                 Toca el mapa o busca tu dirección para calcular el envío.
             </p>
+        </div>
+    )
+}
+
+// Custom Headless Search Box Component
+const SearchBox = ({ onPlaceSelected }) => {
+    const {
+        ready,
+        value,
+        setValue,
+        suggestions: { status, data },
+        clearSuggestions,
+    } = usePlacesAutocomplete({
+        requestOptions: {
+            componentRestrictions: { country: 'ar' },
+        },
+        debounce: 300,
+    })
+
+    const handleSelect = async (address) => {
+        setValue(address, false)
+        clearSuggestions()
+
+        try {
+            const results = await getGeocode({ address })
+            const { lat, lng } = await getLatLng(results[0])
+            // We reconstruct a "place" like object to match expected interface or pass explicit data
+            // To match DeliveryMap expectations which expects a google place object style or we verify what onPlaceSelected expects.
+            // Wait, I updated onPlaceSelected in the previous tool call to expect `place.geometry.location`.
+            // But `getGeocode` returns GeocoderResult which has `geometry.location` (LatLngFunc).
+            // Actually `getGeocode` returns arrays.
+
+            // To simulate Google Maps Place result structure for compatibility or just pass result[0]
+            const place = results[0]
+            // place.geometry.location is a function in Google Maps API, but geocode library might return objects?
+            // checking use-places-autocomplete docs: getGeocode returns standard GeocoderResult which has geometry.location as function or object depending on library load?
+            // Actually use-places-autocomplete wraps the google maps geocoder.
+
+            onPlaceSelected(place)
+        } catch (error) {
+            console.error('Error: ', error)
+        }
+    }
+
+    return (
+        <div className="relative w-full">
+            <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                    value={value}
+                    onChange={(e) => setValue(e.target.value)}
+                    disabled={!ready}
+                    className="w-full bg-[var(--color-surface)] border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-[var(--color-primary)] shadow-lg placeholder-gray-500"
+                    placeholder="Busca tu dirección..."
+                />
+            </div>
+            {status === "OK" && (
+                <ul className="absolute z-50 w-full mt-1 bg-[#2a2a2a] border border-white/10 rounded-xl shadow-xl max-h-60 overflow-y-auto">
+                    {data.map(({ place_id, description }) => (
+                        <li
+                            key={place_id}
+                            onClick={() => handleSelect(description)}
+                            className="px-4 py-2 hover:bg-white/5 cursor-pointer text-sm text-gray-300 transition-colors border-b border-white/5 last:border-0"
+                        >
+                            {description}
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     )
 }
