@@ -116,8 +116,15 @@ class WebAppInterface(private val context: Context) {
         sb.append("\n[C]ORDEN\n")
         
         // 3. ID (HUGE)
-        val orderId = order.optString("id", "").take(8)
-        sb.append("[C]<b><font size='big'>#$orderId</font></b>\n")
+        // 3. ID (HUGE)
+        val orderNumber = order.optString("order_number", "")
+        val displayId = if (orderNumber.isNotEmpty() && orderNumber != "null") {
+             "#" + orderNumber.padStart(4, '0') 
+        } else {
+             "#" + order.optString("id", "").take(4)
+        }
+        
+        sb.append("[C]<b><font size='big'>$displayId</font></b>\n")
         sb.append("[C]--------------------------------\n")
         
         // 4. Client & Type

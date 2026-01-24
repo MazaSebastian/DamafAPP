@@ -243,24 +243,19 @@ const CheckoutPage = () => {
             }
 
             // 3. Handle Payment Flow
-            if (paymentMethod === 'mercadopago') {
-                // NEW FLOW: Show Approval Modal and Wait
-                setPendingOrderId(order.id)
-                setShowApprovalModal(true)
-                // Payment generation is deferred until onApproved callback
-            } else if (paymentMethod === 'transfer') {
+            if (paymentMethod === 'transfer') {
                 // TRANSFER FLOW -> Show Bank Details Modal
                 setPendingOrderId(order.id)
                 // Do NOT clear cart here, otherwise the page unmounts due to empty cart check
                 setShowBankModal(true)
             } else {
-                // CASH FLOW -> MANUAL COORDINATION
-                // User requirement: "Administracion se comunicara para coordinar el pago"
+                // CASH OR MERCADO PAGO -> STANDARD FLOW
+                // "Administracion se comunicara para coordinar el pago"
                 clearCart()
-                toast.success('Pedido enviado. Administración te contactará para coordinar el pago 🕒', { duration: 5000 })
+                toast.success('Pedido enviado. Administración te contactará para confirmar y coordinar el pago 🕒', { duration: 5000 })
                 // Redirect to Profile or Home
                 setTimeout(() => {
-                    navigate('/profile') // Or /orders if it existed, profile usually has history
+                    navigate('/profile')
                 }, 2000)
             }
 

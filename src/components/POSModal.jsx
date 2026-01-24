@@ -267,6 +267,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                 if (window.AndroidPrint) {
                     const printPayload = {
                         id: orderData.id,
+                        order_number: orderData.order_number, // Add friendly ID
                         created_at: orderData.created_at,
                         updated_at: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
                         total: subtotal,

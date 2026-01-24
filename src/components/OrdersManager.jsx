@@ -457,6 +457,7 @@ const OrdersManager = () => {
         if (window.AndroidPrint) {
             const printPayload = {
                 id: order.id,
+                order_number: order.order_number, // Add friendly ID
                 created_at: order.created_at,
                 total: order.total,
                 // Customer Details
@@ -901,15 +902,8 @@ const OrdersManager = () => {
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => {
-                                                // Logic depends on Payment Method
-                                                if (order.payment_method === 'mercadopago') {
-                                                    // MP Order: Needs payment confirmation by user
-                                                    updateStatus(order.id, 'pending_payment')
-                                                } else {
-                                                    // Cash/Transfer: "Accept" means confirmed -> Cooking
-                                                    // This will trigger the Auto-Print logic in updateStatus
-                                                    updateStatus(order.id, 'cooking')
-                                                }
+                                                // Always move to cooking (Admin manual approval)
+                                                updateStatus(order.id, 'cooking')
                                             }}
                                             className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
                                         >
@@ -932,7 +926,7 @@ const OrdersManager = () => {
                                     </div>
 
                                     {/* Secondary Action: Confirm Payment (if needed) */}
-                                    {!order.is_paid && order.payment_method !== 'cash' && order.status !== 'pending_approval' && (
+                                    {!order.is_paid && order.payment_method !== 'cash' && (
                                         <button
                                             onClick={async () => {
                                                 const { error } = await supabase.from('orders').update({ is_paid: true }).eq('id', order.id)
@@ -945,7 +939,7 @@ const OrdersManager = () => {
                                             }}
                                             className="w-full bg-blue-500/10 text-blue-400 py-1.5 rounded-lg font-medium text-xs hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2"
                                         >
-                                            <Banknote className="w-3 h-3" /> Confirmar recepción del pago
+                                            <Banknote className="w-3 h-3" /> Confirmar Pago
                                         </button>
                                     )}
                                 </div>
