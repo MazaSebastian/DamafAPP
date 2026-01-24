@@ -1,4 +1,4 @@
-import { ShoppingBag, X } from 'lucide-react'
+import { ShoppingBag, X, Banknote } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
 
 const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
@@ -6,6 +6,40 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
 
     // Safe access to total
     const total = orderData?.total || 0
+
+    // Dynamic Content based on Payment Method
+    const getModalContent = () => {
+        const method = orderData?.paymentMethod || 'Efectivo'
+
+        switch (method) {
+            case 'Mercado Pago':
+                return {
+                    title: 'Confirmar Pedido',
+                    message: 'Estás a un paso de disfrutar tu comida. Serás redirigido a Mercado Pago para abonar.',
+                    buttonText: 'Sí, Pagar',
+                    color: '#009ee3', // MP Blue
+                    icon: <ShoppingBag className="w-8 h-8 text-[#009ee3]" />
+                }
+            case 'Transferencia':
+                return {
+                    title: 'Confirmar Transferencia',
+                    message: 'Al confirmar, verás los datos bancarios para realizar el pago. Tu pedido quedará pendiente hasta enviar el comprobante.',
+                    buttonText: 'Entendido, ver datos',
+                    color: '#9333ea', // Purple
+                    icon: <Banknote className="w-8 h-8 text-purple-500" />
+                }
+            default: // Efectivo
+                return {
+                    title: 'Confirmar Pedido',
+                    message: 'Tu pedido quedará registrado. Administración se pondrá en contacto para coordinar.',
+                    buttonText: 'Confirmar Pedido',
+                    color: '#16a34a', // Green
+                    icon: <ShoppingBag className="w-8 h-8 text-green-500" />
+                }
+        }
+    }
+
+    const content = getModalContent()
 
     return (
         <AnimatePresence>
@@ -34,14 +68,14 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                     </button>
 
                     <div className="flex flex-col items-center text-center space-y-4">
-                        <div className="w-16 h-16 bg-[#009ee3]/20 rounded-full flex items-center justify-center mb-2">
-                            <ShoppingBag className="w-8 h-8 text-[#009ee3]" />
+                        <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: `${content.color}20` }}>
+                            {content.icon}
                         </div>
 
-                        <h3 className="text-xl font-bold text-white">Confirmar Pedido</h3>
+                        <h3 className="text-xl font-bold text-white">{content.title}</h3>
 
                         <p className="text-[var(--color-text-muted)] text-sm leading-relaxed">
-                            Estás a un paso de disfrutar tu comida. Serás redirigido a Mercado Pago para abonar.
+                            {content.message}
                         </p>
 
                         <div className="py-2">
@@ -54,9 +88,10 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                         <div className="w-full space-y-3 pt-2">
                             <button
                                 onClick={onConfirm}
-                                className="w-full bg-[#009ee3] hover:bg-[#009ee3]/90 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-blue-900/20 active:scale-95 transition-all"
+                                className="w-full text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all hover:brightness-110"
+                                style={{ backgroundColor: content.color, boxShadow: `0 10px 15px -3px ${content.color}40` }}
                             >
-                                Sí, Pagar
+                                {content.buttonText}
                             </button>
 
                             <button

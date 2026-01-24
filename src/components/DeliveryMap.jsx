@@ -273,6 +273,17 @@ const SearchBox = ({ onPlaceSelected }) => {
                     ))}
                 </ul>
             )}
+            {(status === "ZERO_RESULTS" || status === "NOT_FOUND") && value.length > 3 && (
+                <div className="absolute z-[60] w-full mt-1 bg-[#1a1a1a] border border-white/10 rounded-xl p-4 text-center text-sm text-gray-400">
+                    No se encontraron resultados
+                </div>
+            )}
+            {(status === "REQUEST_DENIED" || status === "OVER_QUERY_LIMIT") && (
+                <div className="absolute z-[60] w-full mt-1 bg-red-900/90 border border-red-500/30 rounded-xl p-4 text-center text-xs text-red-200">
+                    <p className="font-bold">Error de Configuración API</p>
+                    <p>Verifique que "Places API" y "Directions API" estén habilitadas en Google Cloud Console.</p>
+                </div>
+            )}
         </div>
     )
 }

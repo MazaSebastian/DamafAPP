@@ -342,7 +342,15 @@ const OrdersManager = () => {
 
             // Shift Row if exists
             if (order.scheduled_time) {
-                encoder.bold(true).invert(true).text(`HORARIO DE ENTREGA/DELIVERY SELECCIONADO: ${order.scheduled_time}`).invert(false).bold(false).newline().newline()
+                encoder
+                    .newline()
+                    .align('center')
+                    .invert(true)
+                    .bold(true).size(2, 2).text(` HORARIO: ${order.scheduled_time} `).size(0, 0).bold(false)
+                    .invert(false)
+                    .align('left')
+                    .newline()
+                    .newline()
             }
 
             encoder.line() // Separator ----------------
