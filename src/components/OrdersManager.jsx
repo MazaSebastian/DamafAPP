@@ -909,8 +909,15 @@ const OrdersManager = () => {
                                     <div className="grid grid-cols-2 gap-2">
                                         <button
                                             onClick={() => {
-                                                // Always move to cooking (Admin manual approval)
-                                                updateStatus(order.id, 'cooking')
+                                                // Logic depends on Payment Method
+                                                if (order.payment_method === 'mercadopago' && !order.is_paid) {
+                                                    // MP Order & Not Paid: Move to pending_payment (Client needs to pay)
+                                                    updateStatus(order.id, 'pending_payment')
+                                                    toast.success('Pedido aceptado. Esperando pago del cliente.')
+                                                } else {
+                                                    // Cash/Transfer or Paid MP: "Accept" means confirmed -> Cooking
+                                                    updateStatus(order.id, 'cooking')
+                                                }
                                             }}
                                             className="bg-green-600 text-white py-2 rounded-lg font-bold text-sm hover:bg-green-500 transition-colors flex items-center justify-center gap-2 shadow-lg shadow-green-900/20"
                                         >

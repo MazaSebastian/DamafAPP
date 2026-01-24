@@ -243,7 +243,11 @@ const CheckoutPage = () => {
             }
 
             // 3. Handle Payment Flow
-            if (paymentMethod === 'transfer') {
+            if (paymentMethod === 'mercadopago') {
+                // MERCADO PAGO -> REDIRECT TO PAYMENT
+                // No "Green Light" wait. Direct payment.
+                await proceedToMercadoPago(order.id)
+            } else if (paymentMethod === 'transfer') {
                 // TRANSFER FLOW -> Show Bank Details Modal
                 setPendingOrderId(order.id)
                 // Do NOT clear cart here, otherwise the page unmounts due to empty cart check
