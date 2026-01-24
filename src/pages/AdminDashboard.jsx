@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers, TrendingUp, Clock, Monitor } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers, TrendingUp, Clock, Monitor, Bell } from 'lucide-react'
 import NewsManager from '../components/NewsManager'
 import RewardsManager from '../components/RewardsManager'
 import ProductManager from '../components/ProductManager'
@@ -18,6 +18,7 @@ import AnalyticsManager from '../components/AnalyticsManager'
 import SlotManager from '../components/admin/SlotManager'
 import IngredientManager from '../components/admin/IngredientManager'
 import DriversManager from '../components/DriversManager'
+import NotificationsManager from '../components/NotificationsManager'
 import { supabase } from '../supabaseClient'
 import { toast } from 'sonner'
 
@@ -226,6 +227,7 @@ const AdminDashboard = () => {
                         <NavItem icon={<Gift />} label="Canjes" active={activeTab === 'Canjes'} onClick={() => { setActiveTab('Canjes'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Ticket />} label="Cupones" active={activeTab === 'Cupones'} onClick={() => { setActiveTab('Cupones'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Newspaper />} label="Novedades" active={activeTab === 'Novedades'} onClick={() => { setActiveTab('Novedades'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<Bell />} label="Notificaciones" active={activeTab === 'Notifications'} onClick={() => { setActiveTab('Notifications'); setIsSidebarOpen(false) }} />
                     </div>
 
                     {/* SISTEMA */}
@@ -279,6 +281,8 @@ const AdminDashboard = () => {
                     <AnalyticsManager />
                 ) : activeTab === 'Drivers' ? (
                     <DriversManager />
+                ) : activeTab === 'Notifications' ? (
+                    <NotificationsManager />
                 ) : activeTab === 'Orders' ? (
                     <OrdersManager />
                 ) : activeTab === 'Cash' ? (

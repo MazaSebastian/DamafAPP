@@ -24,3 +24,7 @@ dist-ssr
 *.sw?
 .env
 .vercel
+
+# Secrets
+service_account_setup.json
+supabase/functions/push/service_account_setup.json

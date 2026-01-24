@@ -10,8 +10,32 @@ const RiderInterface = () => {
     const [orders, setOrders] = useState([])
     const watchIdRef = useRef(null)
 
+    // Load Driver Info
+    const driverId = localStorage.getItem('damaf_driver_id')
+    const driverName = localStorage.getItem('damaf_driver_name')
+
     // Fetch assigned orders
     useEffect(() => {
+        if (!driverId) {
+            toast.error('Sesión inválida. Vuelve a ingresar.')
+            // Redirect to login (simulate)
+            window.location.href = '/rider/login'
+            return
+        }
+
+        // 1. Request Notification Token & Save to Drivers Table
+        const setupNotifications = async () => {
+            const { requestForToken } = await import('../services/messaging')
+            const { token } = await requestForToken(/* userId= */ null) // Don't save to profiles
+
+            if (token) {
+                // Save to DRIVERS table, not profiles
+                await supabase.from('drivers').update({ fcm_token: token }).eq('id', driverId)
+                console.log('Driver Token Saved')
+            }
+        }
+        setupNotifications()
+
         fetchAssignedOrders()
 
         const channel = supabase
@@ -28,6 +52,7 @@ const RiderInterface = () => {
             .from('orders')
             .select('*')
             .in('delivery_status', ['assigned', 'picked_up'])
+            .eq('driver_id', driverId) // Only MY orders
             // Ideally order by a 'delivery_sequence' or created_at
             .order('created_at', { ascending: true })
 
@@ -131,7 +156,7 @@ const RiderInterface = () => {
                             <Bike className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-lg font-black tracking-tight leading-none">Damaf Drivers</h1>
+                            <h1 className="text-lg font-black tracking-tight leading-none">Hola, {driverName || 'Driver'}</h1>
                             <div className="flex items-center gap-2 mt-1">
                                 <span className={`w-2 h-2 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-green-500/50'}`}></span>
                                 <p className="text-xs text-[var(--color-text-muted)] font-medium">
