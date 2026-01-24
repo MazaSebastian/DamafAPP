@@ -896,7 +896,7 @@ const OrdersManager = () => {
 
                         {/* Actions */}
                         <div className="p-3 bg-[var(--color-background)]/30 grid grid-cols-3 gap-2">
-                            {(order.status === 'pending' || order.status === 'pending_approval') && (
+                            {(order.status === 'pending' || order.status === 'pending_approval' || order.status === 'pending_payment') && (
                                 <div className="col-span-3 space-y-2">
                                     {/* Primary Actions: Accept / Reject */}
                                     <div className="grid grid-cols-2 gap-2">
@@ -964,7 +964,7 @@ const OrdersManager = () => {
                                             }}
                                             className="w-full bg-blue-500/10 text-blue-400 py-1.5 rounded-lg font-medium text-xs hover:bg-blue-500/20 transition-colors flex items-center justify-center gap-2"
                                         >
-                                            <Banknote className="w-3 h-3" /> Confirmar recepción del pago
+                                            <Banknote className="w-3 h-3" /> Confirmar Pago
                                         </button>
                                     )}
                                 </div>
