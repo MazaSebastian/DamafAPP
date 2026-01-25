@@ -75,12 +75,21 @@ export const requestForToken = async (userId) => {
 
 const saveTokenToDatabase = async (token, userId) => {
     try {
-        const { error } = await supabase
+        // We must inspect if the row was actually updated.
+        // If the user profile doesn't exist or RLS hides it, no error is thrown but data is empty.
+        const { data, error } = await supabase
             .from('profiles')
             .update({ fcm_token: token })
-            .eq('id', userId);
+            .eq('id', userId)
+            .select();
 
         if (error) throw error;
+
+        if (!data || data.length === 0) {
+            console.warn('Token save failed: Profile not found or RLS restriction for ID', userId);
+            return { success: false, error: { message: 'Profile not found (Rows affected: 0)' } };
+        }
+
         console.log('FCM Token saved to profile');
         return { success: true };
     } catch (error) {
