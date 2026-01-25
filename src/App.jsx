@@ -79,13 +79,18 @@ const AnimatedRoutes = () => {
 }
 
 
+import IOSInstallPrompt from './components/pwa/IOSInstallPrompt';
+
 // Wrapper to use hooks that depend on contexts
 const AppContent = () => {
   // Initialize FCM
   useFCM();
 
   return (
-    <AnimatedRoutes />
+    <>
+      <AnimatedRoutes />
+      <IOSInstallPrompt />
+    </>
   );
 }
 
