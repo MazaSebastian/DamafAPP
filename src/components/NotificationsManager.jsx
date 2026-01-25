@@ -16,17 +16,32 @@ const NotificationsManager = () => {
     // Live User Lookup
     useEffect(() => {
         const fetchUser = async () => {
-            if (targetType !== 'specific_user' || !targetId || targetId.length < 30) {
+            // Allow shorter inputs for Numeric IDs (e.g. "12")
+            if (targetType !== 'specific_user' || !targetId) {
+                setTargetUser(null)
+                return
+            }
+
+            // Simple heuristic: If it looks like a number, treat as customer_id
+            const isNumericId = /^\d+$/.test(targetId);
+
+            // If it's a UUID, it needs to be long-ish. If numeric, can be short.
+            if (!isNumericId && targetId.length < 20) {
                 setTargetUser(null)
                 return
             }
 
             setIsCheckingUser(true)
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('full_name, email, fcm_token')
-                .eq('id', targetId)
-                .single()
+
+            let query = supabase.from('profiles').select('id, full_name, email, fcm_token').single();
+
+            if (isNumericId) {
+                query = query.eq('customer_id', parseInt(targetId));
+            } else {
+                query = query.eq('id', targetId);
+            }
+
+            const { data, error } = await query;
 
             if (data && !error) {
                 setTargetUser(data)
@@ -69,15 +84,15 @@ const NotificationsManager = () => {
                 if (error) throw error
                 tokens = data.map(d => ({ token: d.fcm_token, userId: d.id }))
             } else if (targetType === 'specific_user') {
-                // Here we assume targetId is passed. 
-                // For simplicity, we might just try to send to that ID if provided, 
-                // or fetch to verify.
-                if (!targetId) return toast.error('Ingresa el ID del usuario');
+                // Use the resolved User from the lookup effect
+                if (!targetUser) return toast.error('Debes seleccionar un usuario válido');
 
-                // Try fetching profile first to get token
-                const { data } = await supabase.from('profiles').select('fcm_token').eq('id', targetId).single();
-                if (data?.fcm_token) tokens = [{ token: data.fcm_token, userId: targetId }];
-                else return toast.error('Usuario no encontrado o sin token');
+                // Use targetUser.id (UUID) and targetUser.fcm_token
+                if (targetUser.fcm_token) {
+                    tokens = [{ token: targetUser.fcm_token, userId: targetUser.id }];
+                } else {
+                    return toast.error('El usuario seleccionado no tiene notificaciones activas');
+                }
             }
 
             if (tokens.length === 0) {
@@ -178,7 +193,7 @@ const NotificationsManager = () => {
                                         type="text"
                                         value={targetId}
                                         onChange={e => setTargetId(e.target.value.trim())}
-                                        placeholder="Pegar UUID del usuario..."
+                                        placeholder="Ingresa ID numérico (Ej: 12) o UUID..."
                                         className="w-full bg-black/20 p-3 rounded-xl text-white text-sm border border-white/10 focus:outline-none focus:border-[var(--color-primary)] font-mono"
                                     />
 
@@ -199,7 +214,7 @@ const NotificationsManager = () => {
                                                 <span className="text-[10px] bg-red-500 text-white px-2 py-0.5 rounded-full font-bold">Sin Push ❌</span>
                                             )}
                                         </div>
-                                    ) : targetId.length > 10 ? (
+                                    ) : targetId.length > 0 ? (
                                         <div className="bg-red-500/10 border border-red-500/20 p-2 rounded-lg text-xs text-red-300 flex items-center gap-2">
                                             <AlertTriangle className="w-3 h-3" /> Usuario no encontrado
                                         </div>
