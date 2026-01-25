@@ -324,12 +324,35 @@ const ProfilePage = () => {
 
                         {/* Notification Permission Button */}
                         <div className="pt-4 border-t border-white/5">
+                            <div className="text-[10px] text-gray-600 font-mono mb-2 text-center">Debug ID: {user?.id || 'NULL'}</div>
                             <button
                                 type="button"
                                 onClick={async () => {
-                                    const token = await requestForToken(user.id);
-                                    if (token) toast.success('Notificaciones activadas correctamente 🔔');
-                                    else toast.error('No se pudieron activar las notificaciones. Revisa los permisos de tu navegador.');
+                                    if (!user?.id) {
+                                        toast.error('Error crítico: No hay ID de usuario. Recarga la página.');
+                                        return;
+                                    }
+                                    toast.info('Solicitando permiso...');
+                                    const { token, error } = await requestForToken(user.id);
+
+                                    if (token) {
+                                        toast.success('Notificaciones activadas correctamente 🔔');
+                                    } else {
+                                        // Handle specific errors
+                                        console.error('Notification Error:', error);
+                                        if (error === 'missing_config') {
+                                            toast.error('Error: Faltan credenciales de Firebase.');
+                                        } else if (error === 'permission_denied') {
+                                            toast.error('Permiso denegado. Revisa la config del navegador.');
+                                        } else if (error === 'missing_user_id') {
+                                            toast.error('Error: ID de usuario perdido.');
+                                        } else if (error && error.includes('db_save_error')) {
+                                            // Show the full DB error to the user for checking
+                                            toast.error('Error BD: ' + error.replace('db_save_error: ', ''));
+                                        } else {
+                                            toast.error('Error: ' + (error || 'Desconocido'));
+                                        }
+                                    }
                                 }}
                                 className="w-full flex items-center justify-center gap-2 bg-[var(--color-surface)] border border-white/10 text-white font-bold text-sm py-3 rounded-xl hover:bg-white/5 transition-colors"
                             >

@@ -31,6 +31,13 @@ if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "undefined") {
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 export const requestForToken = async (userId) => {
+    console.log('requestForToken called with userId:', userId);
+
+    if (!userId) {
+        console.error('No userId provided to requestForToken');
+        return { token: null, error: 'missing_user_id: No se recibió ID de usuario' };
+    }
+
     try {
         if (!('Notification' in window)) {
             console.log('This browser does not support desktop notification');
@@ -47,13 +54,18 @@ export const requestForToken = async (userId) => {
             try {
                 const currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
                 if (currentToken) {
-                    console.log('FCM Token:', currentToken);
-                    if (userId) {
-                        const { success, error } = await saveTokenToDatabase(currentToken, userId);
-                        if (!success) {
-                            return { token: null, error: 'db_save_error: ' + (error.message || JSON.stringify(error)) };
-                        }
+                    console.log('FCM Token generated:', currentToken);
+
+                    // Always try to save for this app
+                    const { success, error } = await saveTokenToDatabase(currentToken, userId);
+
+                    if (!success) {
+                        const errorMsg = error?.message || JSON.stringify(error) || 'Unknown DB Error';
+                        console.error('DB Save Failed:', errorMsg);
+                        return { token: null, error: 'db_save_error: ' + errorMsg };
                     }
+
+                    console.log('Token flow completed successfully');
                     return { token: currentToken, error: null };
                 } else {
                     console.log('No registration token available.');
