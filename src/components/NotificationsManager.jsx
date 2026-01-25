@@ -109,7 +109,7 @@ const NotificationsManager = () => {
 
             // Loop through tokens
             for (const recipient of tokens) {
-                const { error } = await supabase.functions.invoke('push', {
+                const { data: funcData, error } = await supabase.functions.invoke('push', {
                     body: {
                         token: recipient.token, // Send direct token to EF
                         title: title,
@@ -122,6 +122,15 @@ const NotificationsManager = () => {
                     successCount++
                 } else {
                     console.error('Failed to send to', recipient.userId, error)
+                    // Try to show the specific server error if possible
+                    let serverMsg = 'Error Servidor';
+                    try {
+                        // Sometimes the error body is in error.context or we need to parse it
+                        // Supabase client usually hides the body in the error object for 500s
+                        serverMsg = error.message || JSON.stringify(error);
+                    } catch (e) { }
+
+                    toast.error(`Error enviando a ${recipient.userId}: ${serverMsg}`);
                 }
 
                 // Update Progress
