@@ -20,9 +20,8 @@ const IOSInstallPrompt = () => {
                 if (hoursSince < 24) return;
             }
 
-            // Small delay to not overwhelm on load
-            const timer = setTimeout(() => setIsVisible(true), 3000);
-            return () => clearTimeout(timer);
+            // Start visible immediately (animation handles the transition)
+            setIsVisible(true);
         }
     }, []);
 
@@ -34,17 +33,17 @@ const IOSInstallPrompt = () => {
     if (!isVisible) return null;
 
     return (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom duration-500">
-            <div className="bg-[var(--color-surface)] border border-white/10 rounded-2xl p-5 shadow-2xl relative max-w-md mx-auto">
+        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 animate-in slide-in-from-bottom-10 fade-in duration-700 ease-out">
+            <div className="bg-[var(--color-surface)] border border-white/10 rounded-2xl p-5 shadow-2xl relative max-w-md mx-auto backdrop-blur-xl bg-black/80">
                 <button
                     onClick={handleDismiss}
-                    className="absolute top-3 right-3 text-white/40 hover:text-white"
+                    className="absolute top-3 right-3 text-white/40 hover:text-white transition-colors"
                 >
                     <X size={20} />
                 </button>
 
                 <div className="flex items-start gap-4">
-                    <img src="/vite.svg" alt="App Icon" className="w-12 h-12 rounded-xl bg-white/5 p-2" />
+                    <img src="/logo-damaf.png" alt="DamafAPP" className="w-14 h-14 rounded-2xl shadow-lg border border-white/10 object-cover" />
                     <div className="space-y-2">
                         <h3 className="font-bold text-white text-lg leading-tight">
                             Instala DamafAPP
