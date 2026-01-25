@@ -10,14 +10,42 @@ const corsHeaders = {
 };
 
 // 1. Get Service Account from Env Var (Secure)
+// 1. Get Service Account from Env Var (Secure)
 const getServiceAccount = () => {
     try {
         const serviceAccountStr = Deno.env.get("FIREBASE_SERVICE_ACCOUNT");
-        if (!serviceAccountStr) return null;
-        return JSON.parse(serviceAccountStr);
+        if (!serviceAccountStr) {
+            console.error("Missing FIREBASE_SERVICE_ACCOUNT");
+            return null;
+        }
+
+        let serviceAccount;
+        try {
+            serviceAccount = JSON.parse(serviceAccountStr);
+        } catch (jsonError) {
+            console.error("JSON Parse Error of Service Account:", jsonError.message);
+            // Attempt to fix common copy-paste issue (extra quotes)
+            try {
+                if (serviceAccountStr.startsWith("'") || serviceAccountStr.startsWith('"')) {
+                    const clean = serviceAccountStr.slice(1, -1);
+                    serviceAccount = JSON.parse(clean);
+                } else {
+                    throw jsonError;
+                }
+            } catch (e) {
+                throw new Error("Invalid JSON in FIREBASE_SERVICE_ACCOUNT: " + jsonError.message);
+            }
+        }
+
+        // Fix Private Key newlines if they are literal "\n"
+        if (serviceAccount.private_key && serviceAccount.private_key.includes("\\n")) {
+            serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+        }
+
+        return serviceAccount;
     } catch (e) {
         console.error("Error parsing service account:", e);
-        return null;
+        throw e; // Re-throw to be caught in main handler
     }
 };
 
@@ -63,9 +91,18 @@ serve(async (req) => {
     }
 
     try {
-        const serviceAccount = getServiceAccount();
+        let serviceAccount;
+        try {
+            serviceAccount = getServiceAccount();
+        } catch (secretError) {
+            return new Response(JSON.stringify({ error: "Secret Configuration Error", details: secretError.message }), {
+                status: 500,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
+        }
+
         if (!serviceAccount) {
-            throw new Error("Missing FIREBASE_SERVICE_ACCOUNT env var");
+            throw new Error("Missing FIREBASE_SERVICE_ACCOUNT env var (Check Supabase Dashboard > Settings > Edge Functions)");
         }
 
         // Parse Request
