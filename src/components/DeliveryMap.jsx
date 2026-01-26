@@ -3,15 +3,28 @@ import { GoogleMap, useLoadScript, Marker, DirectionsRenderer } from '@react-goo
 import usePlacesAutocomplete, { getGeocode, getLatLng } from 'use-places-autocomplete'
 import { MapPin, Search, Navigation } from 'lucide-react'
 import { toast } from 'sonner'
+import { supabase } from '../supabaseClient'
 
 // Real Coordinates provided by User
 const STORE_LOCATION = { lat: -34.530019, lng: -58.542822 }
 const LIBRARIES = ['places']
 
 const DeliveryMap = ({ onDistanceCalculated, onAddressSelected, storeLocation }) => {
+    const [mapsApiKey, setMapsApiKey] = useState(null)
+
+    useEffect(() => {
+        const fetchMapsKey = async () => {
+            const { data } = await supabase.from('app_settings').select('value').eq('key', 'google_maps_api_key').single()
+            if (data?.value) setMapsApiKey(data.value)
+            else console.warn('Google Maps API Key not found in settings')
+        }
+        fetchMapsKey()
+    }, [])
+
     const { isLoaded, loadError } = useLoadScript({
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY,
+        googleMapsApiKey: mapsApiKey || 'LOADING', // Prevent crash, will retry or wait
         libraries: LIBRARIES,
+        enabled: !!mapsApiKey
     })
 
     const finalStoreLocation = storeLocation || STORE_LOCATION

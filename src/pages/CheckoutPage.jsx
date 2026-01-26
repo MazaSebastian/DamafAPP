@@ -5,7 +5,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import { ArrowLeft, Trash2, MapPin, Car, Info, AlertTriangle, Play, Pause, RotateCcw, Plus, ShoppingBag, ArrowRight, Loader2, CreditCard, Banknote, Bike, ChevronRight, Store, X, Copy } from 'lucide-react'
-import { initMercadoPago } from '@mercadopago/sdk-react'
+import { initMercadoPago } from '../payment/MercadoPagoConfig'
 import DeliveryMap from '../components/DeliveryMap'
 import { useStoreStatus } from '../hooks/useStoreStatus'
 import OrderConfirmationModal from '../components/OrderConfirmationModal'
@@ -163,10 +163,9 @@ const CheckoutPage = () => {
     const finalTotal = Number(total) - Number(discountAmount) + (orderType === 'delivery' ? Number(shippingCost) : 0)
 
     // Initialize Mercado Pago
-    const MP_PUBLIC_KEY = import.meta.env.VITE_MP_PUBLIC_KEY
-    if (MP_PUBLIC_KEY) {
-        initMercadoPago(MP_PUBLIC_KEY)
-    }
+    useEffect(() => {
+        initMercadoPago()
+    }, [])
 
     // Approval Flow State
     const [showApprovalModal, setShowApprovalModal] = useState(false)

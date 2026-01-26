@@ -7,6 +7,7 @@ import DeliverySlotSelector from './checkout/DeliverySlotSelector'
 
 const POSModal = ({ isOpen, onClose, onSuccess }) => {
     const [products, setProducts] = useState([])
+    const [categories, setCategories] = useState([])
     const [cart, setCart] = useState([])
     const [loading, setLoading] = useState(true)
     const [processLoading, setProcessLoading] = useState(false)
@@ -29,6 +30,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
     useEffect(() => {
         if (isOpen) {
             fetchProducts()
+            fetchCategories()
             // Reset session on open
             updateCustomerDisplay([], 'active')
             // Reset customer & slot
@@ -93,6 +95,14 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
         if (data) setProducts(data)
         setLoading(false)
+    }
+
+    const fetchCategories = async () => {
+        const { data } = await supabase
+            .from('categories')
+            .select('*')
+            .order('sort_order', { ascending: true })
+        if (data) setCategories(data)
     }
 
     const handleCustomerSearch = async () => {
@@ -360,11 +370,10 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
     const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedCategory === 'all' || p.category === selectedCategory)
+        (selectedCategory === 'all' || p.category_id === selectedCategory)
     )
 
-    // Derived Categories
-    const categories = ['all', ...new Set(products.map(p => p.category).filter(Boolean))]
+    // Derived Categories removed, using DB categories
 
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
@@ -434,16 +443,25 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
                     {/* Category Tabs */}
                     <div className="px-6 py-3 border-b border-white/5 flex gap-2 overflow-x-auto custom-scrollbar whitespace-nowrap">
+                        <button
+                            onClick={() => setSelectedCategory('all')}
+                            className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border ${selectedCategory === 'all'
+                                ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
+                                : 'bg-[var(--color-surface)] border-white/10 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'
+                                }`}
+                        >
+                            Todos
+                        </button>
                         {categories.map(cat => (
                             <button
-                                key={cat}
-                                onClick={() => setSelectedCategory(cat)}
-                                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border ${selectedCategory === cat
+                                key={cat.id}
+                                onClick={() => setSelectedCategory(cat.id)}
+                                className={`px-4 py-1.5 rounded-full text-sm font-bold transition-all border ${selectedCategory === cat.id
                                     ? 'bg-[var(--color-primary)] border-[var(--color-primary)] text-white shadow-lg shadow-[var(--color-primary)]/20'
                                     : 'bg-[var(--color-surface)] border-white/10 text-[var(--color-text-muted)] hover:bg-white/5 hover:text-white'
                                     }`}
                             >
-                                {cat === 'all' ? 'Todos' : cat}
+                                {cat.name}
                             </button>
                         ))}
                     </div>

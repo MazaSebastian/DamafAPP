@@ -1,9 +1,30 @@
-// Mercado Pago Configuration
-// Replace with your actual Public Key from: https://www.mercadopago.com/developers/panel
-export const MP_PUBLIC_KEY = 'TEST-00000000-0000-0000-0000-000000000000'; // PLACEHOLDER
+import { supabase } from '../supabaseClient';
+import { initMercadoPago as initMPSDK } from '@mercadopago/sdk-react';
 
-// Initialization helper (can be expanded)
+// Helper to fetch Public Key dynamically
+export const getMercadoPagoPublicKey = async () => {
+    try {
+        const { data, error } = await supabase
+            .from('app_settings')
+            .select('value')
+            .eq('key', 'mp_public_key')
+            .single();
+
+        if (error) throw error;
+        return data?.value || null;
+    } catch (error) {
+        console.error('Error fetching MP Public Key:', error);
+        return null;
+    }
+};
+
+// Initialization helper
 export const initMercadoPago = async () => {
-    // This will be used if we need custom initialization logic
-    console.log('Mercado Pago Initialized with Key:', MP_PUBLIC_KEY);
+    const key = await getMercadoPagoPublicKey();
+    if (key) {
+        console.log('Initializing Mercado Pago with Dynamic Key...');
+        initMPSDK(key);
+    } else {
+        console.warn('Mercado Pago Public Key missing in settings. Payment components may fail.');
+    }
 }

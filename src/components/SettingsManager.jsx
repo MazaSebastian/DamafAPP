@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { toast } from 'sonner'
-import { Save, Loader2, Settings as SettingsIcon } from 'lucide-react'
+import { Save, Loader2, Settings as SettingsIcon, Palette, Lock, Eye, EyeOff } from 'lucide-react'
 import ScheduleConfig from './ScheduleConfig'
+import { useTheme } from '../context/ThemeContext'
 
 const SettingsManager = () => {
     const [settings, setSettings] = useState([])
     const [loading, setLoading] = useState(true)
     const [saving, setSaving] = useState(false)
     const [activeTab, setActiveTab] = useState('tienda')
+    const { updateThemeSetting } = useTheme()
 
     useEffect(() => {
         fetchSettings()
@@ -43,6 +45,10 @@ const SettingsManager = () => {
             .update({ value, updated_at: new Date() })
             .eq('key', key)
 
+        if (key.startsWith('theme_')) {
+            updateThemeSetting(key, value)
+        }
+
         if (error) {
             console.error('Error saving setting:', error)
             toast.error('Error al guardar')
@@ -72,10 +78,25 @@ const SettingsManager = () => {
         'loyalty_benefits_welcome': 'Beneficios Nivel Welcome (separados por coma)',
         'loyalty_benefits_green': 'Beneficios Nivel Green (separados por coma)',
         'loyalty_benefits_gold': 'Beneficios Nivel Gold (separados por coma)',
+        'loyalty_benefits_gold': 'Beneficios Nivel Gold (separados por coma)',
         'bank_cbu': 'CBU/CVU (Transferencias)',
         'bank_alias': 'Alias (Transferencias)',
         'bank_holder': 'Titular de Cuenta',
-        'bank_name': 'Nombre del Banco'
+        'bank_name': 'Nombre del Banco',
+        'bank_cuit': 'CUIT',
+        'theme_color_primary': 'Color Principal',
+        'theme_color_secondary': 'Color Secundario',
+        'theme_color_background': 'Color de Fondo',
+        'theme_color_surface': 'Color de Superficie (Tarjetas)',
+        'theme_color_text_main': 'Color de Texto Principal',
+        'theme_color_text_muted': 'Color de Texto Secundario',
+        'theme_logo_url': 'URL del Logo',
+        'mp_public_key': 'Mercado Pago Public Key (Frontend)',
+        'mp_access_token': 'Mercado Pago Access Token (Backend)',
+        'google_maps_api_key': 'Google Maps API Key',
+        'instagram_access_token': 'Instagram Access Token',
+        'instagram_verify_token': 'Instagram Verify Token (Webhook)',
+        'instagram_page_id': 'ID de Cuenta Profesional (Page ID)'
     }
 
     // Helper to group settings
@@ -87,6 +108,8 @@ const SettingsManager = () => {
             if (category === 'delivery') return s.key.startsWith('delivery_')
             if (category === 'pagos') return s.key.startsWith('bank_')
             if (category === 'loyalty') return s.key.startsWith('loyalty_') || s.key.startsWith('stars_')
+            if (category === 'apariencia') return s.key.startsWith('theme_') && !['theme_border_radius', 'theme_font_family'].includes(s.key)
+            if (category === 'credentials') return ['mp_public_key', 'mp_access_token', 'google_maps_api_key', 'instagram_access_token', 'instagram_verify_token', 'instagram_page_id'].includes(s.key)
             return false
         })
     }
@@ -96,7 +119,9 @@ const SettingsManager = () => {
         { id: 'whatsapp', label: 'WhatsApp' },
         { id: 'delivery', label: 'Delivery' },
         { id: 'pagos', label: 'Pagos' },
-        { id: 'loyalty', label: 'Fidelización' }
+        { id: 'loyalty', label: 'Fidelización' },
+        { id: 'apariencia', label: 'Apariencia', icon: <Palette className="w-4 h-4" /> },
+        { id: 'credentials', label: 'Credenciales', icon: <Lock className="w-4 h-4" /> }
     ]
 
 
@@ -104,6 +129,34 @@ const SettingsManager = () => {
     if (loading) return <div className="flex justify-center p-10"><Loader2 className="animate-spin text-[var(--color-primary)]" /></div>
 
     const renderSettingInput = (setting) => {
+        // Theme Colors
+        if (setting.key.includes('color')) {
+            return (
+                <div className="flex gap-3 items-center">
+                    <input
+                        type="color"
+                        value={setting.value}
+                        onChange={(e) => {
+                            handleChange(setting.key, e.target.value)
+                            updateThemeSetting(setting.key, e.target.value) // Real-time preview
+                        }}
+                        className="w-12 h-12 rounded-lg cursor-pointer border-none bg-transparent"
+                    />
+                    <input
+                        type="text"
+                        value={setting.value}
+                        onChange={(e) => handleChange(setting.key, e.target.value)}
+                        className="flex-1 bg-[var(--color-background)] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)] font-mono uppercase"
+                    />
+                </div>
+            )
+        }
+
+        // Secure Inputs for Credentials
+        if (activeTab === 'credentials') {
+            return <SecureInput setting={setting} onChange={handleChange} />
+        }
+
         // Schedule Grid UI
         if (setting.key === 'store_schedule') {
             return (
@@ -149,7 +202,7 @@ const SettingsManager = () => {
                 <textarea
                     value={setting.value}
                     onChange={(e) => handleChange(setting.key, e.target.value)}
-                    rows={3}
+                    rows={1}
                     className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-[var(--color-primary)] resize-none"
                 />
             )
@@ -262,6 +315,26 @@ const SettingsManager = () => {
                     </div>
                 )}
             </div>
+        </div>
+    )
+}
+
+const SecureInput = ({ setting, onChange }) => {
+    const [show, setShow] = useState(false)
+    return (
+        <div className="relative">
+            <input
+                type={show ? "text" : "password"}
+                value={setting.value}
+                onChange={(e) => onChange(setting.key, e.target.value)}
+                className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg pl-4 pr-10 py-2 text-white focus:outline-none focus:border-[var(--color-primary)] font-mono"
+            />
+            <button
+                onClick={() => setShow(!show)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white"
+            >
+                {show ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
         </div>
     )
 }

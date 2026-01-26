@@ -96,12 +96,12 @@ const CustomersManager = () => {
                             placeholder="Buscar por nombre o email..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 bg-[#1a1a1a] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#e00201]/50 focus:ring-1 focus:ring-[#e00201]/50 transition-all"
+                            className="w-full pl-10 pr-4 py-2 bg-[var(--color-surface)] border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#e00201]/50 focus:ring-1 focus:ring-[#e00201]/50 transition-all font-medium"
                         />
                     </div>
                     <button
                         onClick={() => setIsCreateModalOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 bg-[#e00201] hover:bg-[#c00201] text-white rounded-xl transition-all shadow-lg shadow-[#e00201]/20 font-medium whitespace-nowrap"
+                        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-orange-600 text-white rounded-xl transition-all shadow-lg shadow-orange-900/20 font-medium whitespace-nowrap"
                     >
                         <Plus size={18} />
                         <span className="hidden sm:inline">Nuevo Cliente</span>
@@ -114,7 +114,7 @@ const CustomersManager = () => {
                     <div
                         key={customer.id}
                         onClick={() => { setSelectedCustomer(customer); setIsDetailsModalOpen(true) }}
-                        className="group bg-[#1a1a1a] border border-white/5 hover:border-[var(--color-primary)] hover:border-opacity-50 rounded-xl p-4 transition-all hover:bg-[#202020] cursor-pointer shadow-sm hover:shadow-lg"
+                        className="group bg-[var(--color-surface)] border border-white/5 hover:border-[var(--color-primary)] hover:border-opacity-50 rounded-xl p-4 transition-all hover:bg-white/5 cursor-pointer shadow-sm hover:shadow-lg"
                     >
                         <div className="flex items-start justify-between gap-4">
                             <div className="flex items-start gap-4">
@@ -148,8 +148,8 @@ const CustomersManager = () => {
                                     )}
                                     {/* Push Status Badge */}
                                     <div className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold mt-1 border ${customer.fcm_token
-                                            ? 'bg-green-500/10 text-green-400 border-green-500/20'
-                                            : 'bg-red-500/10 text-red-400 border-red-500/20'
+                                        ? 'bg-green-500/10 text-green-400 border-green-500/20'
+                                        : 'bg-red-500/10 text-red-400 border-red-500/20'
                                         }`}>
                                         {customer.fcm_token ? <Bell size={10} /> : <BellOff size={10} />}
                                         {customer.fcm_token ? 'Push Activo' : 'Sin Notificaciones'}
@@ -188,7 +188,7 @@ const CustomersManager = () => {
                 ))}
 
                 {filteredCustomers.length === 0 && (
-                    <div className="p-12 text-center text-gray-500 bg-[#1a1a1a] rounded-xl border border-white/5">
+                    <div className="p-12 text-center text-gray-500 bg-[var(--color-surface)] rounded-xl border border-white/5">
                         <User size={48} className="mx-auto mb-4 opacity-20" />
                         <p>No se encontraron clientes.</p>
                     </div>

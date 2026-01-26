@@ -76,14 +76,14 @@ const DriversManager = () => {
                 <div className="flex gap-2">
                     <button
                         onClick={() => setShowModal(true)}
-                        className="bg-[var(--color-primary)] hover:opacity-90 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-all shadow-lg shadow-purple-900/20"
+                        className="bg-[var(--color-secondary)] hover:bg-orange-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all shadow-lg shadow-orange-900/20"
                     >
                         <Plus className="w-4 h-4" />
                         NUEVO REPARTIDOR
                     </button>
                     {/* Placeholder for Assign to Zones */}
                     <button
-                        className="bg-[var(--color-surface)] hover:bg-white/5 text-[var(--color-text-main)] px-4 py-2 rounded-xl flex items-center gap-2 font-medium transition-colors border border-white/10"
+                        className="bg-[var(--color-primary)] hover:bg-[#4a0a7d] text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all shadow-lg shadow-purple-900/20"
                     >
                         ASIGNAR REPARTIDOR A ZONAS
                     </button>

@@ -65,7 +65,7 @@ const CreateCustomerModal = ({ isOpen, onClose, onCustomerCreated }) => {
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm overflow-y-auto">
-            <div className="w-full max-w-lg bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl my-8">
+            <div className="w-full max-w-lg bg-[var(--color-surface)] border border-white/10 rounded-2xl shadow-2xl my-8">
                 <div className="flex items-center justify-between p-4 border-b border-white/10">
                     <h2 className="text-lg font-semibold text-white">Nuevo Cliente Manual</h2>
                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors">

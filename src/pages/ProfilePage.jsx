@@ -17,7 +17,8 @@ const ProfilePage = () => {
         phone: '',
         zip_code: '',
         birth_date: '',
-        address: '' // Added Address
+        address: '',
+        customer_id: null // Added customer_id
     })
 
     // Separate phone state for UI
@@ -49,7 +50,8 @@ const ProfilePage = () => {
                 phone: data.phone || '',
                 zip_code: data.zip_code || '',
                 birth_date: data.birth_date || '',
-                address: data.address || '' // Added Address
+                address: data.address || '',
+                customer_id: data.customer_id // Set customer_id
             })
 
             if (data.phone) {
@@ -90,7 +92,7 @@ const ProfilePage = () => {
                 full_name: formData.full_name,
                 phone: fullPhone,
                 zip_code: formData.zip_code,
-                address: formData.address, // Added Address
+                address: formData.address,
                 updated_at: new Date().toISOString()
             }
 
@@ -193,6 +195,12 @@ const ProfilePage = () => {
 
             <div className="text-center mt-2 mb-6">
                 <h1 className="text-2xl font-bold">Cuenta</h1>
+                {formData.customer_id && (
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 bg-white/5 rounded-full border border-white/10">
+                        <span className="text-xs text-[var(--color-text-muted)] uppercase tracking-wider font-bold">ID Cliente:</span>
+                        <span className="text-sm font-bold text-white">#{formData.customer_id}</span>
+                    </div>
+                )}
             </div>
 
             <main className="px-6 max-w-md mx-auto">

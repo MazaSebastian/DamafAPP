@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { toast } from 'sonner'
-import { DollarSign, Lock, Unlock, TrendingUp, TrendingDown, RefreshCcw, Save } from 'lucide-react'
+import { DollarSign, Lock, Unlock, TrendingUp, TrendingDown, RefreshCcw, Save, Trash2, Edit2, X } from 'lucide-react'
+import ConfirmModal from './ConfirmModal'
 
 const CashManager = () => {
     const [loading, setLoading] = useState(true)
@@ -25,6 +26,11 @@ const CashManager = () => {
     })
 
     const [movements, setMovements] = useState([])
+
+    // Edit Modal State
+    const [editingMovement, setEditingMovement] = useState(null)
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [movementToDelete, setMovementToDelete] = useState(null)
 
     useEffect(() => {
         fetchCurrentRegister()
@@ -192,6 +198,49 @@ const CashManager = () => {
         }
     }
 
+    const handleDeleteMovement = (movement) => {
+        setMovementToDelete(movement)
+    }
+
+    const confirmDeleteMovement = async () => {
+        if (!movementToDelete) return
+
+        const { error } = await supabase.from('cash_movements').delete().eq('id', movementToDelete.id)
+
+        if (error) {
+            toast.error('Error al eliminar')
+        } else {
+            toast.success('Movimiento eliminado')
+            fetchMovements(currentRegister.id, currentRegister.opening_amount)
+        }
+        setMovementToDelete(null)
+    }
+
+    const openEditModal = (movement) => {
+        setEditingMovement({ ...movement })
+        setIsEditModalOpen(true)
+    }
+
+    const handleUpdateMovement = async (e) => {
+        e.preventDefault()
+        const { error } = await supabase
+            .from('cash_movements')
+            .update({
+                amount: editingMovement.amount,
+                description: editingMovement.description
+            })
+            .eq('id', editingMovement.id)
+
+        if (error) {
+            toast.error('Error al actualizar')
+        } else {
+            toast.success('Movimiento actualizado')
+            setIsEditModalOpen(false)
+            setEditingMovement(null)
+            fetchMovements(currentRegister.id, currentRegister.opening_amount)
+        }
+    }
+
     if (loading) return <div className="p-8 text-white">Cargando caja...</div>
 
     // VIEW: CLOSED (Show Open Form)
@@ -343,11 +392,12 @@ const CashManager = () => {
                                     <th className="p-3 text-left">Tipo</th>
                                     <th className="p-3 text-left">Descripción</th>
                                     <th className="p-3 text-right">Monto</th>
+                                    <th className="p-3 text-right">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {movements.map(m => (
-                                    <tr key={m.id} className="border-b border-white/5 hover:bg-white/5">
+                                    <tr key={m.id} className="border-b border-white/5 hover:bg-white/5 group">
                                         <td className="p-3 font-mono text-xs">{new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</td>
                                         <td className="p-3 capitalize">
                                             <span className={`px-2 py-1 rounded text-xs font-bold 
@@ -361,6 +411,24 @@ const CashManager = () => {
                                         <td className={`p-3 text-right font-bold ${m.type === 'sale' || m.type === 'deposit' ? 'text-green-400' : 'text-red-400'}`}>
                                             {m.type === 'sale' || m.type === 'deposit' ? '+' : '-'}${Number(m.amount).toFixed(2)}
                                         </td>
+                                        <td className="p-3 text-right">
+                                            <div className="flex justify-end gap-2">
+                                                <button
+                                                    onClick={() => openEditModal(m)}
+                                                    className="p-1.5 hover:bg-blue-500/20 text-blue-400 rounded-lg transition-colors"
+                                                    title="Editar"
+                                                >
+                                                    <Edit2 className="w-4 h-4" />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteMovement(m)}
+                                                    className="p-1.5 hover:bg-red-500/20 text-red-400 rounded-lg transition-colors"
+                                                    title="Eliminar"
+                                                >
+                                                    <Trash2 className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -368,7 +436,54 @@ const CashManager = () => {
                     )}
                 </div>
             </div>
-        </div >
+
+            {/* Edit Movement Modal */}
+            {isEditModalOpen && editingMovement && (
+                <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-[var(--color-surface)] border border-white/10 rounded-2xl w-full max-w-sm shadow-2xl p-6">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="font-bold text-white">Editar Movimiento</h3>
+                            <button onClick={() => setIsEditModalOpen(false)} className="text-white/50 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+                        <form onSubmit={handleUpdateMovement} className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--color-text-muted)] mb-1">Descripción</label>
+                                <input
+                                    value={editingMovement.description}
+                                    onChange={e => setEditingMovement({ ...editingMovement, description: e.target.value })}
+                                    className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 text-sm focus:border-[var(--color-primary)] outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--color-text-muted)] mb-1">Monto</label>
+                                <input
+                                    type="number"
+                                    value={editingMovement.amount}
+                                    onChange={e => setEditingMovement({ ...editingMovement, amount: e.target.value })}
+                                    className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 text-sm focus:border-[var(--color-primary)] outline-none font-bold"
+                                />
+                            </div>
+                            <button type="submit" className="w-full bg-[var(--color-primary)] py-3 rounded-xl font-bold text-white hover:opacity-90 transition-opacity">
+                                Guardar Cambios
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            <ConfirmModal
+                isOpen={!!movementToDelete}
+                onClose={() => setMovementToDelete(null)}
+                onConfirm={confirmDeleteMovement}
+                title="¿Eliminar Movimiento?"
+                message={`Se eliminará el registro: ${movementToDelete?.description} ($${movementToDelete?.amount})`}
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                isDestructive={true}
+            />
+        </div>
     )
 }
 

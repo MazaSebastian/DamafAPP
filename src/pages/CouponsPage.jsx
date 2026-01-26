@@ -12,6 +12,7 @@ const CouponsPage = () => {
     const navigate = useNavigate()
     const [coupons, setCoupons] = useState([])
     const [loading, setLoading] = useState(true)
+    const [copied, setCopied] = useState(null) // Added state
 
     useEffect(() => {
         if (!authLoading) {
@@ -43,9 +44,11 @@ const CouponsPage = () => {
         }
     }
 
-    const copyCode = (code) => {
+    const handleCopy = (code) => {
         navigator.clipboard.writeText(code)
         toast.success(`Código ${code} copiado!`)
+        setCopied(code)
+        setTimeout(() => setCopied(null), 2000)
     }
 
     if (authLoading) return <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-white" /></div>
@@ -123,13 +126,13 @@ const CouponsPage = () => {
                                         : 'Descuento válido en tu próxima compra.'}
                                 </p>
 
-                                <div className="flex gap-2">
+                                <div className="p-4 border-t border-white/5">
                                     <button
-                                        onClick={() => copyCode(coupon.code)}
-                                        className="flex-1 bg-white text-black py-2.5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 hover:bg-gray-200 transition-colors"
+                                        onClick={() => handleCopy(coupon.code)}
+                                        className="w-full bg-[var(--color-secondary)] text-white hover:bg-orange-600 font-bold py-2.5 rounded-xl transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2"
                                     >
                                         <Copy className="w-4 h-4" />
-                                        Copiar Código
+                                        {copied === coupon.code ? '¡Copiado!' : 'Copiar Código'}
                                     </button>
                                 </div>
                             </div>

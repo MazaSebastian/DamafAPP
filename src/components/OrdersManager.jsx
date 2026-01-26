@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
-import { Loader2, Check, Clock, X, ChefHat, Bell, Trash2, Banknote, CreditCard, Printer, Usb, Plus, Bike, StickyNote } from 'lucide-react'
+import { Search, Filter, RefreshCw, X, Check, Clock, Truck, FileText, ChevronDown, ChevronUp, Printer, Trash2, Bike, Banknote, CreditCard, Pencil, Loader2, ChefHat, Bell, Usb, Plus, StickyNote } from 'lucide-react'
 import { toast } from 'sonner'
 import TicketTemplate from './print/TicketTemplate'
 import { EscPosEncoder } from '../utils/escPosEncoder'
@@ -9,6 +9,9 @@ import { format } from 'date-fns'
 
 import POSModal from './POSModal'
 import AssignDriverModal from './AssignDriverModal'
+import EditOrderModal from './EditOrderModal'
+import ConfirmModal from './ConfirmModal'
+import { useRealtimeConnection } from '../hooks/useRealtimeConnection'
 
 const OrdersManager = () => {
     const [orders, setOrders] = useState([])
@@ -18,8 +21,11 @@ const OrdersManager = () => {
     const [isPOSOpen, setIsPOSOpen] = useState(false)
 
     // Assign Driver Modal
-    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false)
-    const [selectedOrderForAssignment, setSelectedOrderForAssignment] = useState(null)
+    // Assign Driver Modal
+    const [selectedOrderForDriver, setSelectedOrderForDriver] = useState(null)
+    const [editingOrder, setEditingOrder] = useState(null) // State for edit modal
+    const [orderToDelete, setOrderToDelete] = useState(null)
+    const [isClearHistoryModalOpen, setIsClearHistoryModalOpen] = useState(false) // State for delete modal
 
     // Filter States
     const [filters, setFilters] = useState({
@@ -35,6 +41,8 @@ const OrdersManager = () => {
         orderId: ''
     })
 
+    // ...
+
     useEffect(() => {
         fetchOrders()
 
@@ -45,27 +53,13 @@ const OrdersManager = () => {
                 toast.success('Impresora reconectada automáticamente 🔌')
             }
         })
+    }, [filters.startDate, filters.endDate])
 
-        // Subscription for real-time updates (Silent refresh)
-        const channel = supabase
-            .channel('orders_visual_refresh')
-            .on('postgres_changes', {
-                event: '*',
-                schema: 'public',
-                table: 'orders'
-            }, () => {
-                // Just refresh data, global alert handles the sound/toast
-                fetchOrders()
-            })
-            .subscribe()
+    // Auto-Refresh Logic (Mobile/Tab Focus + 30s Polling)
+    useRealtimeConnection(() => fetchOrders(false), [filters], 'OrdersManager', 30000)
 
-        return () => {
-            supabase.removeChannel(channel)
-        }
-    }, [filters.startDate, filters.endDate]) // Refetch when dates change
-
-    const fetchOrders = async () => {
-        setLoading(true)
+    const fetchOrders = async (showLoading = true) => {
+        if (showLoading) setLoading(true)
 
         // Base query with date range
         let query = supabase
@@ -92,9 +86,25 @@ const OrdersManager = () => {
             toast.error(`Error: ${error.message || 'Error al cargar pedidos'}`)
         }
 
-        if (ordersData) setOrders(ordersData)
-        setLoading(false)
+        if (ordersData) {
+            setOrders(ordersData)
+            // We do NOT update editingOrder here anymore to prevent modal re-renders/blinking.
+            // The modal handles its own optimistic state.
+        }
+        if (showLoading) setLoading(false)
     }
+
+    // ... (rest of code) ...
+
+    {/* Edit Order Modal */ }
+    <EditOrderModal
+        isOpen={!!editingOrder}
+        onClose={() => setEditingOrder(null)}
+        order={editingOrder}
+        onUpdate={() => {
+            fetchOrders(false) // Silent update
+        }}
+    />
 
     // Client-side filtering
     const filteredOrders = orders.filter(order => {
@@ -163,8 +173,7 @@ const OrdersManager = () => {
     }
 
     const openAssignModal = (orderId) => {
-        setSelectedOrderForAssignment(orderId)
-        setIsAssignModalOpen(true)
+        setSelectedOrderForDriver(orderId)
     }
 
     const updateStatus = async (orderId, newStatus) => {
@@ -205,57 +214,47 @@ const OrdersManager = () => {
     }
 
     const deleteOrder = (orderId) => {
-        toast.warning('¿Eliminar pedido permanentemente?', {
-            description: 'Esta acción no se puede deshacer.',
-            action: {
-                label: 'Eliminar',
-                onClick: async () => {
-                    const { error } = await supabase
-                        .from('orders')
-                        .delete()
-                        .eq('id', orderId)
+        setOrderToDelete(orderId)
+    }
 
-                    if (!error) {
-                        setOrders(prev => prev.filter(o => o.id !== orderId))
-                        toast.success('Pedido eliminado')
-                    } else {
-                        console.error('Error deleting order:', error)
-                        toast.error('Error al eliminar pedido')
-                    }
-                }
-            },
-            cancel: {
-                label: 'Cancelar'
-            }
-        })
+    const confirmDeleteOrder = async () => {
+        if (!orderToDelete) return
+
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .eq('id', orderToDelete)
+
+        if (!error) {
+            setOrders(prev => prev.filter(o => o.id !== orderToDelete))
+            toast.success('Pedido eliminado correctamente')
+        } else {
+            console.error('Error deleting order:', error)
+            toast.error('Error al eliminar pedido')
+        }
+        setOrderToDelete(null)
     }
 
     const clearHistory = () => {
-        toast.warning('¿Limpiar historial completo?', {
-            description: 'Se borrarán todos los pedidos finalizados y cancelados.',
-            action: {
-                label: 'Confirmar Limpieza',
-                onClick: async () => {
-                    setLoading(true)
-                    const { error } = await supabase
-                        .from('orders')
-                        .delete()
-                        .in('status', ['completed', 'cancelled', 'rejected'])
+        setIsClearHistoryModalOpen(true)
+    }
 
-                    if (!error) {
-                        await fetchOrders()
-                        toast.success('Historial limpio')
-                    } else {
-                        console.error('Error clearing history:', error)
-                        toast.error('Error al limpiar historial')
-                    }
-                    setLoading(false)
-                }
-            },
-            cancel: {
-                label: 'Cancelar'
-            }
-        })
+    const confirmClearHistory = async () => {
+        setLoading(true)
+        const { error } = await supabase
+            .from('orders')
+            .delete()
+            .in('status', ['completed', 'cancelled', 'rejected'])
+
+        if (!error) {
+            setOrders(prev => prev.filter(o => !['completed', 'cancelled', 'rejected'].includes(o.status)))
+            toast.success('Historial limpiado')
+        } else {
+            console.error('Error clearing history:', error)
+            toast.error('Error al limpiar historial')
+        }
+        setLoading(false)
+        setIsClearHistoryModalOpen(false) // Close modal after action
     }
 
     const clearAllOrders = () => {
@@ -505,40 +504,31 @@ const OrdersManager = () => {
                 <TicketTemplate order={printingOrder} />
             </div>
 
-            <AssignDriverModal
-                isOpen={isAssignModalOpen}
-                onClose={() => setIsAssignModalOpen(false)}
-                orderId={selectedOrderForAssignment}
-                onAssignSuccess={fetchOrders}
-            />
+
 
             <div className="flex justify-between items-center">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                     <ChefHat className="text-[var(--color-secondary)]" />
                     Gestión de Pedidos
                 </h2>
-                <div className="flex gap-2">
+                <div className="flex gap-3">
                     <button
                         onClick={() => setIsPOSOpen(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-[var(--color-primary)] text-white rounded-lg text-sm font-bold hover:brightness-110 transition-colors shadow-lg shadow-purple-900/20"
+                        className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] hover:bg-orange-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg shadow-orange-900/20"
                     >
-                        <Plus className="w-4 h-4" />
-                        Tomar Pedido
+                        <Plus size={16} /> Tomar Pedido
                     </button>
-
                     <button
                         onClick={clearAllOrders}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm font-bold hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                        className="flex items-center gap-2 px-4 py-2 bg-red-500/10 hover:bg-red-500/20 text-red-500 border border-red-500/20 rounded-xl font-bold text-sm transition-all"
                     >
-                        <Trash2 className="w-4 h-4" />
-                        Borrar TODO
+                        <Trash2 size={16} /> Borrar TODO
                     </button>
                     <button
                         onClick={clearHistory}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors"
+                        className="flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 text-gray-300 hover:text-white border border-white/5 rounded-xl font-bold text-sm transition-all"
                     >
-                        <Trash2 className="w-4 h-4" />
-                        Limpiar Completados
+                        <Trash2 size={16} /> Limpiar Completados
                     </button>
                 </div>
             </div>
@@ -626,13 +616,19 @@ const OrdersManager = () => {
                     <div className="flex items-end gap-2">
                         <button
                             onClick={fetchOrders}
-                            className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2 rounded-lg font-bold text-sm transition-colors shadow-lg shadow-red-900/20"
+                            className="flex-1 bg-[var(--color-secondary)] hover:bg-orange-600 text-white py-2 rounded-xl font-bold text-sm transition-all shadow-lg shadow-orange-900/20 uppercase tracking-wide"
                         >
                             FILTRAR
                         </button>
                         <button
-                            onClick={resetFilters}
-                            className="flex-1 bg-gray-600 hover:bg-gray-500 text-white py-2 rounded-lg font-bold text-sm transition-colors"
+                            onClick={() => setFilters({
+                                startDate: new Date().toISOString().split('T')[0],
+                                endDate: new Date().toISOString().split('T')[0],
+                                paymentMethod: 'TODAS',
+                                status: 'TODOS',
+                                deliveryType: 'TODOS'
+                            })}
+                            className="px-4 py-2 bg-white/5 hover:bg-white/10 text-white rounded-xl font-bold text-sm transition-all border border-white/5 uppercase tracking-wide"
                         >
                             LIMPIAR
                         </button>
@@ -824,20 +820,21 @@ const OrdersManager = () => {
                                 )}
 
                             </div>
-                            <div>
-                                <div className="mt-1">
+
+                            <div className="text-right flex flex-col items-end gap-2">
+                                <div className="mb-1">
                                     {order.payment_method === 'cash' && (
-                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/20 text-green-300 text-xs font-bold border border-green-500/30 w-fit">
+                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-green-500/20 text-green-300 text-xs font-bold border border-green-500/30 w-fit ml-auto">
                                             <Banknote className="w-3.5 h-3.5" /> Efectivo
                                         </span>
                                     )}
                                     {order.payment_method === 'transfer' && (
-                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30 w-fit">
+                                        <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-500/20 text-purple-300 text-xs font-bold border border-purple-500/30 w-fit ml-auto">
                                             <Banknote className="w-3.5 h-3.5" /> Transferencia
                                         </span>
                                     )}
                                     {order.payment_method === 'mercadopago' && (
-                                        <div className="flex flex-col gap-1 items-start">
+                                        <div className="flex flex-col gap-1 items-end">
                                             <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-blue-500/20 text-blue-300 text-xs font-bold border border-blue-500/30 w-fit">
                                                 <CreditCard className="w-3.5 h-3.5" /> Mercado Pago
                                             </span>
@@ -849,8 +846,6 @@ const OrdersManager = () => {
                                         </div>
                                     )}
                                 </div>
-                            </div>
-                            <div className="text-right flex flex-col items-end gap-2">
                                 <span className="font-bold text-lg block">${order.total}</span>
                                 <div className="flex gap-1">
                                     {/* Assign Driver Button */}
@@ -869,6 +864,14 @@ const OrdersManager = () => {
                                     >
                                         <Printer className="w-4 h-4" />
                                     </button>
+                                    <button
+                                        onClick={() => setEditingOrder(order)}
+                                        className="text-white hover:text-white p-1 rounded hover:bg-[var(--color-primary)]/20 transition-colors"
+                                        title="Editar Pedido"
+                                    >
+                                        <Pencil className="w-4 h-4" />
+                                    </button>
+
                                     <button
                                         onClick={() => deleteOrder(order.id)}
                                         className="text-[var(--color-text-muted)] hover:text-red-400 p-1 rounded hover:bg-white/10"
@@ -1005,6 +1008,50 @@ const OrdersManager = () => {
                     </div>
                 )}
             </div>
+            {/* Assign Driver Modal */}
+            <AssignDriverModal
+                isOpen={!!selectedOrderForDriver}
+                onClose={() => setSelectedOrderForDriver(null)}
+                orderId={selectedOrderForDriver}
+                onAssign={() => {
+                    fetchOrders()
+                    setSelectedOrderForDriver(null)
+                }}
+            />
+
+            {/* Edit Order Modal */}
+            <EditOrderModal
+                isOpen={!!editingOrder}
+                onClose={() => setEditingOrder(null)}
+                order={editingOrder}
+                onUpdate={() => {
+                    fetchOrders(false) // Silent update
+                }}
+            />
+
+            {/* Confirm Delete Modal */}
+            <ConfirmModal
+                isOpen={!!orderToDelete}
+                onClose={() => setOrderToDelete(null)}
+                onConfirm={confirmDeleteOrder}
+                title="¿Eliminar Pedido?"
+                message="Esta acción es irreversible y se eliminará todo el registro del pedido."
+                confirmText="Eliminar"
+                cancelText="Mmm, mejor no"
+                isDestructive={true}
+            />
+
+            {/* Confirm Clear History Modal */}
+            <ConfirmModal
+                isOpen={isClearHistoryModalOpen}
+                onClose={() => setIsClearHistoryModalOpen(false)}
+                onConfirm={confirmClearHistory}
+                title="¿Limpiar historial completo?"
+                message="Se borrarán todos los pedidos finalizados y cancelados permanentemente."
+                confirmText="Confirmar Limpieza"
+                cancelText="Cancelar"
+                isDestructive={true}
+            />
         </div >
     )
 }

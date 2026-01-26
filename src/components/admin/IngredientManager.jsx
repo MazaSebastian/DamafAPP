@@ -136,7 +136,7 @@ const IngredientManager = () => {
                 </div>
                 <button
                     onClick={() => { resetForm(); setIsCreating(true) }}
-                    className="btn-primary flex items-center gap-2"
+                    className="bg-[var(--color-secondary)] hover:bg-orange-600 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-bold text-sm transition-all shadow-lg shadow-orange-900/20"
                 >
                     <Plus size={18} /> Nuevo Ingrediente
                 </button>
@@ -155,54 +155,7 @@ const IngredientManager = () => {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-white/5">
-                        {isCreating && (
-                            <tr className="bg-[var(--color-primary)]/10 animate-fade-in">
-                                <td className="p-4">
-                                    <input
-                                        autoFocus
-                                        placeholder="Nombre (ej: Bacon)"
-                                        value={formData.name}
-                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        className="w-full bg-transparent border-b border-white/20 focus:border-[var(--color-primary)] outline-none px-2 py-1"
-                                    />
-                                </td>
-                                <td className="p-4 text-center">
-                                    <select
-                                        value={formData.unit}
-                                        onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                                        className="bg-[var(--color-background)] border border-white/20 rounded px-2 py-1 outline-none text-xs"
-                                    >
-                                        <option value="g">Gramos (g)</option>
-                                        <option value="kg">Kilos (kg)</option>
-                                        <option value="ml">Mililitros (ml)</option>
-                                        <option value="l">Litros (l)</option>
-                                        <option value="u">Unidades (u)</option>
-                                    </select>
-                                </td>
-                                <td className="p-4 text-center">
-                                    <input
-                                        type="number"
-                                        placeholder="0"
-                                        value={formData.stock}
-                                        onChange={e => setFormData({ ...formData, stock: e.target.value })}
-                                        className="w-20 text-center bg-transparent border-b border-white/20 focus:border-[var(--color-primary)] outline-none px-1"
-                                    />
-                                </td>
-                                <td className="p-4 text-center">
-                                    <input
-                                        type="number"
-                                        placeholder="100"
-                                        value={formData.min_stock}
-                                        onChange={e => setFormData({ ...formData, min_stock: e.target.value })}
-                                        className="w-20 text-center bg-transparent border-b border-white/20 focus:border-[var(--color-primary)] outline-none px-1"
-                                    />
-                                </td>
-                                <td className="p-4 flex justify-end gap-2">
-                                    <button onClick={handleSave} className="p-2 bg-green-500 text-white rounded hover:bg-green-600"><Save size={16} /></button>
-                                    <button onClick={resetForm} className="p-2 bg-red-500 text-white rounded hover:bg-red-600"><X size={16} /></button>
-                                </td>
-                            </tr>
-                        )}
+
 
                         {ingredients.map(ing => {
                             const isLow = ing.stock <= ing.min_stock;
@@ -277,6 +230,89 @@ const IngredientManager = () => {
                             >
                                 Cancelar
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Create/Edit Ingredient Modal */}
+            {isCreating && (
+                <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+                    <div className="bg-[var(--color-surface)] border border-white/10 rounded-2xl w-full max-w-md shadow-2xl p-6 animate-in zoom-in-95">
+                        <div className="flex justify-between items-center mb-6">
+                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                                {editingId ? <Edit2 className="w-5 h-5 text-[var(--color-primary)]" /> : <Plus className="w-5 h-5 text-[var(--color-secondary)]" />}
+                                {editingId ? 'Editar Ingrediente' : 'Nuevo Ingrediente'}
+                            </h3>
+                            <button onClick={resetForm} className="text-white/50 hover:text-white">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-1">Nombre</label>
+                                <input
+                                    autoFocus
+                                    placeholder="Ej: Bacon, Pan, Cheddar..."
+                                    value={formData.name}
+                                    onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                    className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-1">Unidad de Medida</label>
+                                <select
+                                    value={formData.unit}
+                                    onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                                    className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[var(--color-primary)] appearance-none"
+                                >
+                                    <option value="g">Gramos (g)</option>
+                                    <option value="kg">Kilos (kg)</option>
+                                    <option value="ml">Mililitros (ml)</option>
+                                    <option value="l">Litros (l)</option>
+                                    <option value="u">Unidades (u)</option>
+                                </select>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-1">Stock Actual</label>
+                                    <input
+                                        type="number"
+                                        placeholder="0"
+                                        value={formData.stock}
+                                        onChange={e => setFormData({ ...formData, stock: e.target.value })}
+                                        className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-[var(--color-text-muted)] uppercase mb-1">Alerta Mínima</label>
+                                    <input
+                                        type="number"
+                                        placeholder="100"
+                                        value={formData.min_stock}
+                                        onChange={e => setFormData({ ...formData, min_stock: e.target.value })}
+                                        className="w-full bg-[var(--color-background)] border border-white/10 rounded-xl p-3 outline-none focus:ring-2 focus:ring-[var(--color-primary)]"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 mt-6 pt-4 border-t border-white/5">
+                                <button
+                                    onClick={resetForm}
+                                    className="flex-1 py-3 rounded-xl font-bold text-[var(--color-text-muted)] hover:bg-white/5 transition-colors"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleSave}
+                                    className="flex-1 bg-[var(--color-primary)] hover:opacity-90 text-white py-3 rounded-xl font-bold shadow-lg shadow-purple-900/20 transition-all"
+                                >
+                                    {editingId ? 'Guardar Cambios' : 'Crear Ingrediente'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

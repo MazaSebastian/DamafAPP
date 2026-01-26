@@ -80,6 +80,7 @@ const AnimatedRoutes = () => {
 
 
 import IOSInstallPrompt from './components/pwa/IOSInstallPrompt';
+import NotificationModal from './components/NotificationModal';
 
 // Wrapper to use hooks that depend on contexts
 const AppContent = () => {
@@ -90,6 +91,7 @@ const AppContent = () => {
     <>
       <AnimatedRoutes />
       <IOSInstallPrompt />
+      <NotificationModal />
     </>
   );
 }
@@ -100,10 +102,9 @@ function App() {
       <Toaster
         richColors
         position="top-center"
-        theme="dark"
         toastOptions={{
           style: {
-            background: 'var(--color-surface)',
+            background: 'rgba(59, 54, 120, 0.95)', // Matches --color-surface with slight transparency
             border: '1px solid rgba(255,255,255,0.1)',
             color: 'white',
             fontFamily: 'Outfit, sans-serif',

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { supabase } from '../supabaseClient'
 import { Plus, Trash2, Edit2, Save, X, ChevronRight, Loader2, Image, List, Settings, Scale } from 'lucide-react'
 import { toast } from 'sonner'
+import ConfirmModal from './ConfirmModal'
 
 const ProductManager = () => {
     const [categories, setCategories] = useState([])
@@ -15,6 +16,7 @@ const ProductManager = () => {
     const [editingProduct, setEditingProduct] = useState(null)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const [productSizes, setProductSizes] = useState([]) // Array of { name, price }
+    const [categoryToDelete, setCategoryToDelete] = useState(null)
 
     useEffect(() => {
         fetchCategories()
@@ -277,17 +279,22 @@ const ProductManager = () => {
         }
     }
 
-    const handleDeleteCategory = async (id) => {
-        if (!confirm('Eliminar categoría y sus productos?')) return
-        const { error } = await supabase.from('categories').delete().eq('id', id)
+    const handleDeleteCategory = (category) => {
+        setCategoryToDelete(category)
+    }
+
+    const confirmDeleteCategory = async () => {
+        if (!categoryToDelete) return
+        const { error } = await supabase.from('categories').delete().eq('id', categoryToDelete.id)
         if (!error) {
-            setCategories(categories.filter(c => c.id !== id))
-            if (selectedCategory?.id === id) setSelectedCategory(null)
+            setCategories(categories.filter(c => c.id !== categoryToDelete.id))
+            if (selectedCategory?.id === categoryToDelete.id) setSelectedCategory(null)
             updateStats()
             toast.success('Categoría eliminada')
         } else {
             toast.error('Error al eliminar: ' + error.message)
         }
+        setCategoryToDelete(null)
     }
 
     return (
@@ -314,7 +321,7 @@ const ProductManager = () => {
                                         {stats[cat.id]}
                                     </span>
                                 )}
-                                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat.id) }} className="hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteCategory(cat) }} className="hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
                                     <Trash2 className="w-4 h-4" />
                                 </button>
                             </div>
@@ -576,6 +583,17 @@ const ProductManager = () => {
                     </div>
                 </div>
             )}
+            {/* Confirm Category Delete Modal */}
+            <ConfirmModal
+                isOpen={!!categoryToDelete}
+                onClose={() => setCategoryToDelete(null)}
+                onConfirm={confirmDeleteCategory}
+                title="¿Eliminar Categoría?"
+                message={`Se eliminará la categoría "${categoryToDelete?.name}" y todos sus productos asociados. Esta acción no se puede deshacer.`}
+                confirmText="Eliminar"
+                cancelText="Cancelar"
+                isDestructive={true}
+            />
         </div>
     )
 }

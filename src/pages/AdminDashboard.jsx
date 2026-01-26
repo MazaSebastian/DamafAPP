@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers, TrendingUp, Clock, Monitor, Bell } from 'lucide-react'
+import { LayoutDashboard, Package, ShoppingCart, Users, Settings, Newspaper, Gift, UtensilsCrossed, Ticket, Menu, X, Loader2, LogOut, DollarSign, ChefHat, Layers, TrendingUp, Clock, Bell, MessageCircle } from 'lucide-react'
+import { useRealtimeConnection } from '../hooks/useRealtimeConnection'
 import NewsManager from '../components/NewsManager'
 import RewardsManager from '../components/RewardsManager'
 import ProductManager from '../components/ProductManager'
@@ -19,81 +20,64 @@ import SlotManager from '../components/admin/SlotManager'
 import IngredientManager from '../components/admin/IngredientManager'
 import DriversManager from '../components/DriversManager'
 import NotificationsManager from '../components/NotificationsManager'
+import SocialManager from '../components/SocialManager'
 import { supabase } from '../supabaseClient'
 import { toast } from 'sonner'
+
 
 const AdminDashboard = () => {
     const { user, role, loading, signOut } = useAuth()
     const navigate = useNavigate()
     const [activeTab, setActiveTab] = useState('Overview')
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+    const [isSidebarOpen, setIsSidebarOpen] = useState(0)
     const [pendingOrdersCount, setPendingOrdersCount] = useState(0)
     const [lowStockCount, setLowStockCount] = useState(0)
 
     // Badge Logic
-    useEffect(() => {
+    const fetchCounts = async () => {
         if (!user) return
 
-        const fetchCounts = async () => {
-            // Orders: Pending
-            const { count: ordersCount } = await supabase
-                .from('orders')
-                .select('*', { count: 'exact', head: true })
-                .eq('status', 'pending')
+        // Orders: Pending
+        const { count: ordersCount } = await supabase
+            .from('orders')
+            .select('*', { count: 'exact', head: true })
+            .eq('status', 'pending')
 
-            if (ordersCount !== null) setPendingOrdersCount(ordersCount)
+        if (ordersCount !== null) setPendingOrdersCount(ordersCount)
 
-            // Inventory: Low Stock (Ingredients + Products)
-            let lowCount = 0
+        // Inventory: Low Stock (Ingredients + Products)
+        let lowCount = 0
 
-            // 1. Ingredients
-            const { data: ingredients } = await supabase
-                .from('ingredients')
-                .select('stock, min_stock')
+        // 1. Ingredients
+        const { data: ingredients } = await supabase
+            .from('ingredients')
+            .select('stock, min_stock')
 
-            if (ingredients) {
-                lowCount += ingredients.filter(i => i.stock <= i.min_stock).length
-            }
-
-            // 2. Products (Check for stock being 0 or low if we had min_stock, for now just 0 or null as "Low" isn't standard yet on prod)
-            // Actually, let's just count 'Sold Out' (stock === 0) for products as "Action Needed"
-            const { data: products } = await supabase
-                .from('products')
-                .select('stock')
-                .eq('is_available', true)
-
-            if (products) {
-                // Counts products with explicit 0 stock (finite stock management)
-                lowCount += products.filter(p => p.stock !== null && p.stock === 0).length
-            }
-
-            setLowStockCount(lowCount)
+        if (ingredients) {
+            lowCount += ingredients.filter(i => i.stock <= i.min_stock).length
         }
 
+        // 2. Products
+        const { data: products } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('is_available', true)
+
+        if (products) {
+            lowCount += products.filter(p => p.stock !== null && p.stock === 0).length
+        }
+
+        setLowStockCount(lowCount)
+    }
+
+    // Initial Load
+    useEffect(() => {
         fetchCounts()
-
-        // Realtime
-        const channel = supabase
-            .channel('admin_badges')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-                // Refresh orders count
-                fetchCounts()
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'ingredients' }, () => {
-                // Refresh inventory count
-                fetchCounts()
-            })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => {
-                // Refresh inventory count (for product stock)
-                fetchCounts()
-            })
-            .subscribe()
-            .subscribe()
-
-        return () => {
-            supabase.removeChannel(channel)
-        }
     }, [user])
+
+    // Auto-Refresh on Visibility/Focus (and every 60s)
+    useRealtimeConnection(fetchCounts, [user], 'AdminDashboard', 60000)
+
 
     // Global Sound Notification
     const playNewOrderSound = () => {
@@ -201,13 +185,14 @@ const AdminDashboard = () => {
                         <NavItem icon={<LayoutDashboard />} label="Vista General" active={activeTab === 'Overview'} onClick={() => { setActiveTab('Overview'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<TrendingUp />} label="Métricas" active={activeTab === 'Analytics'} onClick={() => { setActiveTab('Analytics'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Users />} label="Clientes" active={activeTab === 'Customers'} onClick={() => { setActiveTab('Customers'); setIsSidebarOpen(false) }} />
+                        <NavItem icon={<MessageCircle />} label="Mensajes" active={activeTab === 'Messages'} onClick={() => { setActiveTab('Messages'); setIsSidebarOpen(false) }} />
                     </div>
 
                     {/* OPERATIVO */}
                     <div className="space-y-1">
                         <p className="px-4 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider mb-2">Operativo</p>
                         <NavItem icon={<ShoppingCart />} label="Pedidos" badge={pendingOrdersCount} active={activeTab === 'Orders'} onClick={() => { setActiveTab('Orders'); setIsSidebarOpen(false) }} />
-                        <NavItem icon={<Monitor />} label="POS Live" onClick={() => navigate('/admin/pos')} />
+
                         <NavItem icon={<Users />} label="Repartidores" active={activeTab === 'Drivers'} onClick={() => { setActiveTab('Drivers'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<Clock />} label="Horarios de Entrega" active={activeTab === 'Slots'} onClick={() => { setActiveTab('Slots'); setIsSidebarOpen(false) }} />
                         <NavItem icon={<DollarSign />} label="Caja" active={activeTab === 'Cash'} onClick={() => { setActiveTab('Cash'); setIsSidebarOpen(false) }} />
@@ -277,6 +262,8 @@ const AdminDashboard = () => {
 
                 {activeTab === 'Novedades' ? (
                     <NewsManager />
+                ) : activeTab === 'Messages' ? (
+                    <SocialManager />
                 ) : activeTab === 'Analytics' ? (
                     <AnalyticsManager />
                 ) : activeTab === 'Drivers' ? (
