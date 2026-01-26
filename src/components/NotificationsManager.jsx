@@ -109,12 +109,16 @@ const NotificationsManager = () => {
 
             // Loop through tokens
             for (const recipient of tokens) {
+                const { data: { session } } = await supabase.auth.getSession()
                 const { data: funcData, error } = await supabase.functions.invoke('push', {
                     body: {
                         token: recipient.token, // Send direct token to EF
                         title: title,
                         body: body,
                         openUrl: '/' // Optional: landing page
+                    },
+                    headers: {
+                        Authorization: session ? `Bearer ${session.access_token}` : undefined
                     }
                 })
 
