@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Loader2, Send, Image, Search, User, MessageCircle, MoreVertical } from 'lucide-react'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { useRealtimeConnection } from '../hooks/useRealtimeConnection'
 
 const SocialManager = () => {
     const [conversations, setConversations] = useState([])

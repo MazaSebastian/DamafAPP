@@ -105,17 +105,23 @@ const WeatherWidget = () => {
                 {hourlyWeather.map((h, i) => (
                     <div key={i} className="flex flex-col items-center min-w-[100px] bg-black/20 p-2.5 rounded-xl border border-white/5 hover:bg-white/5 transition-colors relative group">
 
-                        {/* Probability Badge - Smaller & Compact */}
-                        {h.rainChance > 0 && (
-                            <div className="absolute top-1.5 right-1.5 flex items-center gap-0.5 text-[9px] text-blue-200 font-bold bg-blue-500/30 px-1 py-0.5 rounded-full border border-blue-500/20">
-                                <Droplets className="w-2.5 h-2.5" />
-                                {h.rainChance}%
-                            </div>
-                        )}
+                        <div className="w-full flex flex-col items-center mb-2">
+                            <span className="text-xs text-[var(--color-text-muted)] font-bold">
+                                {format(h.time, 'HH:00')}
+                            </span>
 
-                        <span className="text-xs text-[var(--color-text-muted)] font-bold mb-2">
-                            {format(h.time, 'HH:00')}
-                        </span>
+                            {/* Probability Badge - In Flow */}
+                            <div className="h-4 flex items-center justify-center mt-1">
+                                {h.rainChance > 0 ? (
+                                    <div className="flex items-center gap-1 text-[9px] text-blue-200 font-bold bg-blue-500/30 px-1.5 py-0.5 rounded-full border border-blue-500/20">
+                                        <Droplets className="w-2 h-2" />
+                                        {h.rainChance}%
+                                    </div>
+                                ) : (
+                                    <span className="h-4"></span> // Spacer to keep alignment if needed, or just let it collapse
+                                )}
+                            </div>
+                        </div>
 
                         <div className="mb-2 transform group-hover:scale-110 transition-transform duration-300">
                             {getWeatherIcon(h.code)}
