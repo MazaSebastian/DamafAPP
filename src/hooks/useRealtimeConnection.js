@@ -44,10 +44,14 @@ export const useRealtimeConnection = (refreshCallback, dependencies = [], debugL
         // 4. Safety Polling (Optional)
         let intervalId = null
         if (intervalMs > 0) {
+            // Detect if running in our Android Wrapper (we inject 'AndroidPrint' interface)
+            const isAndroid = typeof window.AndroidPrint !== 'undefined'
+
             intervalId = setInterval(() => {
-                // Only poll if visible to save resources/battery
-                if (document.visibilityState === 'visible') {
-                    // console.log(`[${debugLabel}] Safety Polling...`)
+                // If Android, POLL ALWAYS (Aggressive mode) because visibilityState is unreliable in some WebViews
+                // If Web, only poll if visible to save battery
+                if (isAndroid || document.visibilityState === 'visible') {
+                    // if (isAndroid) console.log(`[${debugLabel}] Android Polling Force...`)
                     refreshCallback()
                 }
             }, intervalMs)
