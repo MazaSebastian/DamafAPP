@@ -57,12 +57,17 @@ serve(async (req) => {
         }
 
         if (action === 'generate' && orderId) {
-            // Fetch Order Data
-            const { data: order } = await supabaseClient
+            // Fetch Order Data - simplified to avoid join errors on null FKs
+            const { data: order, error: orderFetchError } = await supabaseClient
                 .from('orders')
-                .select('*, customer:customer_id(*), address:delivery_address_id(*)')
+                .select('*')
                 .eq('id', orderId)
                 .single();
+
+            if (orderFetchError) {
+                console.error("DB Fetch Error:", orderFetchError);
+                throw new Error("DB Error fetching order: " + orderFetchError.message);
+            }
 
             if (!order) throw new Error("Order not found with ID: " + orderId);
 
