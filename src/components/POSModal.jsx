@@ -45,6 +45,14 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
             .then()
     }
 
+    // Restored missing states
+    const [selectedSlot, setSelectedSlot] = useState(null)
+    const [orderType, setOrderType] = useState('takeaway') // 'takeaway' | 'delivery'
+    const [deliveryAddress, setDeliveryAddress] = useState('')
+    const [notes, setNotes] = useState('') // Notes state
+    const [shippingCost, setShippingCost] = useState(0)
+    const [deliverySettings, setDeliverySettings] = useState({ delivery_fixed_price: 0 })
+
     // ... (States)
 
     // Initial Load
