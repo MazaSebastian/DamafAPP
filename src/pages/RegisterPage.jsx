@@ -31,12 +31,7 @@ const RegisterPage = () => {
     }, [])
 
     // Registration fields
-    const [fullName, setFullName] = useState('')
-    const [phoneData, setPhoneData] = useState({ countryCode: '+54', number: '' })
-    const [dob, setDob] = useState({ day: '', month: '', year: '' })
-    const [addressData, setAddressData] = useState({ address: '', floor: '', department: '', postal_code: '' })
-
-    const [error, setError] = useState(null)
+    const [showSuccessModal, setShowSuccessModal] = useState(false)
 
     const handleRegister = async (e) => {
         e.preventDefault()
@@ -75,8 +70,7 @@ const RegisterPage = () => {
             if (signUpError) throw signUpError
 
             if (signUpData.user) {
-                toast.success('Registro exitoso! Revisa tu email para confirmar.')
-                navigate('/login')
+                setShowSuccessModal(true)
             } else {
                 toast.info('Registro iniciado. Por favor, revisa tu email para confirmar tu cuenta.')
             }
@@ -92,6 +86,34 @@ const RegisterPage = () => {
         <div className="min-h-screen flex flex-col items-center justify-center bg-[var(--color-background)] p-4 relative overflow-hidden">
             {/* Background elements */}
             <div className="absolute top-0 w-full h-1/2 bg-gradient-to-b from-[#1a1a2e] to-transparent opacity-50 z-0"></div>
+
+            {/* Success Modal */}
+            {showSuccessModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in">
+                    <div className="bg-[var(--color-surface)] border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden animate-in zoom-in-95 duration-300">
+                        {/* Decoding effect background */}
+                        <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-green-500 to-emerald-400"></div>
+
+                        <div className="mx-auto w-16 h-16 bg-green-500/10 rounded-full flex items-center justify-center mb-6">
+                            <Mail className="w-8 h-8 text-green-500 animate-bounce" />
+                        </div>
+
+                        <h2 className="text-2xl font-black text-white mb-2">¡Cuenta Creada!</h2>
+                        <p className="text-gray-300 mb-6 leading-relaxed">
+                            Te enviamos un enlace de confirmación a <span className="text-white font-bold">{email}</span>.
+                            <br /><br />
+                            <span className="text-sm opacity-75">Por favor verifícalo para activar tu cuenta.</span>
+                        </p>
+
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="w-full bg-white text-black font-black py-4 rounded-xl hover:scale-105 transition-transform shadow-xl"
+                        >
+                            Ir a Iniciar Sesión
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div className="z-10 w-full max-w-sm my-8">
                 {/* Brand Logo Section */}

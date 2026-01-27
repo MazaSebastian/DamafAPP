@@ -1,80 +1,83 @@
-import { Search, Download, Eye, ExternalLink } from 'lucide-react'
+import React from 'react';
+import { FileText, Download, User } from 'lucide-react';
 
 const BillingList = () => {
     // Mock Data
-    const invoices = []
+    const invoices = [
+        { id: 1, date: '2024-01-26', type: 'Factura B', number: '0005-00001234', amount: 4500.00, customer: 'Consumidor Final', cae: '73412345678901' },
+        { id: 2, date: '2024-01-26', type: 'Factura B', number: '0005-00001233', amount: 12500.50, customer: 'Sebastian Maza', cae: '73412345678902' },
+        { id: 3, date: '2024-01-25', type: 'Factura A', number: '0005-00001232', amount: 32000.00, customer: 'Empresa SA', cae: '73412345678903' },
+    ];
 
     return (
         <div className="space-y-4">
-            {/* Filters */}
-            <div className="flex gap-4">
-                <div className="flex-1 bg-[var(--color-surface)] border border-white/5 rounded-xl flex items-center px-4 py-2">
-                    <Search className="w-4 h-4 text-[var(--color-text-muted)] mr-3" />
+            <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-white">Historial de Comprobantes</h3>
+                <div className="flex gap-2">
                     <input
                         type="text"
-                        placeholder="Buscar por CAE, número o cliente..."
-                        className="bg-transparent border-none focus:outline-none text-white w-full text-sm"
+                        placeholder="Buscar por cliente o número..."
+                        className="bg-[var(--color-surface)] border border-white/10 rounded-xl px-4 py-2 text-white placeholder-white/40 focus:outline-none focus:border-[var(--color-primary)] w-64"
                     />
                 </div>
-                <select className="bg-[var(--color-surface)] border border-white/5 rounded-xl px-4 py-2 text-white text-sm focus:outline-none">
-                    <option>Todos los tipos</option>
-                    <option>Factura A</option>
-                    <option>Factura B</option>
-                    <option>Factura C</option>
-                    <option>Notas de Crédito</option>
-                </select>
             </div>
 
-            {/* Table */}
-            <div className="bg-[var(--color-surface)] border border-white/5 rounded-2xl overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-white/5 border-b border-white/5">
-                        <tr>
-                            <th className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase">Fecha</th>
-                            <th className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase">Comprobante</th>
-                            <th className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase">Cliente</th>
-                            <th className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase">CAE</th>
-                            <th className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase text-right">Monto</th>
-                            <th className="px-6 py-4 text-xs font-bold text-[var(--color-text-muted)] uppercase text-center">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-white/5">
-                        {invoices.length === 0 ? (
+            <div className="bg-[var(--color-surface)] border border-white/10 rounded-3xl overflow-hidden">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm">
+                        <thead className="bg-white/5 text-white/60">
                             <tr>
-                                <td colSpan="6" className="px-6 py-12 text-center text-[var(--color-text-muted)] italic">
-                                    No hay comprobantes generados aún.
-                                </td>
+                                <th className="p-4 font-medium">Fecha</th>
+                                <th className="p-4 font-medium">Comprobante</th>
+                                <th className="p-4 font-medium">Cliente</th>
+                                <th className="p-4 font-medium">CAE</th>
+                                <th className="p-4 font-medium text-right">Monto</th>
+                                <th className="p-4 font-medium text-center">Acciones</th>
                             </tr>
-                        ) : (
-                            invoices.map((inv) => (
-                                <tr key={inv.id} className="hover:bg-white/5 transition-colors">
-                                    <td className="px-6 py-4 text-sm text-white">{inv.date}</td>
-                                    <td className="px-6 py-4 text-sm font-mono text-white">
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold mr-2 ${inv.type === 'A' ? 'bg-purple-500/20 text-purple-400' : 'bg-blue-500/20 text-blue-400'
-                                            }`}>
-                                            {inv.type}
-                                        </span>
-                                        {inv.number}
+                        </thead>
+                        <tbody className="divide-y divide-white/10">
+                            {invoices.map((inv) => (
+                                <tr key={inv.id} className="text-white hover:bg-white/5 transition-colors">
+                                    <td className="p-4">{inv.date}</td>
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="bg-[var(--color-primary)] text-black text-xs font-bold px-1.5 rounded">
+                                                {inv.type.split(' ')[1]}
+                                            </span>
+                                            <span className="font-mono text-white/80">{inv.number}</span>
+                                        </div>
                                     </td>
-                                    <td className="px-6 py-4 text-sm text-gray-300">{inv.client}</td>
-                                    <td className="px-6 py-4 text-xs font-mono text-gray-500">{inv.cae}</td>
-                                    <td className="px-6 py-4 text-sm font-bold text-white text-right">${inv.amount}</td>
-                                    <td className="px-6 py-4 flex justify-center gap-2">
-                                        <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
-                                            <Eye className="w-4 h-4" />
+                                    <td className="p-4">
+                                        <div className="flex items-center gap-2 text-white/80">
+                                            <User size={14} />
+                                            {inv.customer}
+                                        </div>
+                                    </td>
+                                    <td className="p-4 font-mono text-xs text-white/60">{inv.cae}</td>
+                                    <td className="p-4 text-right font-bold">
+                                        ${inv.amount.toLocaleString('es-AR', { minimumFractionDigits: 2 })}
+                                    </td>
+                                    <td className="p-4 flex justify-center gap-2">
+                                        <button className="p-2 hover:bg-white/10 rounded-lg text-white/60 hover:text-white transition-colors" title="Ver PDF">
+                                            <FileText size={18} />
                                         </button>
-                                        <button className="p-2 hover:bg-white/10 rounded-lg text-gray-400 hover:text-white transition-colors">
-                                            <Download className="w-4 h-4" />
+                                        <button className="p-2 hover:bg-white/10 rounded-lg text-white/60 hover:text-[var(--color-primary)] transition-colors" title="Descargar">
+                                            <Download size={18} />
                                         </button>
                                     </td>
                                 </tr>
-                            ))
-                        )}
-                    </tbody>
-                </table>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             </div>
+            {invoices.length === 0 && (
+                <div className="text-center py-12 text-white/40">
+                    No hay comprobantes generados aún.
+                </div>
+            )}
         </div>
-    )
-}
+    );
+};
 
-export default BillingList
+export default BillingList;
