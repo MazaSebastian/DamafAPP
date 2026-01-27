@@ -7,6 +7,7 @@ const BillingSettings = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [cuit, setCuit] = useState('');
     const [salesPoint, setSalesPoint] = useState('');
+    const [taxCondition, setTaxCondition] = useState('monotributo');
     const [certFile, setCertFile] = useState(null);
     const [keyFile, setKeyFile] = useState(null);
     const [existingConfig, setExistingConfig] = useState(null);
@@ -28,6 +29,7 @@ const BillingSettings = () => {
                 setExistingConfig(data);
                 setCuit(data.cuit);
                 setSalesPoint(data.sales_point);
+                if (data.tax_condition) setTaxCondition(data.tax_condition);
             }
         } catch (error) {
             console.error("Error fetching config:", error);
