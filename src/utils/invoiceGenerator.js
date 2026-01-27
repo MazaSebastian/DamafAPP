@@ -106,7 +106,6 @@ export const generateInvoicePDF = async (invoice, company) => {
     y += 4;
 
     // List
-    const items = invoice.items || [{ quantity: 1, name: 'Consumo Gastronómico', price: invoice.total_amount }];
     items.forEach(item => {
         // Multi-line description if needed
         const qtyDesc = `${item.quantity} x ${item.name}`;
