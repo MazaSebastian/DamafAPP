@@ -66,16 +66,6 @@ CREATE TABLE IF NOT EXISTS public.invoices (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
-ALTER TABLE public.invoices ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Admin can view invoices" ON public.invoices
-    FOR SELECT
-    USING (
-        EXISTS (
-            SELECT 1 FROM public.profiles
-            WHERE profiles.id = auth.uid()
-            AND profiles.role IN ('admin', 'owner')
-        )
-    );
+ALTER TABLE public.invoices DISABLE ROW LEVEL SECURITY;
 
 -- Users can view their own invoices? Maybe later.
