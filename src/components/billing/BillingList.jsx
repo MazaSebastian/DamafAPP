@@ -15,7 +15,8 @@ const BillingList = () => {
                 .then(module => module.supabase
                     .from('invoices')
                     // Correct relation: invoices -> orders -> profiles
-                    .select('*, order:orders(profiles(full_name, business_name))')
+                    // 'business_name' does not exist in profiles, removing it.
+                    .select('*, order:orders(profiles(full_name))')
                     .order('created_at', { ascending: false })
                 );
 
@@ -28,7 +29,7 @@ const BillingList = () => {
                 number: `${inv.pt_vta.toString().padStart(4, '0')}-${inv.cbte_nro.toString().padStart(8, '0')}`,
                 amount: inv.total_amount,
                 // Match profile data or fallback
-                customer: inv.order?.profiles?.business_name || inv.order?.profiles?.full_name || 'Consumidor Final',
+                customer: inv.order?.profiles?.full_name || 'Consumidor Final',
                 cae: inv.cae,
                 // Pass raw data for PDF generator
                 ...inv
