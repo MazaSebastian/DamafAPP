@@ -53,8 +53,8 @@ export const AuthProvider = ({ children }) => {
             setUser(session?.user ?? null)
 
             if (session?.user) {
-                // Fetch profile in background, don't block
-                fetchProfile(session.user.id)
+                // Await profile fetch to prevent "Vecino" flash
+                await fetchProfile(session.user.id)
             } else {
                 setProfile(null)
                 setRole(null)

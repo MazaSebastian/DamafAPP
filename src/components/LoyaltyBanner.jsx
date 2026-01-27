@@ -9,7 +9,8 @@ const LoyaltyBanner = ({ stars = 0 }) => {
 
     // While settings load, we might flicker or show default. 
     // Ideally we could show a skeleton, but for now we render gracefully.
-    const firstName = profile?.full_name?.split(' ')[0] || 'Gourmet'
+    // If name is missing, we use empty string or generic "Usuario" if strictly needed, but let's try to get name.
+    const firstName = profile?.full_name?.split(' ')[0] || 'Usuario'
 
     if (loading) return null
 
