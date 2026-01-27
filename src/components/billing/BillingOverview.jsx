@@ -60,20 +60,12 @@ const BillingOverview = ({ onChangeTab }) => {
                 throw new Error("AFIP/Logic Error: " + JSON.stringify(invoiceData.error));
             }
 
-            console.log("Validation Success. Showing Toast.");
             toast.dismiss(toastId);
+            toast.success(`Factura Generada! CAE: ${invoiceData.cae}`);
 
-            try {
-                toast.success(`Factura Generada! CAE: ${invoiceData.cae}`);
-            } catch (err) {
-                console.error("Toast Error:", err);
-            }
-
-            console.log("Switching Tab...");
-            if (typeof onChangeTab === 'function') {
+            // Switch to history tab
+            if (onChangeTab) {
                 onChangeTab('invoices');
-            } else {
-                console.error("onChangeTab is not a function:", onChangeTab);
             }
 
         } catch (error) {
