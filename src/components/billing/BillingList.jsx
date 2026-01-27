@@ -14,7 +14,10 @@ const BillingList = () => {
             const { data, error } = await import('../../supabaseClient')
                 .then(module => module.supabase
                     .from('invoices')
-                    .select('*, order:order_id(customer:customer_id(name, business_name))')
+                    // Use table name 'orders' explicitly, defaulting to alias 'order'. 
+                    // Use table name 'customers' explicitly inside orders.
+                    // If multiple FKs exist, Supabase might complain, but usually this is safer than column embedding if column is just an ID.
+                    .select('*, order:orders(customer:customers(name, business_name))')
                     .order('created_at', { ascending: false })
                 );
 
