@@ -42,13 +42,19 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
 
     const content = getModalContent()
     const [phoneInput, setPhoneInput] = useState(orderData?.customerPhone || '')
-    const [nameInput, setNameInput] = useState(orderData?.customerName === 'Cliente Web' ? '' : orderData?.customerName || '')
+    // Default to empty if generic name to force user input
+    const [nameInput, setNameInput] = useState(
+        (orderData?.customerName === 'Cliente Web' || orderData?.customerName === 'Cliente' || orderData?.customerName === 'Invitado')
+            ? ''
+            : orderData?.customerName || ''
+    )
 
     const handleConfirm = () => {
         // Validation: Must have Name and Phone
         // Use existing data if valid, otherwise check inputs
         const finalPhone = orderData?.customerPhone || phoneInput.trim()
-        const finalName = (orderData?.customerName && orderData?.customerName !== 'Cliente Web') ? orderData.customerName : nameInput.trim()
+        const isGenericName = ['Cliente Web', 'Cliente', 'Invitado'].includes(orderData?.customerName)
+        const finalName = (orderData?.customerName && !isGenericName) ? orderData.customerName : nameInput.trim()
 
         if (!finalPhone || !finalName) return
 
@@ -93,7 +99,7 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                         </p>
 
                         {/* Contact Info Inputs if Missing (or Generic) */}
-                        {(!orderData?.customerPhone || orderData?.customerName === 'Cliente Web') && (
+                        {(!orderData?.customerPhone || !orderData?.customerName || ['Cliente Web', 'Cliente', 'Invitado'].includes(orderData?.customerName)) && (
                             <div className="w-full text-left space-y-3 animate-in fade-in slide-in-from-top-2 bg-black/20 p-3 rounded-xl border border-white/5">
                                 <p className="text-xs text-[var(--color-text-muted)] text-center mb-1">Por favor completa tus datos de contacto</p>
 
@@ -133,7 +139,7 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                                 onClick={handleConfirm}
                                 disabled={
                                     (!orderData?.customerPhone && !phoneInput.trim()) ||
-                                    ((!orderData?.customerName || orderData?.customerName === 'Cliente Web') && !nameInput.trim())
+                                    ((!orderData?.customerName || ['Cliente Web', 'Cliente', 'Invitado'].includes(orderData?.customerName)) && !nameInput.trim())
                                 }
                                 className="w-full text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ backgroundColor: content.color, boxShadow: `0 10px 15px -3px ${content.color}40` }}
