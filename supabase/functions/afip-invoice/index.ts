@@ -111,25 +111,25 @@ serve(async (req) => {
             } else {
                 return new Response(JSON.stringify({ success: false, error: result, raw_response: result.rawResponse }), {
                     headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-                    status: 400,
+                    status: 200, // Return 200 to allow client to read error body
                 })
             }
         }
 
         return new Response(JSON.stringify({ error: 'Invalid Action' }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400,
+            status: 200, // Return 200 to allow client to read error body
         })
 
     } catch (error) {
-        // GLOBAL ERROR HANDLER - RETURNS 400 INSTEAD OF 500 TO SHOW MESSAGE
+        // GLOBAL ERROR HANDLER
         console.error("FUNCTION ERROR:", error);
         return new Response(JSON.stringify({
             error: error.message,
             stack: error.stack
         }), {
             headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-            status: 400 // Returning 400 so the client can read the JSON body
+            status: 200 // Return 200 to allow client to read error body
         })
     }
 })
