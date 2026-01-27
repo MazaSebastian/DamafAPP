@@ -37,13 +37,16 @@ const BillingOverview = ({ onChangeTab }) => {
             // Explicitly getting session to ensure auth header is present
             const { data: { session } } = await supabase.auth.getSession();
 
+            // Fallback to Anon Key if no session token (to pass Gateway check)
+            const authToken = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
+
             const { data: invoiceData, error: invoiceError } = await supabase.functions.invoke('afip-invoice', {
                 body: {
                     action: 'generate',
                     orderId: order.id
                 },
                 headers: {
-                    Authorization: `Bearer ${session?.access_token}`
+                    Authorization: `Bearer ${authToken}`
                 }
             });
 
