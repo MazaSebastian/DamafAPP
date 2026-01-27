@@ -20,6 +20,31 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
     const [customerLoading, setCustomerLoading] = useState(false)
     const [customizingProduct, setCustomizingProduct] = useState(null)
 
+    const updateCustomerDisplay = async (currentCart, statusOverride, qrUrl = null, method = null) => {
+        // Calculate totals
+        const subtotal = currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const total = subtotal
+
+        const payload = {
+            status: statusOverride || (currentCart.length > 0 ? 'active' : 'idle'),
+            cart_items: currentCart,
+            subtotal: subtotal,
+            total: total,
+            qr_code_url: qrUrl,
+            updated_at: new Date().toISOString()
+        }
+
+        if (method) payload.payment_method = method
+
+        // We update the singleton row
+        // We catch errors to avoid unhandled rejections if network blips
+        await supabase
+            .from('checkout_sessions')
+            .update(payload)
+            .eq('id', '00000000-0000-0000-0000-000000000000')
+            .then()
+    }
+
     // ... (States)
 
     // Initial Load

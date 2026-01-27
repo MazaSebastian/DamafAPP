@@ -172,23 +172,19 @@ const CheckoutPage = () => {
     const [showBankModal, setShowBankModal] = useState(false)
     const [pendingOrderId, setPendingOrderId] = useState(null)
 
-    const processOrder = async (confirmedPhone = null) => {
+    const processOrder = async (confirmedPhone = null, confirmedName = null) => {
         const { data: { user } } = await supabase.auth.getUser()
 
-        // Validation: Phone is mandatory
+        // Validation logic
         const userPhone = user?.phone || user?.user_metadata?.phone || confirmedPhone
-        // Note: For Guests, we might need to rely on the confirmation modal passing it.
-        // But local storage guest logic below doesn't use "processOrder" in the same way? 
-        // Wait, "Save order locally if guest" (Line 224) happens INSIDE processOrder.
-        // So processOrder IS used for guests too (where user is null).
-        // CheckoutPage usually requires auth, or if we allow guests, how do we get their data?
-        // Ah, earlier I saw "Debes iniciar sesión para usar cupones".
-        // But the main specific request is "TODOS los pedidos... SIEMPRE nombre y telefono".
+        // If user logged in, trust metadata unless it was 'Cliente Web' which means we asked for it
+        let userName = user?.user_metadata?.full_name || user?.user_metadata?.name
 
-        // If user is logged in but has no phone updates?
-        if (user && !userPhone) {
-            // Ensure we captured it via modal. If not, we should have blocked before calling this.
-            // But Confirmation Modal should handle it.
+        // If we got a confirmedName from modal, use it (it overrides or fills missing)
+        if (confirmedName) {
+            userName = confirmedName
+        } else if (!userName) {
+            userName = 'Cliente Web'
         }
 
         try {
@@ -209,7 +205,7 @@ const CheckoutPage = () => {
                 notes: notes,
                 scheduled_time: selectedSlot ? selectedSlot.start_time.slice(0, 5) : null,
                 // NEW: Mandatory Fields
-                client_name: user?.user_metadata?.full_name || user?.user_metadata?.name || 'Invitado/Web',
+                client_name: userName,
                 client_phone: userPhone || ''
             }
 
@@ -648,8 +644,8 @@ const CheckoutPage = () => {
                 }}
                 onConfirm={(additionalData) => {
                     setShowConfirmModal(false)
-                    // If modal provided phone, pass it to processOrder
-                    processOrder(additionalData?.phone)
+                    // Pass Phone AND Name
+                    processOrder(additionalData?.phone, additionalData?.name)
                 }}
                 onClose={() => setShowConfirmModal(false)}
             />

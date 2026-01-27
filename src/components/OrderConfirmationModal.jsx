@@ -41,12 +41,18 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
     }
 
     const content = getModalContent()
-    const [phoneInput, setPhoneInput] = useState('')
+    const [phoneInput, setPhoneInput] = useState(orderData?.customerPhone || '')
+    const [nameInput, setNameInput] = useState(orderData?.customerName === 'Cliente Web' ? '' : orderData?.customerName || '')
 
     const handleConfirm = () => {
-        if (!orderData?.customerPhone && !phoneInput.trim()) return
+        // Validation: Must have Name and Phone
+        // Use existing data if valid, otherwise check inputs
+        const finalPhone = orderData?.customerPhone || phoneInput.trim()
+        const finalName = (orderData?.customerName && orderData?.customerName !== 'Cliente Web') ? orderData.customerName : nameInput.trim()
 
-        onConfirm({ phone: phoneInput })
+        if (!finalPhone || !finalName) return
+
+        onConfirm({ phone: finalPhone, name: finalName })
     }
 
     return (
@@ -86,18 +92,32 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                             {content.message}
                         </p>
 
-                        {/* Phone Input if Missing */}
-                        {!orderData?.customerPhone && (
-                            <div className="w-full text-left space-y-1 animate-in fade-in slide-in-from-top-2">
-                                <label className="text-xs font-bold text-orange-400 ml-1">Teléfono de Contacto (Requerido) *</label>
-                                <input
-                                    type="tel"
-                                    value={phoneInput}
-                                    onChange={(e) => setPhoneInput(e.target.value)}
-                                    placeholder="Ej: 11 1234 5678"
-                                    className="w-full bg-black/20 border border-orange-500/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono"
-                                    autoFocus
-                                />
+                        {/* Contact Info Inputs if Missing (or Generic) */}
+                        {(!orderData?.customerPhone || orderData?.customerName === 'Cliente Web') && (
+                            <div className="w-full text-left space-y-3 animate-in fade-in slide-in-from-top-2 bg-black/20 p-3 rounded-xl border border-white/5">
+                                <p className="text-xs text-[var(--color-text-muted)] text-center mb-1">Por favor completa tus datos de contacto</p>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-white ml-1">Nombre y Apellido *</label>
+                                    <input
+                                        type="text"
+                                        value={nameInput}
+                                        onChange={(e) => setNameInput(e.target.value)}
+                                        placeholder="Ej: Juan Perez"
+                                        className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] transition-all"
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-xs font-bold text-white ml-1">Teléfono (WhatsApp) *</label>
+                                    <input
+                                        type="tel"
+                                        value={phoneInput}
+                                        onChange={(e) => setPhoneInput(e.target.value)}
+                                        placeholder="Ej: 11 1234 5678"
+                                        className="w-full bg-[var(--color-background)] border border-white/10 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-[var(--color-primary)] transition-all font-mono"
+                                    />
+                                </div>
                             </div>
                         )}
 
@@ -111,7 +131,10 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                         <div className="w-full space-y-3 pt-2">
                             <button
                                 onClick={handleConfirm}
-                                disabled={!orderData?.customerPhone && !phoneInput.trim()}
+                                disabled={
+                                    (!orderData?.customerPhone && !phoneInput.trim()) ||
+                                    ((!orderData?.customerName || orderData?.customerName === 'Cliente Web') && !nameInput.trim())
+                                }
                                 className="w-full text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ backgroundColor: content.color, boxShadow: `0 10px 15px -3px ${content.color}40` }}
                             >
