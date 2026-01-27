@@ -40,6 +40,7 @@ const BillingOverview = ({ onChangeTab }) => {
             // Fallback to Anon Key if no session token (to pass Gateway check)
             const authToken = session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY;
 
+            console.log("Invoking Edge Function...");
             const { data: invoiceData, error: invoiceError } = await supabase.functions.invoke('afip-invoice', {
                 body: {
                     action: 'generate',
@@ -50,21 +51,36 @@ const BillingOverview = ({ onChangeTab }) => {
                 }
             });
 
+            console.log("Edge Function Response:", invoiceData, "Error:", invoiceError);
+
             if (invoiceError) throw new Error("Error en función de facturación: " + invoiceError.message);
 
             if (invoiceData?.error) {
-                throw new Error("AFIP Error: " + JSON.stringify(invoiceData.error));
+                console.error("Invoice Logic Error:", invoiceData.error);
+                throw new Error("AFIP/Logic Error: " + JSON.stringify(invoiceData.error));
             }
 
+            console.log("Validation Success. Showing Toast.");
             toast.dismiss(toastId);
-            toast.success(`Factura Generada! CAE: ${invoiceData.cae}`);
-            // Refresh logic could go here
-            onChangeTab('invoices');
+
+            try {
+                toast.success(`Factura Generada! CAE: ${invoiceData.cae}`);
+            } catch (err) {
+                console.error("Toast Error:", err);
+            }
+
+            console.log("Switching Tab...");
+            if (typeof onChangeTab === 'function') {
+                onChangeTab('invoices');
+            } else {
+                console.error("onChangeTab is not a function:", onChangeTab);
+            }
 
         } catch (error) {
-            console.error(error);
+            console.error("FULL ERROR OBJECT:", error);
+            console.error("ERROR STACK:", error.stack);
             toast.dismiss(toastId);
-            toast.error(error.message);
+            toast.error("Error: " + (error.message || "Unknown Error"));
         } finally {
             setIsTesting(false);
         }
