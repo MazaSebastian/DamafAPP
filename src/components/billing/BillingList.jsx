@@ -14,10 +14,8 @@ const BillingList = () => {
             const { data, error } = await import('../../supabaseClient')
                 .then(module => module.supabase
                     .from('invoices')
-                    // Use table name 'orders' explicitly, defaulting to alias 'order'. 
-                    // Use table name 'customers' explicitly inside orders.
-                    // If multiple FKs exist, Supabase might complain, but usually this is safer than column embedding if column is just an ID.
-                    .select('*, order:orders(customer:customers(name, business_name))')
+                    // Correct relation: invoices -> orders -> profiles
+                    .select('*, order:orders(profiles(full_name, business_name))')
                     .order('created_at', { ascending: false })
                 );
 
@@ -29,7 +27,8 @@ const BillingList = () => {
                 type: inv.cbte_tipo === 11 ? 'Factura C' : (inv.cbte_tipo === 6 ? 'Factura B' : 'Factura A'),
                 number: `${inv.pt_vta.toString().padStart(4, '0')}-${inv.cbte_nro.toString().padStart(8, '0')}`,
                 amount: inv.total_amount,
-                customer: inv.order?.customer?.business_name || inv.order?.customer?.name || 'Consumidor Final',
+                // Match profile data or fallback
+                customer: inv.order?.profiles?.business_name || inv.order?.profiles?.full_name || 'Consumidor Final',
                 cae: inv.cae,
                 // Pass raw data for PDF generator
                 ...inv
