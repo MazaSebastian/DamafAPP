@@ -1,5 +1,6 @@
 import { ShoppingBag, X, Banknote } from 'lucide-react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { useState } from 'react'
 
 const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
     if (!isOpen) return null
@@ -40,6 +41,13 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
     }
 
     const content = getModalContent()
+    const [phoneInput, setPhoneInput] = useState('')
+
+    const handleConfirm = () => {
+        if (!orderData?.customerPhone && !phoneInput.trim()) return
+
+        onConfirm({ phone: phoneInput })
+    }
 
     return (
         <AnimatePresence>
@@ -67,7 +75,7 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                         <X className="w-5 h-5" />
                     </button>
 
-                    <div className="flex flex-col items-center text-center space-y-4">
+                    <div className="flex flex-col items-center text-center space-y-4 w-full">
                         <div className="w-16 h-16 rounded-full flex items-center justify-center mb-2" style={{ backgroundColor: `${content.color}20` }}>
                             {content.icon}
                         </div>
@@ -78,6 +86,21 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
                             {content.message}
                         </p>
 
+                        {/* Phone Input if Missing */}
+                        {!orderData?.customerPhone && (
+                            <div className="w-full text-left space-y-1 animate-in fade-in slide-in-from-top-2">
+                                <label className="text-xs font-bold text-orange-400 ml-1">Teléfono de Contacto (Requerido) *</label>
+                                <input
+                                    type="tel"
+                                    value={phoneInput}
+                                    onChange={(e) => setPhoneInput(e.target.value)}
+                                    placeholder="Ej: 11 1234 5678"
+                                    className="w-full bg-black/20 border border-orange-500/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500 transition-all font-mono"
+                                    autoFocus
+                                />
+                            </div>
+                        )}
+
                         <div className="py-2">
                             <span className="text-3xl font-bold text-white">${total.toFixed(2)}</span>
                             {orderData?.type === 'delivery' && (
@@ -87,8 +110,9 @@ const OrderConfirmationModal = ({ isOpen, onClose, onConfirm, orderData }) => {
 
                         <div className="w-full space-y-3 pt-2">
                             <button
-                                onClick={onConfirm}
-                                className="w-full text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all hover:brightness-110"
+                                onClick={handleConfirm}
+                                disabled={!orderData?.customerPhone && !phoneInput.trim()}
+                                className="w-full text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-all hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed"
                                 style={{ backgroundColor: content.color, boxShadow: `0 10px 15px -3px ${content.color}40` }}
                             >
                                 {content.buttonText}

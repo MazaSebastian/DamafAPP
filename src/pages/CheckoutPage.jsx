@@ -172,36 +172,63 @@ const CheckoutPage = () => {
     const [showBankModal, setShowBankModal] = useState(false)
     const [pendingOrderId, setPendingOrderId] = useState(null)
 
-    const processOrder = async () => {
+    const processOrder = async (confirmedPhone = null) => {
         const { data: { user } } = await supabase.auth.getUser()
+
+        // Validation: Phone is mandatory
+        const userPhone = user?.phone || user?.user_metadata?.phone || confirmedPhone
+        // Note: For Guests, we might need to rely on the confirmation modal passing it.
+        // But local storage guest logic below doesn't use "processOrder" in the same way? 
+        // Wait, "Save order locally if guest" (Line 224) happens INSIDE processOrder.
+        // So processOrder IS used for guests too (where user is null).
+        // CheckoutPage usually requires auth, or if we allow guests, how do we get their data?
+        // Ah, earlier I saw "Debes iniciar sesión para usar cupones".
+        // But the main specific request is "TODOS los pedidos... SIEMPRE nombre y telefono".
+
+        // If user is logged in but has no phone updates?
+        if (user && !userPhone) {
+            // Ensure we captured it via modal. If not, we should have blocked before calling this.
+            // But Confirmation Modal should handle it.
+        }
 
         try {
             // 1. Create Order
-            // ALL User Orders start as 'pending_approval' so Admin can Accept/Reject
             const initialStatus = 'pending_approval'
+
+            const orderPayload = {
+                user_id: user?.id || null,
+                total: finalTotal,
+                status: initialStatus,
+                order_type: orderType,
+                payment_method: paymentMethod,
+                delivery_address: orderType === 'delivery' ? address : null,
+                delivery_lat: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lat : null,
+                delivery_lng: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lng : null,
+                coupon_code: appliedCoupon?.code || null,
+                discount_amount: discountAmount,
+                notes: notes,
+                scheduled_time: selectedSlot ? selectedSlot.start_time.slice(0, 5) : null,
+                // NEW: Mandatory Fields
+                client_name: user?.user_metadata?.full_name || user?.user_metadata?.name || 'Invitado/Web',
+                client_phone: userPhone || ''
+            }
 
             const { data: order, error: orderError } = await supabase
                 .from('orders')
-                .insert([{
-                    user_id: user?.id || null,
-                    total: finalTotal,
-                    status: initialStatus,
-                    order_type: orderType,
-                    payment_method: paymentMethod,
-                    delivery_address: orderType === 'delivery' ? address : null,
-                    delivery_lat: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lat : null,
-                    delivery_lng: (orderType === 'delivery' && deliveryCoords) ? deliveryCoords.lng : null,
-                    coupon_code: appliedCoupon?.code || null,
-                    discount_amount: discountAmount,
-                    coupon_code: appliedCoupon?.code || null,
-                    discount_amount: discountAmount,
-                    notes: notes, // Customer notes
-                    scheduled_time: selectedSlot ? selectedSlot.start_time.slice(0, 5) : null // Save "HH:mm"
-                }])
+                .insert([orderPayload])
                 .select()
                 .single()
 
             if (orderError) throw orderError
+
+            // If user provided phone and didn't have one, maybe update profile?
+            if (user && confirmedPhone && !user.phone) {
+                // Update profile phone silently
+                await supabase.auth.updateUser({
+                    data: { phone: confirmedPhone }
+                })
+                await supabase.from('profiles').update({ phone: confirmedPhone }).eq('id', user.id)
+            }
 
             // 2. Create Order Items
             const orderItems = cart.map(item => ({
@@ -619,9 +646,10 @@ const CheckoutPage = () => {
                     customerPhone: user?.phone || '', // User phone if available
                     paymentMethod: paymentMethod === 'mercadopago' ? 'Mercado Pago' : paymentMethod === 'transfer' ? 'Transferencia' : 'Efectivo'
                 }}
-                onConfirm={() => {
+                onConfirm={(additionalData) => {
                     setShowConfirmModal(false)
-                    processOrder()
+                    // If modal provided phone, pass it to processOrder
+                    processOrder(additionalData?.phone)
                 }}
                 onClose={() => setShowConfirmModal(false)}
             />

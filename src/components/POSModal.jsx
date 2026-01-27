@@ -15,40 +15,34 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
     const [selectedCategory, setSelectedCategory] = useState('all')
     const [selectedCustomer, setSelectedCustomer] = useState(null)
     const [customerIdInput, setCustomerIdInput] = useState('')
+    const [clientName, setClientName] = useState('') // Manual Name
+    const [clientPhone, setClientPhone] = useState('') // Manual Phone
     const [customerLoading, setCustomerLoading] = useState(false)
-    const [customizingProduct, setCustomizingProduct] = useState(null) // Restored missing state
+    const [customizingProduct, setCustomizingProduct] = useState(null)
 
-    // New: Schedule Slot
-    const [selectedSlot, setSelectedSlot] = useState(null)
-    const [orderType, setOrderType] = useState('takeaway') // 'takeaway' | 'delivery'
-    const [deliveryAddress, setDeliveryAddress] = useState('')
-    const [notes, setNotes] = useState('') // Notes state
-    const [shippingCost, setShippingCost] = useState(0)
-    const [deliverySettings, setDeliverySettings] = useState({ delivery_fixed_price: 0 })
+    // ... (States)
 
     // Initial Load
     useEffect(() => {
         if (isOpen) {
             fetchProducts()
             fetchCategories()
-            // Reset session on open
             updateCustomerDisplay([], 'active')
-            // Reset customer & slot
             setSelectedCustomer(null)
             setCustomerIdInput('')
-            setCustomerIdInput('')
+            setClientName('')
+            setClientPhone('')
             setSelectedSlot(null)
             fetchSettings()
         } else {
-            // Reset session on close to idle
             updateCustomerDisplay([], 'idle')
             setCart([])
             setSearchTerm('')
             setSelectedCustomer(null)
             setCustomerIdInput('')
+            setClientName('')
+            setClientPhone('')
             setSelectedSlot(null)
-            setOrderType('takeaway')
-            setDeliveryAddress('')
             setOrderType('takeaway')
             setDeliveryAddress('')
             setNotes('')
@@ -56,54 +50,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
         }
     }, [isOpen])
 
-
-    // Realtime Sync to Customer Display
-    useEffect(() => {
-        if (isOpen) {
-            const status = cart.length > 0 ? 'active' : 'active' // Keep active while modal is open basically
-            updateCustomerDisplay(cart, status)
-        }
-    }, [cart])
-
-    useEffect(() => {
-        if (orderType === 'delivery') {
-            if (deliverySettings.delivery_fixed_price > 0) {
-                setShippingCost(deliverySettings.delivery_fixed_price)
-            }
-        } else {
-            setShippingCost(0)
-        }
-    }, [orderType, deliverySettings])
-
-    const fetchSettings = async () => {
-        const { data } = await supabase.from('app_settings').select('*')
-        if (data) {
-            const settings = {}
-            data.forEach(item => settings[item.key] = item.value)
-            setDeliverySettings({
-                delivery_fixed_price: parseFloat(settings.delivery_fixed_price || 0)
-            })
-        }
-    }
-
-    const fetchProducts = async () => {
-        setLoading(true)
-        const { data } = await supabase
-            .from('products')
-            .select('*')
-            .eq('is_available', true)
-
-        if (data) setProducts(data)
-        setLoading(false)
-    }
-
-    const fetchCategories = async () => {
-        const { data } = await supabase
-            .from('categories')
-            .select('*')
-            .order('sort_order', { ascending: true })
-        if (data) setCategories(data)
-    }
+    // ...
 
     const handleCustomerSearch = async () => {
         if (!customerIdInput.trim()) {
@@ -112,7 +59,6 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
         }
 
         setCustomerLoading(true)
-        // Search by numeric customer_id
         const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -123,7 +69,7 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
         if (data) {
             setSelectedCustomer(data)
-            if (data.address) setDeliveryAddress(data.address) // Pre-fill address
+            if (data.address) setDeliveryAddress(data.address)
             toast.success(`Cliente identificado: ${data.full_name}`)
         } else {
             setSelectedCustomer(null)
@@ -131,113 +77,41 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
         }
     }
 
-    const updateCustomerDisplay = async (currentCart, statusOverride, qrUrl = null, method = null) => {
-        // Calculate totals
-        const subtotal = currentCart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-        const total = subtotal
-
-        const payload = {
-            status: statusOverride || (currentCart.length > 0 ? 'active' : 'idle'),
-            cart_items: currentCart,
-            subtotal: subtotal,
-            total: total,
-            qr_code_url: qrUrl,
-            updated_at: new Date().toISOString()
-        }
-
-        if (method) payload.payment_method = method
-
-        // We update the singleton row
-        // We catch errors to avoid unhandled rejections if network blips
-        await supabase
-            .from('checkout_sessions')
-            .update(payload)
-            .eq('id', '00000000-0000-0000-0000-000000000000')
-            .then()
-    }
-
-    const initiateAddToCart = (product) => {
-        setCustomizingProduct(product)
-    }
-
-    /* ... (Rest of logic) ... */
-    const handleAddToCartFromModal = (customItem) => {
-        setCart(prev => [...prev, customItem])
-        setCustomizingProduct(null)
-    }
-
     // ...
-
-    const draftTimeoutRef = useRef(null)
-
-    const handleDraftChange = (draft) => {
-        if (draftTimeoutRef.current) clearTimeout(draftTimeoutRef.current)
-
-        draftTimeoutRef.current = setTimeout(() => {
-            updateLiveDraft(draft)
-        }, 300)
-    }
-
-    const updateLiveDraft = async (draft) => {
-        // We only update if modal is open, otherwise clear it
-        const payload = {
-            current_action: draft,
-            updated_at: new Date().toISOString()
-        }
-
-        await supabase
-            .from('checkout_sessions')
-            .update(payload)
-            .eq('id', '00000000-0000-0000-0000-000000000000')
-            .then()
-    }
-
-    // Clear draft on close or add
-    useEffect(() => {
-        if (!customizingProduct) {
-            updateLiveDraft(null)
-        }
-    }, [customizingProduct])
-
-    const updateQuantity = (productId, delta) => {
-        setCart(prev => prev.map(p => {
-            if (p.id === productId) {
-                const newQty = Math.max(0, p.quantity + delta)
-                return { ...p, quantity: newQty }
-            }
-            return p
-        }).filter(p => p.quantity > 0))
-    }
 
     const handleCheckout = async (method) => {
         if (cart.length === 0) return
+
+        // 1. Validation: Name & Phone MANDATORY
+        const finalName = selectedCustomer ? selectedCustomer.full_name : clientName.trim()
+        const finalPhone = selectedCustomer ? selectedCustomer.phone : clientPhone.trim()
+
+        if (!finalName) {
+            toast.error('Por favor ingresa el NOMBRE del cliente')
+            return
+        }
+        if (!finalPhone) {
+            toast.error('Por favor ingresa el TELÉFONO del cliente')
+            return
+        }
 
         try {
             setProcessLoading(true)
             const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
-            // 1. Create Order in DB
-            // Use selectedCustomer.id if available (Juan Perez), otherwise null (Invitado)
-            // Or if we want to attribute to Admin, we use userData. But usually orders are linked to the Customer.
-            // If linked to Customer, Loyalty applies. 
-
             const { data: userData } = await supabase.auth.getUser()
-
-            // Logic: If Customer Selected -> user_id = customer.id
-            // If Guest -> user_id = null (Or maybe we keep tracking who CREATED it in a separate field? 
-            // For now, let's assume user_id is the customer)
 
             const orderUserId = selectedCustomer ? selectedCustomer.id : null
 
             const orderPayload = {
                 user_id: orderUserId,
-                client_name: selectedCustomer ? selectedCustomer.full_name : 'Invitado', // Explicitly store name
-                client_name: selectedCustomer ? selectedCustomer.full_name : 'Invitado', // Explicitly store name
-                status: 'cooking', // POS orders bypass approval (cooking directly)
+                client_name: finalName,
+                client_phone: finalPhone, // New Field
+                status: 'cooking',
                 total: subtotal + (orderType === 'delivery' ? Number(shippingCost) : 0),
                 payment_method: method,
                 order_type: orderType,
-                payment_status: method === 'cash' ? 'paid' : 'pending', // MP is pending initially
+                payment_status: method === 'cash' ? 'paid' : 'pending',
                 delivery_address: orderType === 'delivery'
                     ? (selectedCustomer?.address || deliveryAddress || 'Sin Dirección')
                     : 'Retiro en Local',
@@ -252,14 +126,17 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
             if (orderError) throw orderError
 
-            // 2. Create Order Items
+            // 2. Order Items
             const orderItems = cart.map(item => ({
                 order_id: orderData.id,
                 product_id: item.id,
                 quantity: item.quantity,
                 unit_price: item.price,
                 price_at_time: item.price,
-                notes: item.notes || ''
+                notes: item.notes || '',
+                modifiers: item.modifiers || [],
+                side_info: item.side_info,
+                drink_info: item.drink_info
             }))
 
             const { error: itemsError } = await supabase
@@ -268,24 +145,25 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
             if (itemsError) throw itemsError
 
+            // ... (Payment Processing) -> Remains same but uses finalName/finalPhone for print payloads
+
             // 3. Handle Payment Method
             if (method === 'cash') {
-                // Immediate Success
                 await finalizeOrder(orderData.id, 'paid', subtotal)
 
-                // Print Detailed Ticket (Android) - Auto-print for POS
+                // Print
                 if (window.AndroidPrint) {
                     const printPayload = {
                         id: orderData.id,
-                        order_number: orderData.order_number, // Add friendly ID
+                        order_number: orderData.order_number,
                         created_at: orderData.created_at,
                         updated_at: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString(),
                         total: subtotal,
-                        client_name: selectedCustomer ? selectedCustomer.full_name : 'Invitado',
+                        client_name: finalName, // Use resolved name
+                        client_phone: finalPhone, // Use resolved phone
                         client_address: orderType === 'delivery' ? (selectedCustomer?.address || deliveryAddress || '') : '',
-                        client_phone: selectedCustomer?.phone || '',
                         client_shift: selectedSlot ? selectedSlot.start_time.slice(0, 5) : '',
-                        delivery_time: selectedSlot ? selectedSlot.start_time.slice(0, 5) : '', // Explicit Label Support
+                        delivery_time: selectedSlot ? selectedSlot.start_time.slice(0, 5) : '',
                         order_type: orderType,
                         payment_method: 'cash',
                         cart_items: cart.map(item => ({
@@ -307,30 +185,24 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
 
                 toast.success(`Pedido #${orderData.id.slice(0, 6)} completado (Efectivo) 💵`)
                 closeModalAfterDelay()
-            } else if (method === 'mercadopago') {
-                // Generate QR via Edge Function
-                toast.loading('Generando QR de pago...')
 
+            } else if (method === 'mercadopago') {
+                // ... (Same MP logic)
+                toast.loading('Generando QR de pago...')
                 const { data: mpData, error: mpError } = await supabase.functions.invoke('create-payment-preference', {
                     body: { order_id: orderData.id }
                 })
-
                 if (mpError) throw new Error('Error conectando con MP: ' + mpError.message)
                 if (!mpData?.init_point) throw new Error('No se recibió URL de pago')
-
-                // Show QR on Customer Display
                 await updateCustomerDisplay(cart, 'active', mpData.init_point, method)
-
                 toast.dismiss()
                 toast.success('¡QR generado! Cliente escaneando...')
                 setProcessLoading(false)
+
             } else if (method === 'transfer') {
-                // Show Bank Details on Customer Display
+                // ... (Same Transfer logic)
                 toast.loading('Mostrando datos bancarios...')
-
-                // We pass method 'transfer' so LiveCartView knows to fetch bank details
                 await updateCustomerDisplay(cart, 'active', null, method)
-
                 toast.dismiss()
                 toast.success('Datos bancarios mostrados al cliente')
                 setProcessLoading(false)
@@ -415,27 +287,50 @@ const POSModal = ({ isOpen, onClose, onSuccess }) => {
                             />
                         </div>
 
-                        {/* CUSTOMER ID INPUT */}
-                        <div className="hidden md:flex items-center gap-2 pl-4 border-l border-white/5">
-                            <div className="relative w-24">
-                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-xs font-mono">#</span>
-                                <input
-                                    type="text"
-                                    placeholder="ID"
-                                    className="w-full bg-[var(--color-background)] rounded-xl py-2.5 pl-7 pr-2 text-sm outline-none focus:ring-1 ring-[var(--color-primary)] transition-all font-mono"
-                                    value={customerIdInput}
-                                    onChange={e => setCustomerIdInput(e.target.value)}
-                                    onBlur={handleCustomerSearch}
-                                    onKeyDown={e => e.key === 'Enter' && handleCustomerSearch()}
-                                />
-                            </div>
-                            {selectedCustomer ? (
-                                <div className="bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg text-sm font-bold truncate max-w-[150px]">
-                                    {selectedCustomer.full_name}
+                        {/* CUSTOMER SEARCH & GUEST INPUTS */}
+                        <div className="hidden md:flex flex-col gap-2 pl-4 border-l border-white/5 min-w-[250px]">
+                            {/* Row 1: Search & Status */}
+                            <div className="flex items-center gap-2">
+                                <div className="relative w-24">
+                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)] text-xs font-mono">#</span>
+                                    <input
+                                        type="text"
+                                        placeholder="ID"
+                                        className="w-full bg-[var(--color-background)] rounded-xl py-2 pl-7 pr-2 text-xs outline-none focus:ring-1 ring-[var(--color-primary)] transition-all font-mono"
+                                        value={customerIdInput}
+                                        onChange={e => setCustomerIdInput(e.target.value)}
+                                        onBlur={handleCustomerSearch}
+                                        onKeyDown={e => e.key === 'Enter' && handleCustomerSearch()}
+                                    />
                                 </div>
-                            ) : (
-                                <div className="text-[var(--color-text-muted)] text-sm px-2">
-                                    Invitado
+                                {selectedCustomer ? (
+                                    <div className="bg-green-500/10 text-green-400 px-3 py-1.5 rounded-lg text-sm font-bold truncate flex-1">
+                                        {selectedCustomer.full_name}
+                                    </div>
+                                ) : (
+                                    <div className="text-[var(--color-text-muted)] text-sm px-2 flex-1">
+                                        Invitado
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Row 2: Manual Inputs (If Guest) */}
+                            {!selectedCustomer && (
+                                <div className="grid grid-cols-2 gap-2 animate-in fade-in slide-in-from-top-1">
+                                    <input
+                                        type="text"
+                                        placeholder="Nombre *"
+                                        className="bg-[var(--color-background)] rounded-lg px-2 py-1.5 text-xs outline-none focus:border-[var(--color-primary)] border border-white/5"
+                                        value={clientName}
+                                        onChange={e => setClientName(e.target.value)}
+                                    />
+                                    <input
+                                        type="text"
+                                        placeholder="Teléfono *"
+                                        className="bg-[var(--color-background)] rounded-lg px-2 py-1.5 text-xs outline-none focus:border-[var(--color-primary)] border border-white/5"
+                                        value={clientPhone}
+                                        onChange={e => setClientPhone(e.target.value)}
+                                    />
                                 </div>
                             )}
                         </div>

@@ -12,6 +12,11 @@ const RegisterPage = () => {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
     const [storeLocation, setStoreLocation] = useState(null)
+    const [fullName, setFullName] = useState('')
+    const [phoneData, setPhoneData] = useState({ countryCode: '+54', number: '' })
+    const [addressData, setAddressData] = useState({ address: '', floor: '', department: '', postal_code: '' })
+    const [dob, setDob] = useState({ day: '', month: '', year: '' })
+    const [error, setError] = useState(null)
 
     useEffect(() => {
         const fetchSettings = async () => {

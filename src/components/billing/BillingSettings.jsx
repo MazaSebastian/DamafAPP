@@ -71,38 +71,40 @@ const BillingSettings = () => {
                 keyContent = await readFileContent(keyFile);
             }
 
-            const upsertData = {
+            const configPayload = {
                 environment: 'production',
-                cuit: cuit.replace(/\D/g, ''), // Remove non-digits
+                cuit: cuit.replace(/\D/g, ''),
                 sales_point: parseInt(salesPoint),
                 tax_condition: taxCondition,
                 cert_crt: certContent,
                 private_key: keyContent,
-                is_active: true,
-                updated_at: new Date()
+                is_active: true
             };
 
-            if (existingConfig?.id) {
-                const { error } = await supabase
-                    .from('afip_credentials')
-                    .update(upsertData)
-                    .eq('id', existingConfig.id);
-                if (error) throw error;
-            } else {
-                const { error } = await supabase
-                    .from('afip_credentials')
-                    .insert(upsertData);
-                if (error) throw error;
-            }
+            console.log("Saving Configuration via Edge Function...", configPayload);
 
+            const { data, error } = await supabase.functions.invoke('afip-invoice', {
+                body: {
+                    action: 'save_config',
+                    payload: configPayload
+                }
+            });
+
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error || "Error desconocido al guardar");
+
+            console.log("Configuration Saved Successfully");
             toast.success('Configuración Fiscal guardada exitosamente');
             setCertFile(null);
             setKeyFile(null);
             fetchConfig();
 
+            // Refresh context in a cleaner way if possible, or reload
+            setTimeout(() => window.location.reload(), 1500);
+
         } catch (error) {
             console.error('Error saving config:', error);
-            toast.error('Error al guardar: ' + error.message);
+            toast.error('Error al guardar: ' + (error.message || error));
         } finally {
             setIsLoading(false);
         }

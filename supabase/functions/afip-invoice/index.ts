@@ -49,6 +49,44 @@ serve(async (req) => {
         }
         console.log(`Using Credentials: CUIT ${credentials.cuit}, PtoVta ${credentials.sales_point}`);
 
+        if (action === 'save_config') {
+            const { payload } = body;
+            if (!payload) throw new Error("Missing payload for save_config");
+
+            console.log("Saving config for env:", payload.environment);
+
+            // Check if exists
+            const { data: existing } = await supabaseClient
+                .from('afip_credentials')
+                .select('id')
+                .eq('environment', payload.environment)
+                .single();
+
+            let saveError;
+            if (existing) {
+                const { error } = await supabaseClient
+                    .from('afip_credentials')
+                    .update({ ...payload, updated_at: new Date() })
+                    .eq('id', existing.id);
+                saveError = error;
+            } else {
+                const { error } = await supabaseClient
+                    .from('afip_credentials')
+                    .insert(payload);
+                saveError = error;
+            }
+
+            if (saveError) {
+                console.error("DB Save Error:", saveError);
+                throw new Error("Error saving to DB: " + ((saveError as any).message || JSON.stringify(saveError)));
+            }
+
+            return new Response(JSON.stringify({ success: true }), {
+                headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+                status: 200,
+            })
+        }
+
         if (action === 'status') {
             // Determine Invoice Details
             const isMonotributo = credentials.tax_condition === 'monotributo';

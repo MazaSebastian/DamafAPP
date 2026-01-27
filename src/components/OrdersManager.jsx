@@ -786,6 +786,11 @@ const OrdersManager = () => {
                                     // Guest or Manual Name
                                     <div className="mt-2 text-xs">
                                         <div className="font-bold text-white">{order.client_name || 'Invitado'}</div>
+                                        {order.client_phone && (
+                                            <div className="flex items-center gap-1 mt-0.5 text-[var(--color-text-muted)]">
+                                                <span>📞</span> {order.client_phone}
+                                            </div>
+                                        )}
                                         {order.delivery_address && (
                                             <div className="text-white/70 italic mt-0.5 max-w-[150px] truncate">
                                                 📍 {order.delivery_address}
