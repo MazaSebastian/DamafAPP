@@ -10,9 +10,19 @@ const LoyaltyBanner = ({ stars = 0 }) => {
     // While settings load, we might flicker or show default. 
     // Ideally we could show a skeleton, but for now we render gracefully.
     // If name is missing, just show "Hola!" without name to avoid "Hola, Usuario"
+    // If name is missing, just show "Hola!" without name to avoid "Hola, Usuario"
     const firstName = profile?.full_name?.split(' ')[0] || ''
 
-    if (loading) return null
+    // Show skeleton if loading, instead of nothing
+    if (loading) {
+        return (
+            <div className="bg-[var(--color-surface)] rounded-2xl p-5 h-[180px] animate-pulse border border-white/5 mb-6">
+                <div className="h-6 w-32 bg-white/10 rounded mb-4"></div>
+                <div className="h-10 w-16 bg-white/10 rounded mb-2"></div>
+                <div className="h-3 w-48 bg-white/10 rounded mt-8"></div>
+            </div>
+        )
+    }
 
     return (
         <div className="bg-gradient-to-r from-[#502314] to-[#7c3a1f] rounded-2xl p-5 text-white shadow-xl relative overflow-hidden mb-6 border border-white/5">
